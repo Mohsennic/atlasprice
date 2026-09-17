@@ -1,0 +1,490 @@
+<!DOCTYPE html>
+<html lang="fa" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>محاسبه و سفارش والپست و اتصالات | اطلس سازه</title>
+    <link href="https://cdn.jsdelivr.net/gh/rastikerdar/vazirmatn@v33.003/Vazirmatn-font-face.css" rel="stylesheet">
+    <style>
+        :root { --navy: #00224d; --orange: #ff6600; --bg: #f0f2f5; --red: #e63946; }
+        * { font-family: 'Vazirmatn', sans-serif; box-sizing: border-box; }
+        body { background: var(--bg); display: flex; justify-content: center; padding: 15px; margin: 0; }
+        .card { width: 100%; max-width: 460px; background: white; border-radius: 20px; padding: 20px; box-shadow: 0 8px 25px rgba(0,0,0,0.08); }
+        .tabs { display: flex; gap: 8px; margin-bottom: 15px; }
+        .tab-btn { flex: 1; padding: 10px; border: 2px solid var(--navy); background: white; color: var(--navy); border-radius: 12px; font-weight: bold; cursor: pointer; transition: 0.2s; font-size: 13px; }
+        .tab-btn.active { background: var(--navy); color: white; }
+        .grid-inputs { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-bottom: 15px; }
+        input, select { width: 100%; padding: 10px; border: 1px solid #ddd; border-radius: 10px; background: #fafafa; text-align: center; font-size: 14px; }
+        .btn-main { width: 100%; padding: 13px; border: none; border-radius: 12px; background: var(--orange); color: white; font-weight: bold; cursor: pointer; transition: 0.2s; font-size: 14px; }
+        .btn-main:active { transform: scale(0.98); }
+        .btn-clear { width: 100%; padding: 9px; border: 1px solid var(--red); border-radius: 10px; background: #fff5f5; color: var(--red); font-size: 12px; font-weight: bold; cursor: pointer; margin-top: 10px; }
+        .btn-reset { width: 100%; padding: 10px; border: 1px solid #888; border-radius: 10px; background: #eee; color: #333; font-size: 13px; font-weight: bold; cursor: pointer; margin-top: 10px; }
+        .modal { display: none; position: fixed; top:0; left:0; width: 100%; height: 100%; background: rgba(0,0,0,0.6); z-index: 1000; justify-content: center; align-items: center; }
+        .modal-content { background: white; padding: 20px; width: 95%; max-width: 440px; border-radius: 20px; max-height: 90vh; overflow-y: auto; }
+        .admin-box { background: #fcfcfc; border: 1px solid #eee; padding: 12px; border-radius: 12px; margin-bottom: 12px; }
+        .section-title { font-size: 13px; color: var(--navy); margin-bottom: 8px; font-weight: bold; }
+        .checkbox-container { grid-column: span 2; display: flex; align-items: center; gap: 10px; font-size: 13px; padding: 8px; border: 1px solid #ddd; border-radius: 10px; background: #fff; cursor: pointer; }
+        .order-item { display: flex; justify-content: space-between; align-items: center; padding: 8px 0; border-bottom: 1px dashed #ddd; font-size: 13px; gap: 6px; }
+        .item-info { flex: 1; display: flex; flex-direction: column; text-align: right; }
+        .item-price { font-weight: bold; color: var(--navy); white-space: nowrap; }
+        .btn-del { background: #ffebee; border: 1px solid #ffcdd2; color: var(--red); border-radius: 6px; width: 26px; height: 26px; cursor: pointer; display: flex; align-items: center; justify-content: center; font-size: 13px; }
+        .footer-nav { display: flex; justify-content: space-around; margin-top: 20px; color: #666; font-size: 13px; cursor: pointer; }
+    </style>
+</head>
+<body>
+
+<div class="card">
+    <h2 style="text-align:center; color:var(--navy); margin-bottom:3px;">اطلس سازه- محاسبه و سفارش</h2>
+    <div id="badge" style="text-align:center; font-size:12px; color:var(--orange); font-weight:bold; margin-bottom:12px;">وضعیت: مشتری</div>
+
+    <!-- تب‌ها -->
+    <div class="tabs">
+        <button id="tabWallpost" class="tab-btn active" onclick="switchTab('wallpost')">والپست و وادار</button>
+        <button id="tabAccessory" class="tab-btn" onclick="switchTab('accessory')">اتصالات و لوازم جانبی</button>
+    </div>
+
+    <!-- تب والپست -->
+    <div id="sectionWallpost">
+        <div class="grid-inputs">
+            <div style="grid-column: span 2">
+                <label style="font-size:11px; font-weight:bold; color:var(--navy);">نوع مقطع / محصول:</label>
+                <select id="prodType" onchange="handleProductChange()">
+                    <option value="wallpost">والپست منقطع (ساده)</option>
+                    <option value="vador_end">وادار انتهایی</option>
+                    <option value="vador_mid">وادار میانی (با قیدهای ۴۰ سانتی)</option>
+                </select>
+            </div>
+            <div><label style="font-size:10px">دهنه / عرض (cm)</label><input type="number" id="w" value="15" oninput="calc()"></div>
+            <div><label style="font-size:10px">بال (cm)</label><input type="number" id="f" value="7" oninput="calc()"></div>
+            <div><label style="font-size:10px">طول شاخه (cm)</label><input type="number" id="l" value="320" oninput="calc()"></div>
+            <div><label style="font-size:10px">ضخامت (mm)</label><input type="number" id="t" value="2" oninput="calc()"></div>
+            <div style="grid-column: span 2">
+                <select id="sheetType" onchange="calc()">
+                    <option value="st37" id="optSt37">ورق سیاه (st37)</option>
+                    <option value="galv" id="optGalv">ورق گالوانیزه</option>
+                </select>
+            </div>
+            <div style="grid-column: span 2"><input type="number" id="count" value="10" placeholder="تعداد شاخه" oninput="calc()"></div>
+            <label class="checkbox-container" id="antiRustBox">
+                <input type="checkbox" id="noAntiRust" onchange="calc()" style="width:18px; height:18px;">
+                <span id="antiRustLabel">بدون ضد زنگ</span>
+            </label>
+        </div>
+
+        <div style="background:var(--navy); color:white; padding:12px; border-radius:12px; text-align:center; margin-bottom:12px;">
+            <div id="resUnit" style="font-size:13px;">قیمت واحد: ۰ تومان</div>
+            <div id="resTotal" style="font-size:20px; color:#ffad33; font-weight:bold; margin-top:4px;">مبلغ کل: ۰ تومان</div>
+            <div id="discountStatus" style="font-size:11px; color:#00ff88; margin-top:3px; font-weight:bold;"></div>
+        </div>
+
+        <button class="btn-main" onclick="addWallpostOrder()">➕ افزودن والپست به لیست</button>
+    </div>
+
+    <!-- تب اتصالات -->
+    <div id="sectionAccessory" style="display: none;">
+        <div class="grid-inputs">
+            <div style="grid-column: span 2">
+                <label style="font-size:11px; font-weight:bold; color:var(--navy);">انتخاب اتصال یا قطعه:</label>
+                <select id="accType" onchange="calcAccessory()">
+                    <option value="wire_clip">گیره گالوانیزه</option>
+                    <option value="hook">قلاب</option>
+                    <option value="bed_rebar_55">میلگرد بستر عرض 5.5 سانت</option>
+                    <option value="bed_rebar_11">میلگرد بستر عرض 11 سانت</option>
+                    <option value="bed_rebar_15">میلگرد بستر عرض 15 سانت</option>
+                    <option value="rollbolt_12_10">رول بولت 12 طول 10 خارجی</option>
+                    <option value="boltex_6">پیچ بولتکس 6 سانتی</option>
+                    <option value="flat_tie">بست تخت</option>
+                    <option value="radical_tie">بست رادیکالی</option>
+                    <option value="screw_plug">پیچ و رولپلاک</option>
+                    <option value="plate">صفحه پلیت</option>
+                </select>
+            </div>
+            <div style="grid-column: span 2">
+                <label style="font-size:10px">تعداد سفارش</label>
+                <input type="number" id="accCount" value="100" oninput="calcAccessory()">
+            </div>
+        </div>
+
+        <div style="background:var(--navy); color:white; padding:12px; border-radius:12px; text-align:center; margin-bottom:12px;">
+            <div id="accResUnit" style="font-size:13px;">قیمت واحد: ۰ تومان</div>
+            <div id="accResTotal" style="font-size:20px; color:#ffad33; font-weight:bold; margin-top:4px;">مبلغ کل: ۰ تومان</div>
+        </div>
+
+        <button class="btn-main" onclick="addAccessoryOrder()">➕ افزودن اتصال به لیست</button>
+    </div>
+
+    <!-- لیست کلیه اقلام فاکتور -->
+    <div id="orderList" style="margin-top:15px;"></div>
+    <button id="clearBtn" class="btn-clear" style="display:none;" onclick="clearAllOrders()">🗑️ پاک کردن کل لیست</button>
+    <button id="copyBtn" class="btn-main" style="background:#28a745; margin-top:10px; display:none;" onclick="copyEitaa()">📋 کپی پیش‌فاکتور (ایتا/تلگرام)</button>
+
+    <div class="footer-nav">
+        <span onclick="openAdmin()">⚙️ تنظیمات</span>
+        <span onclick="toggleMode()">👤 تغییر وضعیت</span>
+    </div>
+</div>
+
+<!-- مودال مدیریت -->
+<div id="modal" class="modal">
+    <div class="modal-content">
+        <h3 style="text-align:center; color:var(--navy); margin-top:0;">تنظیمات مدیریت</h3>
+        
+        <div class="admin-box">
+            <div class="section-title">💰 نرخ پایه والپست (تومان)</div>
+            <div class="grid-inputs">
+                <div><label style="font-size:10px">ورق سیاه (کیلو)</label><input type="number" id="sSt37"></div>
+                <div><label style="font-size:10px">ورق گالوا (کیلو)</label><input type="number" id="sGalv"></div>
+                <div style="grid-column: span 2;"><label style="font-size:10px">مزد ساخت (هر کیلو)</label><input type="number" id="sLabor"></div>
+                <div><label style="font-size:10px">ضدزنگ والپست</label><input type="number" id="sAntiRustWallpost"></div>
+                <div><label style="font-size:10px">ضدزنگ وادار</label><input type="number" id="sAntiRustVador"></div>
+            </div>
+        </div>
+
+        <div class="admin-box">
+            <div class="section-title">🔩 نرخ پایه اتصالات (تومان)</div>
+            <div class="grid-inputs">
+                <div><label style="font-size:10px">گیره گالوانیزه</label><input type="number" id="p_wire_clip"></div>
+                <div><label style="font-size:10px">قلاب</label><input type="number" id="p_hook"></div>
+                <div><label style="font-size:10px">میلگرد ۵.۵</label><input type="number" id="p_bed_rebar_55"></div>
+                <div><label style="font-size:10px">میلگرد ۱۱</label><input type="number" id="p_bed_rebar_11"></div>
+                <div><label style="font-size:10px">میلگرد ۱۵</label><input type="number" id="p_bed_rebar_15"></div>
+                <div><label style="font-size:10px">رول بولت ۱۲×۱۰</label><input type="number" id="p_rollbolt_12_10"></div>
+                <div><label style="font-size:10px">پیچ بولتکس ۶</label><input type="number" id="p_boltex_6"></div>
+                <div><label style="font-size:10px">بست تخت</label><input type="number" id="p_flat_tie"></div>
+                <div><label style="font-size:10px">بست رادیکالی</label><input type="number" id="p_radical_tie"></div>
+                <div><label style="font-size:10px">پیچ و رولپلاک</label><input type="number" id="p_screw_plug"></div>
+                <div style="grid-column: span 2;"><label style="font-size:10px">صفحه پلیت</label><input type="number" id="p_plate"></div>
+            </div>
+        </div>
+
+        <div class="admin-box">
+            <div class="section-title">📉 درصد تخفیف والپست</div>
+            <div class="grid-inputs">
+                <div><label style="font-size:10px">۱۰۰ عدد</label><input type="number" id="d100"></div>
+                <div><label style="font-size:10px">۲۵۰ عدد</label><input type="number" id="d250"></div>
+                <div><label style="font-size:10px">۴۰۰ عدد</label><input type="number" id="d400"></div>
+                <div><label style="font-size:10px">۶۰۰ عدد</label><input type="number" id="d600"></div>
+                <div><label style="font-size:10px">۸۰۰ عدد</label><input type="number" id="d800"></div>
+                <div><label style="font-size:10px">۱۰۰۰ عدد</label><input type="number" id="d1000"></div>
+            </div>
+        </div>
+
+        <button class="btn-main" style="background:var(--navy); margin-bottom:8px;" onclick="saveSettings()">ذخیره تغییرات</button>
+        <button class="btn-reset" onclick="resetFactorySettings()">🔄 بازنشانی به تنظیمات کارخانه</button>
+        <button class="btn-reset" style="background:#ddd;" onclick="document.getElementById('modal').style.display='none'">بستن</button>
+    </div>
+</div>
+
+<script>
+    const defaultSettings = { 
+        st37: 30000, 
+        galv: 38000, 
+        labor: 3500,
+        antiRustWallpost: 3000, 
+        antiRustVador: 25000,   
+        d100: 1, 
+        d250: 2, 
+        d400: 3, 
+        d600: 4, 
+        d800: 5, 
+        d1000: 6,
+        p_wire_clip: 8500,
+        p_hook: 7500,
+        p_bed_rebar_55: 22000,
+        p_bed_rebar_11: 24000,
+        p_bed_rebar_15: 27000,
+        p_rollbolt_12_10: 19000,
+        p_boltex_6: 5500,
+        p_flat_tie: 6000,
+        p_radical_tie: 9500,
+        p_screw_plug: 3500,
+        p_plate: 45000
+    };
+
+    const accessoryNames = {
+        wire_clip: "گیره گالوانیزه",
+        hook: "قلاب",
+        bed_rebar_55: "میلگرد بستر عرض 5.5 سانت",
+        bed_rebar_11: "میلگرد بستر عرض 11 سانت",
+        bed_rebar_15: "میلگرد بستر عرض 15 سانت",
+        rollbolt_12_10: "رول بولت 12 طول 10 خارجی",
+        boltex_6: "پیچ بولتکس 6 سانتی",
+        flat_tie: "بست تخت",
+        radical_tie: "بست رادیکالی",
+        screw_plug: "پیچ و رولپلاک",
+        plate: "صفحه پلیت"
+    };
+
+    let settings = { ...defaultSettings };
+    try {
+        let saved = JSON.parse(localStorage.getItem('atlasSet'));
+        if (saved && typeof saved === 'object') {
+            for (let k in defaultSettings) {
+                if (saved[k] !== undefined && !isNaN(saved[k])) {
+                    settings[k] = Number(saved[k]);
+                }
+            }
+        }
+    } catch(e) {
+        settings = { ...defaultSettings };
+    }
+
+    let orders = [];
+
+    function switchTab(tab) {
+        if(tab === 'wallpost') {
+            document.getElementById('sectionWallpost').style.display = 'block';
+            document.getElementById('sectionAccessory').style.display = 'none';
+            document.getElementById('tabWallpost').classList.add('active');
+            document.getElementById('tabAccessory').classList.remove('active');
+            calc();
+        } else {
+            document.getElementById('sectionWallpost').style.display = 'none';
+            document.getElementById('sectionAccessory').style.display = 'block';
+            document.getElementById('tabAccessory').classList.add('active');
+            document.getElementById('tabWallpost').classList.remove('active');
+            calcAccessory();
+        }
+    }
+
+    function handleProductChange() {
+        const prodType = document.getElementById('prodType').value;
+        const optGalv = document.getElementById('optGalv');
+        const sheetSelect = document.getElementById('sheetType');
+
+        if(prodType === 'vador_end' || prodType === 'vador_mid') {
+            optGalv.disabled = true;
+            sheetSelect.value = 'st37';
+        } else {
+            optGalv.disabled = false;
+        }
+        calc();
+    }
+
+    function calc() {
+        const prodType = document.getElementById('prodType').value;
+        const w = parseFloat(document.getElementById('w').value) || 0;
+        const f = parseFloat(document.getElementById('f').value) || 0;
+        let l = parseFloat(document.getElementById('l').value) || 0;
+        const t = parseFloat(document.getElementById('t').value) || 0;
+        const count = parseFloat(document.getElementById('count').value) || 0;
+        const noAntiRust = document.getElementById('noAntiRust').checked;
+        const isPart = sessionStorage.getItem('isPart') === 'true';
+        const sheetType = document.getElementById('sheetType').value;
+
+        const antiRustBox = document.getElementById('antiRustBox');
+        if(sheetType === 'galv' && prodType === 'wallpost') {
+            antiRustBox.style.opacity = '0.5';
+            document.getElementById('noAntiRust').disabled = true;
+        } else {
+            antiRustBox.style.opacity = '1';
+            document.getElementById('noAntiRust').disabled = false;
+        }
+
+        let effectiveLength = l;
+        let prodName = "والپست منقطع";
+        let isVador = false;
+
+        if(prodType === 'vador_end') {
+            prodName = "وادار انتهایی";
+            isVador = true;
+        } else if(prodType === 'vador_mid') {
+            prodName = "وادار میانی";
+            isVador = true;
+            let pieces = Math.floor(l / 100);
+            effectiveLength = l + (pieces * 40);
+        }
+
+        let pKg = (prodType === 'wallpost' && sheetType === 'galv') ? (settings.galv || 38000) : (settings.st37 || 30000);
+        let weightKg = ((w + 2 * f) * effectiveLength * t * 7.9) / 10000;
+        let ironAndLabor = weightKg * (pKg + (settings.labor || 3500));
+
+        let antiRustCost = 0;
+        if(sheetType === 'st37' || isVador) {
+            if(!noAntiRust) {
+                antiRustCost = isVador ? (settings.antiRustVador || 25000) : (settings.antiRustWallpost || 3000);
+            }
+        }
+
+        let baseCost = ironAndLabor + antiRustCost;
+        let disc = count >= 1000 ? settings.d1000 : count >= 800 ? settings.d800 : count >= 600 ? settings.d600 : count >= 400 ? settings.d400 : count >= 250 ? settings.d250 : count >= 100 ? settings.d100 : 0;
+        let isDiscounted = (disc > 0);
+        
+        let final = baseCost * 1.10 * (1 - (disc / 100));
+        if(!isPart) final = final * 1.04;
+        
+        let unit = Math.ceil(final / 500) * 500;
+        document.getElementById('resUnit').innerText = "قیمت واحد: " + (unit || 0).toLocaleString() + " تومان";
+        document.getElementById('resTotal').innerText = "مبلغ کل: " + ((unit * count) || 0).toLocaleString() + " تومان";
+        document.getElementById('discountStatus').innerText = isDiscounted ? `(${disc}% تخفیف اعمال شده)` : "";
+        
+        let coatingText = (sheetType === 'galv' && !isVador) ? "گالوانیزه" : (noAntiRust ? "بدون ضدزنگ" : "با ضدزنگ");
+
+        return { 
+            desc: `${prodName} ${l}×${w} (بال ${f}) - ${coatingText}`, 
+            unit, 
+            count, 
+            isDiscounted 
+        };
+    }
+
+    function calcAccessory() {
+        const accType = document.getElementById('accType').value;
+        const count = parseFloat(document.getElementById('accCount').value) || 0;
+        const isPart = sessionStorage.getItem('isPart') === 'true';
+
+        let basePrice = settings['p_' + accType] || defaultSettings['p_' + accType] || 0;
+        let final = basePrice;
+        if(!isPart) final = final * 1.04;
+
+        let unit = Math.ceil(final / 500) * 500;
+        document.getElementById('accResUnit').innerText = "قیمت واحد: " + (unit || 0).toLocaleString() + " تومان";
+        document.getElementById('accResTotal').innerText = "مبلغ کل: " + ((unit * count) || 0).toLocaleString() + " تومان";
+
+        return {
+            desc: accessoryNames[accType] || "قطعه اتصال",
+            unit,
+            count,
+            isDiscounted: false
+        };
+    }
+
+    function addWallpostOrder() {
+        orders.push(calc());
+        render();
+    }
+
+    function addAccessoryOrder() {
+        orders.push(calcAccessory());
+        render();
+    }
+
+    function removeOrder(index) {
+        orders.splice(index, 1);
+        render();
+    }
+
+    function clearAllOrders() {
+        if(confirm("آیا از پاک کردن کل لیست سفارش مطمئن هستید؟")) {
+            orders = [];
+            render();
+        }
+    }
+
+    function render() {
+        const list = document.getElementById('orderList');
+        list.innerHTML = "";
+        orders.forEach((o, index) => {
+            list.innerHTML += `
+                <div class="order-item">
+                    <button class="btn-del" title="حذف" onclick="removeOrder(${index})">✕</button>
+                    <div class="item-info">
+                        <span style="font-weight:bold;">${o.desc}</span>
+                        <small style="color:#666;">${o.count} عدد ${o.isDiscounted ? '• تخفیف‌دار' : ''}</small>
+                    </div>
+                    <span class="item-price">${((o.unit * o.count) || 0).toLocaleString()} ت</span>
+                </div>
+            `;
+        });
+        const hasOrders = orders.length > 0;
+        document.getElementById('copyBtn').style.display = hasOrders ? 'block' : 'none';
+        document.getElementById('clearBtn').style.display = hasOrders ? 'block' : 'none';
+    }
+
+    function copyEitaa() {
+        if(orders.length === 0) return;
+        let txt = "💰 پیش‌فاکتور اطلس سازه\n";
+        let sum = 0;
+        orders.forEach((o, i) => {
+            let discText = o.isDiscounted ? " (با تخفیف)" : "";
+            txt += `\n${i+1}. ${o.desc}\n   تعداد: ${o.count} عدد | فی: ${o.unit.toLocaleString()} ت | مبلغ: ${(o.unit * o.count).toLocaleString()} ت${discText}`;
+            sum += (o.unit * o.count);
+        });
+        txt += `\n\n━━━━━━━━━━━━\n✅ جمع کل سفارش: ${sum.toLocaleString()} تومان`;
+        navigator.clipboard.writeText(txt);
+        alert("متن پیش‌فاکتور کپی شد.");
+    }
+
+    function openAdmin() {
+        let pass = prompt("رمز مدیریت:");
+        if(pass !== "1132") {
+            if(pass !== null) alert("رمز اشتباه است");
+            return;
+        }
+        document.getElementById('sSt37').value = settings.st37;
+        document.getElementById('sGalv').value = settings.galv;
+        document.getElementById('sLabor').value = settings.labor;
+        document.getElementById('sAntiRustWallpost').value = settings.antiRustWallpost;
+        document.getElementById('sAntiRustVador').value = settings.antiRustVador;
+        
+        ['d100','d250','d400','d600','d800','d1000'].forEach(id => {
+            document.getElementById(id).value = settings[id];
+        });
+
+        Object.keys(accessoryNames).forEach(k => {
+            let el = document.getElementById('p_' + k);
+            if(el) el.value = settings['p_' + k] || defaultSettings['p_' + k];
+        });
+
+        document.getElementById('modal').style.display = 'flex';
+    }
+
+    function saveSettings() {
+        settings.st37 = parseInt(document.getElementById('sSt37').value) || defaultSettings.st37;
+        settings.galv = parseInt(document.getElementById('sGalv').value) || defaultSettings.galv;
+        settings.labor = parseInt(document.getElementById('sLabor').value) || defaultSettings.labor;
+        settings.antiRustWallpost = parseInt(document.getElementById('sAntiRustWallpost').value) || defaultSettings.antiRustWallpost;
+        settings.antiRustVador = parseInt(document.getElementById('sAntiRustVador').value) || defaultSettings.antiRustVador;
+        
+        ['d100','d250','d400','d600','d800','d1000'].forEach(id => {
+            settings[id] = parseInt(document.getElementById(id).value) || 0;
+        });
+
+        Object.keys(accessoryNames).forEach(k => {
+            let el = document.getElementById('p_' + k);
+            if(el) settings['p_' + k] = parseInt(el.value) || defaultSettings['p_' + k];
+        });
+
+        localStorage.setItem('atlasSet', JSON.stringify(settings));
+        document.getElementById('modal').style.display = 'none';
+        calc();
+        calcAccessory();
+        alert("تنظیمات با موفقیت ذخیره شد.");
+    }
+
+    function resetFactorySettings() {
+        if(confirm("آیا مایلید تمام قیمت‌ها و تنظیمات به حالت اولیه کارخانه بازگردند؟")) {
+            localStorage.removeItem('atlasSet');
+            settings = { ...defaultSettings };
+            document.getElementById('modal').style.display = 'none';
+            calc();
+            calcAccessory();
+            alert("تنظیمات کارخانه اعمال شد.");
+        }
+    }
+
+    function toggleMode() {
+        if(sessionStorage.getItem('isPart') === 'true') {
+            sessionStorage.setItem('isPart', 'false');
+            document.getElementById('badge').innerText = "وضعیت: مشتری";
+        } else {
+            let pass = prompt("رمز همکار:");
+            if(pass === "2244") {
+                sessionStorage.setItem('isPart', 'true');
+                document.getElementById('badge').innerText = "وضعیت: همکار";
+            } else if(pass !== null) {
+                alert("رمز اشتباه است");
+            }
+        }
+        calc();
+        calcAccessory();
+    }
+
+    // مقداردهی اولیه پس از بارگذاری DOM
+    window.addEventListener('DOMContentLoaded', () => {
+        handleProductChange();
+        calcAccessory();
+    });
+</script>
+</body>
+</html>
