@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>اطلس سازه | محاسبه‌گر پیشرفته قیمت والپست و اتصالات</title>
+    <title>محاسبه قیمت والپست و اتصالات | اطلس سازه</title>
     <link href="https://cdn.jsdelivr.net/gh/rastikerdar/vazirmatn@v33.003/Vazirmatn-font-face.css" rel="stylesheet">
     <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
     <style>
@@ -24,7 +24,7 @@
 
         * {
             box-sizing: border-box;
-            font-family: 'Vazirmatn', sans-serif;
+            font-family: 'Vazirmatn', Tahoma, sans-serif;
             margin: 0;
             padding: 0;
         }
@@ -49,13 +49,16 @@
         .brand-header {
             background: linear-gradient(135deg, var(--navy-dark) 0%, var(--navy-main) 100%);
             color: white;
-            padding: 20px 25px;
+            padding: 18px 22px;
+            border-bottom: 4px solid var(--orange-main);
+        }
+
+        .header-top-row {
             display: flex;
             justify-content: space-between;
             align-items: center;
-            border-bottom: 4px solid var(--orange-main);
             flex-wrap: wrap;
-            gap: 15px;
+            gap: 12px;
         }
 
         .brand-title {
@@ -65,50 +68,74 @@
         }
 
         .brand-logo-shape {
-            width: 44px;
-            height: 44px;
+            width: 42px;
+            height: 42px;
             background: var(--orange-main);
             border-radius: 10px;
             display: flex;
             align-items: center;
             justify-content: center;
             font-weight: 900;
-            font-size: 22px;
+            font-size: 20px;
             color: white;
             box-shadow: 0 4px 10px rgba(249, 115, 22, 0.35);
         }
 
         .brand-text h1 {
-            font-size: 1.3rem;
+            font-size: 1.25rem;
             font-weight: 800;
+            margin-bottom: 2px;
         }
 
         .brand-text p {
             font-size: 0.75rem;
             color: #94a3b8;
-            margin-top: 2px;
         }
 
-        .header-meta {
+        .header-controls {
             display: flex;
-            flex-direction: column;
-            align-items: flex-end;
+            align-items: center;
+            gap: 8px;
+            flex-wrap: wrap;
+        }
+
+        .btn-header {
+            background: rgba(255, 255, 255, 0.12);
+            color: white;
+            border: 1px solid rgba(255, 255, 255, 0.25);
+            padding: 6px 12px;
+            border-radius: 8px;
+            font-size: 0.8rem;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.2s;
+            display: flex;
+            align-items: center;
             gap: 5px;
         }
 
-        .badge-status {
-            background: rgba(255, 255, 255, 0.1);
-            padding: 4px 12px;
-            border-radius: 20px;
-            font-size: 0.75rem;
-            border: 1px solid rgba(255, 255, 255, 0.2);
-            color: #e2e8f0;
+        .btn-header:hover {
+            background: rgba(255, 255, 255, 0.25);
         }
 
-        .sync-time {
+        .badge-status {
+            background: rgba(249, 115, 22, 0.2);
+            color: #fdba74;
+            border: 1px solid rgba(249, 115, 22, 0.4);
+            padding: 5px 10px;
+            border-radius: 6px;
+            font-size: 0.75rem;
+            font-weight: 600;
+        }
+
+        .sync-bar {
+            margin-top: 10px;
+            padding-top: 8px;
+            border-top: 1px solid rgba(255, 255, 255, 0.1);
+            display: flex;
+            justify-content: space-between;
             font-size: 0.7rem;
-            color: #cbd5e1;
-            direction: ltr;
+            color: #94a3b8;
         }
 
         .content-body {
@@ -137,7 +164,7 @@
 
         .grid-inputs {
             display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
+            grid-template-columns: repeat(auto-fit, minmax(130px, 1fr));
             gap: 10px;
             margin-bottom: 12px;
         }
@@ -175,13 +202,12 @@
             display: flex;
             align-items: center;
             gap: 8px;
-            margin: 10px 0;
+            margin: 10px 0 14px 0;
             cursor: pointer;
             user-select: none;
             font-size: 0.8rem;
             font-weight: 600;
             color: var(--navy-main);
-            justify-content: flex-start;
         }
 
         .checkbox-container input {
@@ -217,7 +243,8 @@
             overflow-x: auto;
             border: 1px solid var(--border-color);
             border-radius: 10px;
-            margin-bottom: 20px;
+            margin-bottom: 15px;
+            background: white;
         }
 
         table {
@@ -237,7 +264,7 @@
         }
 
         td {
-            padding: 8px 6px;
+            padding: 9px 6px;
             border-bottom: 1px solid var(--border-color);
             color: var(--text-dark);
             vertical-align: middle;
@@ -254,7 +281,7 @@
             padding: 2px 5px;
             border-radius: 4px;
             display: inline-block;
-            margin-top: 2px;
+            margin-top: 3px;
             font-weight: bold;
         }
 
@@ -313,24 +340,24 @@
 
         .actions-row {
             display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(130px, 1fr));
-            gap: 8px;
-            margin-bottom: 20px;
+            grid-template-columns: repeat(auto-fit, minmax(160px, 1fr));
+            gap: 10px;
+            margin-bottom: 10px;
         }
 
         .btn-act {
             background: white;
             border: 1px solid var(--border-color);
             color: var(--navy-main);
-            border-radius: 7px;
-            padding: 8px 12px;
-            font-size: 0.8rem;
-            font-weight: 600;
+            border-radius: 8px;
+            padding: 10px 14px;
+            font-size: 0.85rem;
+            font-weight: 700;
             cursor: pointer;
             display: flex;
             align-items: center;
             justify-content: center;
-            gap: 6px;
+            gap: 8px;
             transition: all 0.2s;
         }
 
@@ -354,7 +381,7 @@
             left: 0;
             width: 100%;
             height: 100%;
-            background: rgba(15, 23, 42, 0.6);
+            background: rgba(15, 23, 42, 0.65);
             backdrop-filter: blur(4px);
             display: none;
             align-items: center;
@@ -392,16 +419,16 @@
             font-size: 0.85rem;
             font-weight: 700;
             color: var(--orange-main);
-            margin: 12px 0 6px 0;
+            margin: 14px 0 6px 0;
             border-bottom: 1px dashed var(--border-color);
             padding-bottom: 4px;
         }
 
         .admin-grid {
             display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
+            grid-template-columns: repeat(auto-fit, minmax(130px, 1fr));
             gap: 8px;
-            margin-bottom: 10px;
+            margin-bottom: 8px;
         }
 
         .toast {
@@ -423,24 +450,34 @@
 <body>
 
 <div class="main-wrapper">
-    <!-- هدر برندینگ -->
+    <!-- هدر برندینگ + کنترل‌های مدیریتی -->
     <div class="brand-header">
-        <div class="brand-title">
-            <div class="brand-logo-shape">ع</div>
-            <div class="brand-text">
-                <h1>اطلس سازه</h1>
-                <p>سامانه جامع محاسبات و پیش‌فاکتور والپست و اتصالات</p>
+        <div class="header-top-row">
+            <div class="brand-title">
+                <div class="brand-logo-shape">ع</div>
+                <div class="brand-text">
+                    <h1>اطلس سازه</h1>
+                    <p>سامانه هوشمند قیمت‌گذاری والپست و اتصالات</p>
+                </div>
+            </div>
+
+            <!-- بخش دکمه‌های مدیریت و وضعیت در هدر -->
+            <div class="header-controls">
+                <div class="badge-status" id="userStatusBadge">وضعیت: مشتری</div>
+                <button class="btn-header" onclick="togglePartnerMode()">🔄 حالت همکار</button>
+                <button class="btn-header" onclick="openAdminModal()">⚙️ پنل مدیریت</button>
             </div>
         </div>
-        <div class="header-meta">
-            <div class="badge-status" id="userStatusBadge">وضعیت: مشتری</div>
-            <div class="sync-time" id="lastSyncTime">آخرین بروزرسانی: در حال بارگذاری...</div>
+
+        <div class="sync-bar">
+            <span>سیستم آنلاین اطلس سازه</span>
+            <span id="lastSyncTime">در حال اتصال...</span>
         </div>
     </div>
 
     <div class="content-body">
         <!-- فرم ورودی -->
-        <div class="section-title">محاسبه و افزودن قلم جدید</div>
+        <div class="section-title">محاسبه و افزودن به پیش‌فاکتور</div>
         <div class="form-card">
             <div class="grid-inputs">
                 <!-- انتخاب دسته بندی -->
@@ -449,12 +486,12 @@
                     <select id="prodCategory" onchange="handleCategoryChange()">
                         <option value="wallpost">والپست منقطع (محاسبه به قطعه)</option>
                         <option value="vador_end">وادار انتهایی U (محاسبه به شاخه)</option>
-                        <option value="vador_mid">وادار میانی H (محاسبه به شاخه + قید)</option>
-                        <option value="fittings">اتصالات و متعلقات (محاسبه به عدد)</option>
+                        <option value="vador_mid">وادار میانی H (محاسبه به شاخه)</option>
+                        <option value="fittings">اتصالات و متعلقات (۱۱ قلم استاندارد)</option>
                     </select>
                 </div>
 
-                <!-- فیلد اتصالات (مخفی در حالت اولیه) -->
+                <!-- انتخاب زیرنوع اتصال -->
                 <div class="form-group" id="groupFittingType" style="display: none; grid-column: span 2;">
                     <label>نوع اتصال</label>
                     <select id="fittingType">
@@ -497,14 +534,14 @@
                     </select>
                 </div>
 
-                <!-- تعداد مشترک -->
+                <!-- تعداد -->
                 <div class="form-group" id="grp_count">
                     <label id="lbl_count">تعداد (قطعه)</label>
                     <input type="number" id="item_count" value="100" min="1">
                 </div>
             </div>
 
-            <!-- چک باکس بدون ضدزنگ راست چین -->
+            <!-- گزینه بدون ضدزنگ -->
             <label class="checkbox-container" id="grp_antirust">
                 <input type="checkbox" id="chk_no_antirust">
                 <span>بدون ضدزنگ (کسر هزینه رنگ‌آمیزی)</span>
@@ -526,7 +563,6 @@
                             <th>شرح کالا</th>
                             <th>مشخصات / ابعاد</th>
                             <th>تعداد / شاخه</th>
-                            <th>وزن کل (kg)</th>
                             <th>قیمت واحد (تومان)</th>
                             <th>مبلغ کل (تومان)</th>
                             <th>عملیات</th>
@@ -534,7 +570,7 @@
                     </thead>
                     <tbody id="tableItemsBody">
                         <tr>
-                            <td colspan="8" style="padding: 20px; color: var(--text-muted);">هنوز آیتمی به لیست اضافه نشده است.</td>
+                            <td colspan="7" style="padding: 20px; color: var(--text-muted);">هنوز آیتمی به لیست اضافه نشده است.</td>
                         </tr>
                     </tbody>
                 </table>
@@ -547,33 +583,27 @@
                     <span class="summary-val" id="sumTotalCount">۰</span>
                 </div>
                 <div class="summary-item">
-                    <span class="summary-label">وزن کل سفارش:</span>
-                    <span class="summary-val" id="sumTotalWeight">۰ kg</span>
-                </div>
-                <div class="summary-item">
                     <span class="summary-label">مبلغ قابل پرداخت:</span>
                     <span class="summary-val total-price-val" id="sumTotalPrice">۰ تومان</span>
                 </div>
             </div>
         </div>
 
-        <!-- دکمه‌های عملیاتی -->
+        <!-- دکمه‌های پیش‌فاکتور -->
         <div class="actions-row">
             <button class="btn-act" onclick="copyInvoiceText()">📋 کپی متن پیش‌فاکتور</button>
             <button class="btn-act" onclick="exportPDF()">📄 خروجی PDF رسمی</button>
-            <button class="btn-act" onclick="openAdminModal()">⚙️ پنل مدیریت</button>
-            <button class="btn-act" onclick="togglePartnerMode()">🔄 تغییر وضعیت (همکار/مشتری)</button>
-            <button class="btn-act danger-btn" onclick="clearAllOrders()">🗑️ پاک کردن لیست</button>
+            <button class="btn-act danger-btn" onclick="clearAllOrders()">🗑️ پاک کردن کل لیست</button>
         </div>
     </div>
 </div>
 
-<!-- مدال تنظیمات مدیریت -->
+<!-- مدال پنل مدیریت (رمز 1132) -->
 <div class="modal-overlay" id="adminModal">
     <div class="modal-card">
         <div class="modal-header">
             <h3>⚙️ تنظیمات نرخ پایه و ضرایب (اطلس سازه)</h3>
-            <button onclick="closeAdminModal()" style="border:none;background:none;font-size:1.2rem;cursor:pointer;">✕</button>
+            <button onclick="closeAdminModal()" style="border:none;background:none;font-size:1.3rem;cursor:pointer;">✕</button>
         </div>
         
         <div class="admin-section-title">قیمت مواد اولیه و خدمات (تومان به ازای کیلوگرم/عدد)</div>
@@ -653,20 +683,13 @@
 
     function formatJalaliDateTime(dateObj) {
         if (!dateObj) dateObj = new Date();
-        const dateStr = new Intl.DateTimeFormat('fa-IR', {
-            year: 'numeric',
-            month: '2-digit',
-            day: '2-digit'
-        }).format(dateObj);
-
-        const timeStr = new Intl.DateTimeFormat('fa-IR', {
-            hour: '2-digit',
-            minute: '2-digit',
-            second: '2-digit',
-            hour12: false
-        }).format(dateObj);
-
-        return `${dateStr} - ${timeStr}`;
+        try {
+            const dateStr = new Intl.DateTimeFormat('fa-IR', { year: 'numeric', month: '2-digit', day: '2-digit' }).format(dateObj);
+            const timeStr = new Intl.DateTimeFormat('fa-IR', { hour: '2-digit', minute: '2-digit', second: '2-digit', hour12: false }).format(dateObj);
+            return `${dateStr} - ${timeStr}`;
+        } catch (e) {
+            return new Date().toLocaleDateString('fa-IR');
+        }
     }
 
     function showToast(msg) {
@@ -688,7 +711,7 @@
                 }
             }
         } catch (e) {
-            console.log("آفلاین یا خطا در خواندن از ابر:", e);
+            console.log("استفاده از حافظه پیش‌فرض:", e);
         }
         
         const updateText = appSettings.lastUpdated || formatJalaliDateTime(new Date());
@@ -709,7 +732,7 @@
             });
             showToast("تنظیمات با سرور ابری همگام شد.");
         } catch (e) {
-            showToast("خطا در همگام‌سازی آنلاین.");
+            showToast("ذخیره در سیستم محلی انجام شد.");
         }
     }
 
@@ -772,7 +795,6 @@
             name = fitSelect.options[fitSelect.selectedIndex].text;
             specs = 'اتصال استاندارد';
             unitCost = appSettings.fittings[fitKey] || 0;
-            weightUnit = 0;
         } else {
             const w = parseFloat(document.getElementById('dim_w').value) || 0;
             const f = parseFloat(document.getElementById('dim_f').value) || 0;
@@ -796,42 +818,4 @@
                 weightUnit = ((w + 2 * f) * l * t * 7.9) / 10000;
                 const arCost = noAntiRust ? 0 : appSettings.ar_vador;
                 unitCost = (weightUnit * (sheetPricePerKg + appSettings.labor)) + arCost;
-            } else if (cat === 'vador_mid') {
-                name = 'وادار میانی (H)';
-                specs = `W:${w} F:${f} L:${l} cm - ضخامت ${t} (${sheetName})`;
-                const totalDevLen = l + (Math.floor(l / 100) * 40);
-                weightUnit = ((w + 2 * f) * totalDevLen * t * 7.9) / 10000;
-                const arCost = noAntiRust ? 0 : appSettings.ar_vador;
-                unitCost = (weightUnit * (sheetPricePerKg + appSettings.labor)) + arCost;
-            }
-
-            if (noAntiRust) specs += ' | بدون ضدزنگ';
-        }
-
-        if (hasDiscount) {
-            unitCost = unitCost * (1 - (discRate / 100));
-        }
-
-        const partnerFactor = isPartner ? 1.00 : 1.04;
-        unitCost = unitCost * partnerFactor;
-
-        const finalUnitPrice = Math.ceil(unitCost / 500) * 500;
-        const totalWeight = weightUnit * count;
-        const totalPrice = finalUnitPrice * count;
-
-        orders.push({
-            name,
-            specs,
-            count,
-            weight: totalWeight,
-            unitPrice: finalUnitPrice,
-            totalPrice: totalPrice,
-            hasDiscount: hasDiscount
-        });
-
-        renderTable();
-        showToast("به لیست پیش‌فاکتور افزوده شد.");
-    }
-
-    function renderTable() {
-        const tbody = document.getElementById('tableItemsBody');
+            } else if (
