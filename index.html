@@ -818,4 +818,219 @@
                 weightUnit = ((w + 2 * f) * l * t * 7.9) / 10000;
                 const arCost = noAntiRust ? 0 : appSettings.ar_vador;
                 unitCost = (weightUnit * (sheetPricePerKg + appSettings.labor)) + arCost;
-            } else if (
+            } else if (cat === 'vador_mid') {
+                name = 'وادار میانی (H)';
+                specs = `W:${w} F:${f} L:${l} cm - ضخامت ${t} (${sheetName})`;
+                const totalDevLen = l + (Math.floor(l / 100) * 40);
+                weightUnit = ((w + 2 * f) * totalDevLen * t * 7.9) / 10000;
+                const arCost = noAntiRust ? 0 : appSettings.ar_vador;
+                unitCost = (weightUnit * (sheetPricePerKg + appSettings.labor)) + arCost;
+            }
+
+            if (noAntiRust) specs += ' | بدون ضدزنگ';
+        }
+
+        if (hasDiscount) {
+            unitCost = unitCost * (1 - (discRate / 100));
+        }
+
+        const partnerFactor = isPartner ? 1.00 : 1.04;
+        unitCost = unitCost * partnerFactor;
+
+        const finalUnitPrice = Math.ceil(unitCost / 500) * 500;
+        const totalPrice = finalUnitPrice * count;
+
+        orders.push({
+            name,
+            specs,
+            count,
+            unitPrice: finalUnitPrice,
+            totalPrice: totalPrice,
+            hasDiscount: hasDiscount
+        });
+
+        renderTable();
+        showToast("آیتم افزوده شد.");
+    }
+
+    function renderTable() {
+        const tbody = document.getElementById('tableItemsBody');
+        if (orders.length === 0) {
+            tbody.innerHTML = `<tr><td colspan="7" style="padding: 20px; color: var(--text-muted);">هنوز آیتمی به لیست اضافه نشده است.</td></tr>`;
+            document.getElementById('sumTotalCount').innerText = '۰';
+            document.getElementById('sumTotalPrice').innerText = '۰ تومان';
+            return;
+        }
+
+        tbody.innerHTML = '';
+        let totalCount = 0;
+        let totalPrice = 0;
+
+        orders.forEach((item, index) => {
+            totalCount += item.count;
+            totalPrice += item.totalPrice;
+
+            const discBadge = item.hasDiscount ? `<br><span class="badge-discount">تخفیف اعمال شد</span>` : '';
+
+            tbody.innerHTML += `
+                <tr>
+                    <td>${index + 1}</td>
+                    <td><strong>${item.name}</strong>${discBadge}</td>
+                    <td>${item.specs}</td>
+                    <td><strong>${item.count.toLocaleString()}</strong></td>
+                    <td>${item.unitPrice.toLocaleString()}</td>
+                    <td><strong>${item.totalPrice.toLocaleString()}</strong></td>
+                    <td>
+                        <button class="btn-del-item" onclick="deleteOrderItem(${index})" title="حذف">✕</button>
+                    </td>
+                </tr>
+            `;
+        });
+
+        document.getElementById('sumTotalCount').innerText = totalCount.toLocaleString();
+        document.getElementById('sumTotalPrice').innerText = `${totalPrice.toLocaleString()} تومان`;
+    }
+
+    function deleteOrderItem(index) {
+        orders.splice(index, 1);
+        renderTable();
+    }
+
+    function clearAllOrders() {
+        if (orders.length === 0) return;
+        if (confirm("آیا از پاک کردن کل پیش‌فاکتور اطمینان دارید؟")) {
+            orders = [];
+            renderTable();
+            showToast("لیست خالی شد.");
+        }
+    }
+
+    function togglePartnerMode() {
+        const pass = prompt("رمز عبور همکار را وارد کنید:");
+        if (pass === '2244') {
+            isPartner = !isPartner;
+            const badge = document.getElementById('userStatusBadge');
+            if (isPartner) {
+                badge.innerText = "وضعیت: همکار";
+                badge.style.background = "#ea580c";
+                badge.style.color = "#ffffff";
+                showToast("حالت همکار فعال شد.");
+            } else {
+                badge.innerText = "وضعیت: مشتری";
+                badge.style.background = "rgba(249, 115, 22, 0.2)";
+                badge.style.color = "#fdba74";
+                showToast("حالت مشتری فعال شد.");
+            }
+        } else if (pass !== null) {
+            alert("رمز عبور اشتباه است!");
+        }
+    }
+
+    function openAdminModal() {
+        const pass = prompt("رمز عبور پنل مدیریت:");
+        if (pass === '1132') {
+            document.getElementById('adm_st37').value = appSettings.st37;
+            document.getElementById('adm_galv').value = appSettings.galv;
+            document.getElementById('adm_labor').value = appSettings.labor;
+            document.getElementById('adm_ar_wallpost').value = appSettings.ar_wallpost;
+            document.getElementById('adm_ar_vador').value = appSettings.ar_vador;
+
+            const f = appSettings.fittings;
+            document.getElementById('adm_fit_girandeh').value = f.girandeh;
+            document.getElementById('adm_fit_ghollab').value = f.ghollab;
+            document.getElementById('adm_fit_bastar_5_5').value = f.bastar_5_5;
+            document.getElementById('adm_fit_bastar_11').value = f.bastar_11;
+            document.getElementById('adm_fit_bastar_15').value = f.bastar_15;
+            document.getElementById('adm_fit_pich_boltex').value = f.pich_boltex;
+            document.getElementById('adm_fit_pich_rool').value = f.pich_rool;
+            document.getElementById('adm_fit_rollbolt_12').value = f.rollbolt_12;
+            document.getElementById('adm_fit_bast_sabt').value = f.bast_sabt;
+            document.getElementById('adm_fit_bast_radikali').value = f.bast_radikali;
+            document.getElementById('adm_fit_plate_25_15').value = f.plate_25_15;
+
+            const d = appSettings.discounts;
+            document.getElementById('adm_d100').value = d.d100;
+            document.getElementById('adm_d200').value = d.d200;
+            document.getElementById('adm_d300').value = d.d300;
+            document.getElementById('adm_d500').value = d.d500;
+            document.getElementById('adm_d1000').value = d.d1000;
+
+            document.getElementById('adminModal').style.display = 'flex';
+        } else if (pass !== null) {
+            alert("رمز عبور مدیریت اشتباه است!");
+        }
+    }
+
+    function closeAdminModal() {
+        document.getElementById('adminModal').style.display = 'none';
+    }
+
+    function saveAdminSettings() {
+        appSettings.st37 = parseFloat(document.getElementById('adm_st37').value) || 0;
+        appSettings.galv = parseFloat(document.getElementById('adm_galv').value) || 0;
+        appSettings.labor = parseFloat(document.getElementById('adm_labor').value) || 0;
+        appSettings.ar_wallpost = parseFloat(document.getElementById('adm_ar_wallpost').value) || 0;
+        appSettings.ar_vador = parseFloat(document.getElementById('adm_ar_vador').value) || 0;
+
+        appSettings.fittings = {
+            girandeh: parseFloat(document.getElementById('adm_fit_girandeh').value) || 0,
+            ghollab: parseFloat(document.getElementById('adm_fit_ghollab').value) || 0,
+            bastar_5_5: parseFloat(document.getElementById('adm_fit_bastar_5_5').value) || 0,
+            bastar_11: parseFloat(document.getElementById('adm_fit_bastar_11').value) || 0,
+            bastar_15: parseFloat(document.getElementById('adm_fit_bastar_15').value) || 0,
+            pich_boltex: parseFloat(document.getElementById('adm_fit_pich_boltex').value) || 0,
+            pich_rool: parseFloat(document.getElementById('adm_fit_pich_rool').value) || 0,
+            rollbolt_12: parseFloat(document.getElementById('adm_fit_rollbolt_12').value) || 0,
+            bast_sabt: parseFloat(document.getElementById('adm_fit_bast_sabt').value) || 0,
+            bast_radikali: parseFloat(document.getElementById('adm_fit_bast_radikali').value) || 0,
+            plate_25_15: parseFloat(document.getElementById('adm_fit_plate_25_15').value) || 0
+        };
+
+        appSettings.discounts = {
+            d100: parseFloat(document.getElementById('adm_d100').value) || 0,
+            d200: parseFloat(document.getElementById('adm_d200').value) || 0,
+            d300: parseFloat(document.getElementById('adm_d300').value) || 0,
+            d500: parseFloat(document.getElementById('adm_d500').value) || 0,
+            d1000: parseFloat(document.getElementById('adm_d1000').value) || 0
+        };
+
+        closeAdminModal();
+        syncToCloud();
+    }
+
+    function copyInvoiceText() {
+        if (orders.length === 0) { alert("پیش‌فاکتور خالی است."); return; }
+        let txt = `📄 پیش‌فاکتور رسمی اطلس سازه\n📅 تاریخ: ${formatJalaliDateTime(new Date())}\n----------------------------------\n`;
+        orders.forEach((o, i) => {
+            txt += `${i+1}. ${o.name} | مشخصات: ${o.specs} | تعداد: ${o.count} | فی: ${o.unitPrice.toLocaleString()} تومان | کل: ${o.totalPrice.toLocaleString()} تومان\n`;
+        });
+        txt += `----------------------------------\n`;
+        txt += `مبلغ قابل پرداخت: ${document.getElementById('sumTotalPrice').innerText}\n`;
+        txt += `اطلس سازه - تامین‌کننده تخصصی والپست و اتصالات نوین`;
+
+        navigator.clipboard.writeText(txt).then(() => {
+            showToast("متن پیش‌فاکتور کپی شد.");
+        });
+    }
+
+    function exportPDF() {
+        if (orders.length === 0) { alert("پیش‌فاکتور خالی است."); return; }
+        const element = document.getElementById('invoice-print-area');
+        const opt = {
+            margin:       10,
+            filename:     'Atlas-Sazeh-Invoice.pdf',
+            image:        { type: 'jpeg', quality: 0.98 },
+            html2canvas:  { scale: 2 },
+            jsPDF:        { unit: 'mm', format: 'a4', orientation: 'portrait' }
+        };
+        html2pdf().set(opt).from(element).save();
+    }
+
+    // لود اولیه
+    window.addEventListener('DOMContentLoaded', () => {
+        handleCategoryChange();
+        loadCloudSettings();
+    });
+</script>
+</body>
+</html>
