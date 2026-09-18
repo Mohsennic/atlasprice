@@ -3,261 +3,835 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>اطلس سازه | سامانه محاسبات پیشرفته</title>
+    <title>اطلس سازه | محاسبه‌گر پیشرفته قیمت والپست و اتصالات</title>
     <link href="https://cdn.jsdelivr.net/gh/rastikerdar/vazirmatn@v33.003/Vazirmatn-font-face.css" rel="stylesheet">
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
     <style>
-        :root { --navy: #0f172a; --orange: #f97316; --bg: #f1f5f9; --red: #e11d48; --card: #ffffff; }
-        * { font-family: 'Vazirmatn', sans-serif; box-sizing: border-box; }
-        body { background: var(--bg); display: flex; justify-content: center; padding: 15px; margin: 0; }
-        .container { width: 100%; max-width: 500px; }
-        .card { background: var(--card); border-radius: 20px; padding: 20px; box-shadow: 0 4px 15px rgba(0,0,0,0.08); margin-bottom: 20px; }
-        
-        .header-panel { background: var(--navy); color: white; padding: 20px; border-radius: 20px; text-align: center; margin-bottom: 20px; }
-        .badge { font-size: 0.8rem; color: var(--orange); font-weight: bold; margin-bottom: 5px; }
-        
-        .tabs { display: flex; gap: 8px; margin-bottom: 15px; }
-        .tab-btn { flex: 1; padding: 10px; border: 2px solid var(--navy); background: white; color: var(--navy); border-radius: 12px; font-weight: bold; cursor: pointer; transition: 0.2s; }
-        .tab-btn.active { background: var(--navy); color: white; }
-        
-        .grid-inputs { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; margin-bottom: 15px; }
-        input, select { width: 100%; padding: 12px; border: 1.5px solid #e2e8f0; border-radius: 10px; background: #f8fafc; text-align: center; }
-        
-        .btn-main { width: 100%; padding: 14px; border: none; border-radius: 12px; background: var(--orange); color: white; font-weight: bold; cursor: pointer; }
-        .btn-main:hover { opacity: 0.9; }
-        
-        .result-box { background: var(--navy); color: white; padding: 15px; border-radius: 15px; text-align: center; margin: 15px 0; }
-        
-        .order-item { display: flex; justify-content: space-between; align-items: center; padding: 10px 0; border-bottom: 1px dashed #cbd5e1; font-size: 0.9rem; }
-        .btn-del { background: #fee2e2; color: var(--red); border: none; border-radius: 6px; width: 28px; height: 28px; cursor: pointer; }
-        
-        /* مودال */
-        .modal { display: none; position: fixed; top:0; left:0; width: 100%; height: 100%; background: rgba(15, 23, 42, 0.8); z-index: 1000; justify-content: center; align-items: center; padding: 15px; }
-        .modal-content { background: white; padding: 20px; width: 100%; max-width: 450px; border-radius: 20px; max-height: 90vh; overflow-y: auto; }
-        .admin-box { background: #f8fafc; padding: 15px; border-radius: 12px; margin-bottom: 15px; border: 1px solid #e2e8f0; }
-        .sync-status { font-size: 0.7rem; color: #38bdf8; margin-top: 10px; }
+        :root {
+            --navy-dark: #0f172a;
+            --navy-main: #1e293b;
+            --navy-light: #334155;
+            --orange-main: #f97316;
+            --orange-hover: #ea580c;
+            --bg-light: #f8fafc;
+            --card-bg: #ffffff;
+            --text-dark: #0f172a;
+            --text-muted: #64748b;
+            --border-color: #e2e8f0;
+            --danger: #ef4444;
+            --success: #10b981;
+        }
+
+        * {
+            box-sizing: border-box;
+            font-family: 'Vazirmatn', sans-serif;
+            margin: 0;
+            padding: 0;
+        }
+
+        body {
+            background-color: #f1f5f9;
+            color: var(--text-dark);
+            padding: 15px 10px;
+            direction: rtl;
+        }
+
+        .main-wrapper {
+            max-width: 950px;
+            margin: 0 auto;
+            background: var(--card-bg);
+            border-radius: 16px;
+            box-shadow: 0 10px 25px rgba(15, 23, 42, 0.08);
+            border: 1px solid var(--border-color);
+            overflow: hidden;
+        }
+
+        .brand-header {
+            background: linear-gradient(135deg, var(--navy-dark) 0%, var(--navy-main) 100%);
+            color: white;
+            padding: 20px 25px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            border-bottom: 4px solid var(--orange-main);
+            flex-wrap: wrap;
+            gap: 15px;
+        }
+
+        .brand-title {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+
+        .brand-logo-shape {
+            width: 44px;
+            height: 44px;
+            background: var(--orange-main);
+            border-radius: 10px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: 900;
+            font-size: 22px;
+            color: white;
+            box-shadow: 0 4px 10px rgba(249, 115, 22, 0.35);
+        }
+
+        .brand-text h1 {
+            font-size: 1.3rem;
+            font-weight: 800;
+        }
+
+        .brand-text p {
+            font-size: 0.75rem;
+            color: #94a3b8;
+            margin-top: 2px;
+        }
+
+        .header-meta {
+            display: flex;
+            flex-direction: column;
+            align-items: flex-end;
+            gap: 5px;
+        }
+
+        .badge-status {
+            background: rgba(255, 255, 255, 0.1);
+            padding: 4px 12px;
+            border-radius: 20px;
+            font-size: 0.75rem;
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            color: #e2e8f0;
+        }
+
+        .sync-time {
+            font-size: 0.7rem;
+            color: #cbd5e1;
+            direction: ltr;
+        }
+
+        .content-body {
+            padding: 20px;
+        }
+
+        .section-title {
+            font-size: 0.95rem;
+            font-weight: 700;
+            color: var(--navy-main);
+            margin-bottom: 12px;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            border-right: 4px solid var(--orange-main);
+            padding-right: 10px;
+        }
+
+        .form-card {
+            background: var(--bg-light);
+            border: 1px solid var(--border-color);
+            border-radius: 12px;
+            padding: 16px;
+            margin-bottom: 20px;
+        }
+
+        .grid-inputs {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
+            gap: 10px;
+            margin-bottom: 12px;
+        }
+
+        .form-group {
+            display: flex;
+            flex-direction: column;
+            gap: 4px;
+        }
+
+        .form-group label {
+            font-size: 0.75rem;
+            font-weight: 600;
+            color: var(--navy-light);
+        }
+
+        input[type="number"], select {
+            width: 100%;
+            padding: 8px 10px;
+            border: 1px solid #cbd5e1;
+            border-radius: 7px;
+            font-size: 0.85rem;
+            background: white;
+            color: var(--text-dark);
+            outline: none;
+            transition: all 0.2s;
+        }
+
+        input[type="number"]:focus, select:focus {
+            border-color: var(--orange-main);
+            box-shadow: 0 0 0 3px rgba(249, 115, 22, 0.15);
+        }
+
+        .checkbox-container {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            margin: 10px 0;
+            cursor: pointer;
+            user-select: none;
+            font-size: 0.8rem;
+            font-weight: 600;
+            color: var(--navy-main);
+            justify-content: flex-start;
+        }
+
+        .checkbox-container input {
+            width: 16px;
+            height: 16px;
+            accent-color: var(--orange-main);
+            cursor: pointer;
+        }
+
+        .btn-add {
+            background: var(--orange-main);
+            color: white;
+            border: none;
+            border-radius: 8px;
+            padding: 11px 20px;
+            font-weight: 700;
+            font-size: 0.9rem;
+            cursor: pointer;
+            width: 100%;
+            transition: all 0.2s;
+            box-shadow: 0 4px 10px rgba(249, 115, 22, 0.25);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 8px;
+        }
+
+        .btn-add:hover {
+            background: var(--orange-hover);
+        }
+
+        .table-container {
+            overflow-x: auto;
+            border: 1px solid var(--border-color);
+            border-radius: 10px;
+            margin-bottom: 20px;
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            text-align: center;
+            font-size: 0.8rem;
+        }
+
+        th {
+            background: var(--navy-dark);
+            color: white;
+            padding: 10px 6px;
+            font-weight: 600;
+            border-bottom: 2px solid var(--orange-main);
+            white-space: nowrap;
+        }
+
+        td {
+            padding: 8px 6px;
+            border-bottom: 1px solid var(--border-color);
+            color: var(--text-dark);
+            vertical-align: middle;
+        }
+
+        tr:nth-child(even) td {
+            background-color: #f8fafc;
+        }
+
+        .badge-discount {
+            background: #dcfce7;
+            color: #15803d;
+            font-size: 0.65rem;
+            padding: 2px 5px;
+            border-radius: 4px;
+            display: inline-block;
+            margin-top: 2px;
+            font-weight: bold;
+        }
+
+        .btn-del-item {
+            background: #fef2f2;
+            color: var(--danger);
+            border: 1px solid #fecaca;
+            border-radius: 5px;
+            width: 26px;
+            height: 26px;
+            cursor: pointer;
+            font-weight: bold;
+            transition: all 0.2s;
+        }
+
+        .btn-del-item:hover {
+            background: var(--danger);
+            color: white;
+        }
+
+        .summary-box {
+            background: linear-gradient(135deg, #fff7ed 0%, #ffedd5 100%);
+            border: 1px dashed var(--orange-main);
+            border-radius: 10px;
+            padding: 15px 20px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 15px;
+            flex-wrap: wrap;
+            gap: 10px;
+        }
+
+        .summary-item {
+            display: flex;
+            flex-direction: column;
+            gap: 2px;
+        }
+
+        .summary-label {
+            font-size: 0.75rem;
+            color: var(--text-muted);
+            font-weight: 600;
+        }
+
+        .summary-val {
+            font-size: 1.1rem;
+            font-weight: 800;
+            color: var(--navy-dark);
+        }
+
+        .total-price-val {
+            font-size: 1.35rem;
+            color: #c2410c;
+        }
+
+        .actions-row {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(130px, 1fr));
+            gap: 8px;
+            margin-bottom: 20px;
+        }
+
+        .btn-act {
+            background: white;
+            border: 1px solid var(--border-color);
+            color: var(--navy-main);
+            border-radius: 7px;
+            padding: 8px 12px;
+            font-size: 0.8rem;
+            font-weight: 600;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 6px;
+            transition: all 0.2s;
+        }
+
+        .btn-act:hover {
+            background: #f1f5f9;
+            border-color: #cbd5e1;
+        }
+
+        .btn-act.danger-btn {
+            color: var(--danger);
+            border-color: #fecaca;
+        }
+        .btn-act.danger-btn:hover {
+            background: #fef2f2;
+        }
+
+        /* مدال پنل مدیریت */
+        .modal-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(15, 23, 42, 0.6);
+            backdrop-filter: blur(4px);
+            display: none;
+            align-items: center;
+            justify-content: center;
+            z-index: 1000;
+            padding: 15px;
+        }
+
+        .modal-card {
+            background: white;
+            border-radius: 14px;
+            width: 100%;
+            max-width: 650px;
+            max-height: 90vh;
+            overflow-y: auto;
+            padding: 20px;
+            box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.2);
+        }
+
+        .modal-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            border-bottom: 2px solid #f1f5f9;
+            padding-bottom: 10px;
+            margin-bottom: 15px;
+        }
+
+        .modal-header h3 {
+            font-size: 1.1rem;
+            color: var(--navy-dark);
+        }
+
+        .admin-section-title {
+            font-size: 0.85rem;
+            font-weight: 700;
+            color: var(--orange-main);
+            margin: 12px 0 6px 0;
+            border-bottom: 1px dashed var(--border-color);
+            padding-bottom: 4px;
+        }
+
+        .admin-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
+            gap: 8px;
+            margin-bottom: 10px;
+        }
+
+        .toast {
+            position: fixed;
+            bottom: 20px;
+            left: 50%;
+            transform: translateX(-50%);
+            background: var(--navy-dark);
+            color: white;
+            padding: 10px 20px;
+            border-radius: 8px;
+            font-size: 0.85rem;
+            box-shadow: 0 5px 15px rgba(0,0,0,0.3);
+            display: none;
+            z-index: 2000;
+        }
     </style>
 </head>
 <body>
 
-<div class="container">
-    <div class="header-panel">
-        <h2 style="margin:0;">اطلس سازه</h2>
-        <div id="badge" class="badge">وضعیت: مشتری</div>
-        <div id="syncStatus" class="sync-status">در حال اتصال به فضای ابری...</div>
-    </div>
-
-    <div class="tabs">
-        <button id="tabWallpost" class="tab-btn active" onclick="switchTab('wallpost')">والپست و وادار</button>
-        <button id="tabAccessory" class="tab-btn" onclick="switchTab('accessory')">اتصالات</button>
-    </div>
-
-    <!-- فرم والپست -->
-    <div class="card" id="sectionWallpost">
-        <div class="grid-inputs">
-            <div style="grid-column: span 2">
-                <select id="prodType" onchange="handleProductChange()">
-                    <option value="wallpost">والپست منقطع (ساده)</option>
-                    <option value="vador_end">وادار انتهایی</option>
-                    <option value="vador_mid">وادار میانی</option>
-                </select>
+<div class="main-wrapper">
+    <!-- هدر برندینگ -->
+    <div class="brand-header">
+        <div class="brand-title">
+            <div class="brand-logo-shape">ع</div>
+            <div class="brand-text">
+                <h1>اطلس سازه</h1>
+                <p>سامانه جامع محاسبات و پیش‌فاکتور والپست و اتصالات</p>
             </div>
-            <div><label style="font-size:0.7rem">عرض (cm)</label><input type="number" id="w" value="15" oninput="calc()"></div>
-            <div><label style="font-size:0.7rem">بال (cm)</label><input type="number" id="f" value="7" oninput="calc()"></div>
-            <div><label style="font-size:0.7rem">طول (cm)</label><input type="number" id="l" value="320" oninput="calc()"></div>
-            <div><label style="font-size:0.7rem">ضخامت (mm)</label><input type="number" id="t" value="2" oninput="calc()"></div>
-            <div style="grid-column: span 2"><select id="sheetType" onchange="calc()"><option value="st37">ورق سیاه (st37)</option><option value="galv">ورق گالوانیزه</option></select></div>
-            <div style="grid-column: span 2"><input type="number" id="count" value="10" placeholder="تعداد شاخه" oninput="calc()"></div>
-            <label style="grid-column:span 2; display:flex; align-items:center; gap:10px;"><input type="checkbox" id="noAntiRust" onchange="calc()"> بدون ضد زنگ</label>
         </div>
-        <div class="result-box">
-            <div id="resUnit" style="font-size:0.8rem">قیمت واحد: ۰</div>
-            <div id="resTotal" style="font-size:1.2rem; color:#fbbf24; font-weight:bold;">۰ تومان</div>
+        <div class="header-meta">
+            <div class="badge-status" id="userStatusBadge">وضعیت: مشتری</div>
+            <div class="sync-time" id="lastSyncTime">آخرین بروزرسانی: در حال بارگذاری...</div>
         </div>
-        <button class="btn-main" onclick="addWallpostOrder()">➕ افزودن به لیست</button>
     </div>
 
-    <!-- فرم اتصالات -->
-    <div class="card" id="sectionAccessory" style="display: none;">
-        <div class="grid-inputs">
-            <div style="grid-column: span 2">
-                <select id="accType" onchange="calcAccessory()">
-                    <option value="wire_clip">گیره گالوانیزه</option>
-                    <option value="hook">قلاب</option>
-                    <option value="bed_rebar_55">میلگرد بستر ۵.۵ سانت</option>
-                    <option value="bed_rebar_11">میلگرد بستر ۱۱ سانت</option>
-                    <option value="bed_rebar_15">میلگرد بستر ۱۵ سانت</option>
-                    <option value="rollbolt_12_10">رول بولت</option>
-                    <option value="boltex_6">بولتکس</option>
-                    <option value="flat_tie">بست تخت</option>
-                    <option value="radical_tie">بست رادیکالی</option>
-                    <option value="screw_plug">پیچ و رولپلاک</option>
-                    <option value="plate">صفحه پلیت</option>
-                </select>
-            </div>
-            <div style="grid-column: span 2"><input type="number" id="accCount" value="100" oninput="calcAccessory()"></div>
-        </div>
-        <div class="result-box">
-            <div id="accResUnit" style="font-size:0.8rem">قیمت واحد: ۰</div>
-            <div id="accResTotal" style="font-size:1.2rem; color:#fbbf24; font-weight:bold;">۰ تومان</div>
-        </div>
-        <button class="btn-main" onclick="addAccessoryOrder()">➕ افزودن اتصال</button>
-    </div>
-
-    <div class="card" id="orderList"></div>
-    <div style="display:flex; gap:10px;">
-        <button id="copyBtn" class="btn-main" style="background:#059669; display:none;" onclick="copyEitaa()">📋 کپی پیش‌فاکتور</button>
-    </div>
-
-    <div style="text-align:center; margin-top:20px; color:#64748b; font-size:0.8rem;">
-        <span onclick="openAdmin()" style="cursor:pointer;">⚙️ تنظیمات مدیریت</span> | 
-        <span onclick="toggleMode()" style="cursor:pointer;">👤 تغییر وضعیت</span>
-    </div>
-</div>
-
-<!-- مودال مدیریت -->
-<div id="modal" class="modal">
-    <div class="modal-content">
-        <h3 style="text-align:center;">پنل مدیریت و همگام‌سازی</h3>
-        <div class="admin-box">
+    <div class="content-body">
+        <!-- فرم ورودی -->
+        <div class="section-title">محاسبه و افزودن قلم جدید</div>
+        <div class="form-card">
             <div class="grid-inputs">
-                <div><label>ورق سیاه</label><input type="number" id="sSt37"></div>
-                <div><label>ورق گالوا</label><input type="number" id="sGalv"></div>
-                <div><label>مزد ساخت</label><input type="number" id="sLabor"></div>
-                <div><label>ضدزنگ والپست</label><input type="number" id="sAntiRustWallpost"></div>
+                <!-- انتخاب دسته بندی -->
+                <div class="form-group" style="grid-column: span 2;">
+                    <label>نوع کالا / بخش محاسباتی</label>
+                    <select id="prodCategory" onchange="handleCategoryChange()">
+                        <option value="wallpost">والپست منقطع (محاسبه به قطعه)</option>
+                        <option value="vador_end">وادار انتهایی U (محاسبه به شاخه)</option>
+                        <option value="vador_mid">وادار میانی H (محاسبه به شاخه + قید)</option>
+                        <option value="fittings">اتصالات و متعلقات (محاسبه به عدد)</option>
+                    </select>
+                </div>
+
+                <!-- فیلد اتصالات (مخفی در حالت اولیه) -->
+                <div class="form-group" id="groupFittingType" style="display: none; grid-column: span 2;">
+                    <label>نوع اتصال</label>
+                    <select id="fittingType">
+                        <option value="girandeh">گیره</option>
+                        <option value="ghollab">قلاب</option>
+                        <option value="bastar_5_5">میلگرد بستر عرض ۵.۵ سانت</option>
+                        <option value="bastar_11">میلگرد بستر عرض ۱۱ سانت</option>
+                        <option value="bastar_15">میلگرد بستر عرض ۱۵ سانت</option>
+                        <option value="pich_boltex">پیچ بولتکس</option>
+                        <option value="pich_rool">پیچ و رول‌پلاک</option>
+                        <option value="rollbolt_12">رول‌بولت ۱۲ طول ۱۰ خارجی</option>
+                        <option value="bast_sabt">بست تخت (ثابت)</option>
+                        <option value="bast_radikali">بست رادیکالی</option>
+                        <option value="plate_25_15">صفحه پلیت ۲۵*۱۵ سانت</option>
+                    </select>
+                </div>
+
+                <!-- ابعاد ابعادی والپست و وادار -->
+                <div class="form-group dim-field" id="grp_w">
+                    <label>عرض (cm)</label>
+                    <input type="number" id="dim_w" value="15" min="1">
+                </div>
+                <div class="form-group dim-field" id="grp_f">
+                    <label>بال (cm)</label>
+                    <input type="number" id="dim_f" value="7" min="1">
+                </div>
+                <div class="form-group dim-field" id="grp_l">
+                    <label id="lbl_l">طول قطعه (cm)</label>
+                    <input type="number" id="dim_l" value="40" min="1">
+                </div>
+                <div class="form-group dim-field" id="grp_t">
+                    <label>ضخامت (mm)</label>
+                    <input type="number" id="dim_t" value="2" step="0.1" min="0.5">
+                </div>
+                <div class="form-group dim-field" id="grp_sheet">
+                    <label>نوع ورق</label>
+                    <select id="sheet_type">
+                        <option value="st37">سیاه (ST37)</option>
+                        <option value="galv">گالوانیزه</option>
+                    </select>
+                </div>
+
+                <!-- تعداد مشترک -->
+                <div class="form-group" id="grp_count">
+                    <label id="lbl_count">تعداد (قطعه)</label>
+                    <input type="number" id="item_count" value="100" min="1">
+                </div>
+            </div>
+
+            <!-- چک باکس بدون ضدزنگ راست چین -->
+            <label class="checkbox-container" id="grp_antirust">
+                <input type="checkbox" id="chk_no_antirust">
+                <span>بدون ضدزنگ (کسر هزینه رنگ‌آمیزی)</span>
+            </label>
+
+            <button class="btn-add" onclick="addItemToOrder()">
+                <span>➕</span> افزودن به لیست پیش‌فاکتور
+            </button>
+        </div>
+
+        <!-- جدول اقلام پیش‌فاکتور -->
+        <div id="invoice-print-area">
+            <div class="section-title">اقلام سفارش پیش‌فاکتور</div>
+            <div class="table-container">
+                <table>
+                    <thead>
+                        <tr>
+                            <th>#</th>
+                            <th>شرح کالا</th>
+                            <th>مشخصات / ابعاد</th>
+                            <th>تعداد / شاخه</th>
+                            <th>وزن کل (kg)</th>
+                            <th>قیمت واحد (تومان)</th>
+                            <th>مبلغ کل (تومان)</th>
+                            <th>عملیات</th>
+                        </tr>
+                    </thead>
+                    <tbody id="tableItemsBody">
+                        <tr>
+                            <td colspan="8" style="padding: 20px; color: var(--text-muted);">هنوز آیتمی به لیست اضافه نشده است.</td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+
+            <!-- باکس جمع کل -->
+            <div class="summary-box">
+                <div class="summary-item">
+                    <span class="summary-label">تعداد کل اقلام:</span>
+                    <span class="summary-val" id="sumTotalCount">۰</span>
+                </div>
+                <div class="summary-item">
+                    <span class="summary-label">وزن کل سفارش:</span>
+                    <span class="summary-val" id="sumTotalWeight">۰ kg</span>
+                </div>
+                <div class="summary-item">
+                    <span class="summary-label">مبلغ قابل پرداخت:</span>
+                    <span class="summary-val total-price-val" id="sumTotalPrice">۰ تومان</span>
+                </div>
             </div>
         </div>
-        <button class="btn-main" style="background:var(--navy)" onclick="saveSettings()">ذخیره و همگام‌سازی ابری</button>
+
+        <!-- دکمه‌های عملیاتی -->
+        <div class="actions-row">
+            <button class="btn-act" onclick="copyInvoiceText()">📋 کپی متن پیش‌فاکتور</button>
+            <button class="btn-act" onclick="exportPDF()">📄 خروجی PDF رسمی</button>
+            <button class="btn-act" onclick="openAdminModal()">⚙️ پنل مدیریت</button>
+            <button class="btn-act" onclick="togglePartnerMode()">🔄 تغییر وضعیت (همکار/مشتری)</button>
+            <button class="btn-act danger-btn" onclick="clearAllOrders()">🗑️ پاک کردن لیست</button>
+        </div>
     </div>
 </div>
+
+<!-- مدال تنظیمات مدیریت -->
+<div class="modal-overlay" id="adminModal">
+    <div class="modal-card">
+        <div class="modal-header">
+            <h3>⚙️ تنظیمات نرخ پایه و ضرایب (اطلس سازه)</h3>
+            <button onclick="closeAdminModal()" style="border:none;background:none;font-size:1.2rem;cursor:pointer;">✕</button>
+        </div>
+        
+        <div class="admin-section-title">قیمت مواد اولیه و خدمات (تومان به ازای کیلوگرم/عدد)</div>
+        <div class="admin-grid">
+            <div class="form-group"><label>ورق سیاه (kg)</label><input type="number" id="adm_st37"></div>
+            <div class="form-group"><label>ورق گالوانیزه (kg)</label><input type="number" id="adm_galv"></div>
+            <div class="form-group"><label>مزد ساخت (kg)</label><input type="number" id="adm_labor"></div>
+            <div class="form-group"><label>ضدزنگ والپست (قطعه)</label><input type="number" id="adm_ar_wallpost"></div>
+            <div class="form-group"><label>ضدزنگ وادار (شاخه)</label><input type="number" id="adm_ar_vador"></div>
+        </div>
+
+        <div class="admin-section-title">قیمت اتصالات و متعلقات ۱۱‌گانه (تومان)</div>
+        <div class="admin-grid">
+            <div class="form-group"><label>گیره</label><input type="number" id="adm_fit_girandeh"></div>
+            <div class="form-group"><label>قلاب</label><input type="number" id="adm_fit_ghollab"></div>
+            <div class="form-group"><label>بستر ۵.۵ سانت</label><input type="number" id="adm_fit_bastar_5_5"></div>
+            <div class="form-group"><label>بستر ۱۱ سانت</label><input type="number" id="adm_fit_bastar_11"></div>
+            <div class="form-group"><label>بستر ۱۵ سانت</label><input type="number" id="adm_fit_bastar_15"></div>
+            <div class="form-group"><label>پیچ بولتکس</label><input type="number" id="adm_fit_pich_boltex"></div>
+            <div class="form-group"><label>پیچ و رول‌پلاک</label><input type="number" id="adm_fit_pich_rool"></div>
+            <div class="form-group"><label>رول‌بولت ۱۲ (۱۰ سانت)</label><input type="number" id="adm_fit_rollbolt_12"></div>
+            <div class="form-group"><label>بست تخت (ثابت)</label><input type="number" id="adm_fit_bast_sabt"></div>
+            <div class="form-group"><label>بست رادیکالی</label><input type="number" id="adm_fit_bast_radikali"></div>
+            <div class="form-group"><label>صفحه پلیت ۲۵*۱۵</label><input type="number" id="adm_fit_plate_25_15"></div>
+        </div>
+
+        <div class="admin-section-title">درصد تخفیف‌های پلکانی تعدادی (درصد)</div>
+        <div class="admin-grid">
+            <div class="form-group"><label>۱۰۰ عدد (d100)</label><input type="number" id="adm_d100"></div>
+            <div class="form-group"><label>۲۰۰ عدد (d200)</label><input type="number" id="adm_d200"></div>
+            <div class="form-group"><label>۳۰۰ عدد (d300)</label><input type="number" id="adm_d300"></div>
+            <div class="form-group"><label>۵۰۰ عدد (d500)</label><input type="number" id="adm_d500"></div>
+            <div class="form-group"><label>۱۰۰۰ عدد (d1000)</label><input type="number" id="adm_d1000"></div>
+        </div>
+
+        <button class="btn-add" style="margin-top: 15px;" onclick="saveAdminSettings()">💾 ذخیره و همگام‌سازی ابری</button>
+    </div>
+</div>
+
+<div class="toast" id="toastBox">پیام سیستم</div>
 
 <script>
     const CLOUD_BIN_ID = '6aacef5bac6210605adb76b4';
     const CLOUD_MASTER_KEY = '$2a$10$YS.0unbKgsmiwKQBqMwLVehbD1mds2wcclc4tQtoL55QQY69dL/9q';
 
-    let settings = {
-        st37: 30000, galv: 38000, labor: 3500,
-        antiRustWallpost: 3000, antiRustVador: 25000,
-        d100: 1, d250: 2, d400: 3, d600: 4, d800: 5, d1000: 6,
-        p_wire_clip: 8500, p_hook: 7500, p_bed_rebar_55: 22000,
-        p_bed_rebar_11: 24000, p_bed_rebar_15: 27000, p_rollbolt_12_10: 19000,
-        p_boltex_6: 5500, p_flat_tie: 6000, p_radical_tie: 9500,
-        p_screw_plug: 3500, p_plate: 45000
-    };
-
+    let isPartner = false;
     let orders = [];
 
-    // --- منطق ابری ---
-    async function fetchFromCloud() {
-        try {
-            const res = await fetch(`https://api.jsonbin.io/v3/b/${CLOUD_BIN_ID}/latest`, { headers: {'X-Master-Key': CLOUD_MASTER_KEY} });
-            if(res.ok) {
-                const data = await res.json();
-                settings = data.record;
-                document.getElementById('syncStatus').innerText = "✅ همگام‌سازی انجام شد";
-                calc(); calcAccessory();
-            }
-        } catch(e) { document.getElementById('syncStatus').innerText = "⚠️ حالت آفلاین"; }
+    let appSettings = {
+        st37: 32000,
+        galv: 41000,
+        labor: 3500,
+        ar_wallpost: 3000,
+        ar_vador: 25000,
+        fittings: {
+            girandeh: 4500,
+            ghollab: 4500,
+            bastar_5_5: 18000,
+            bastar_11: 22000,
+            bastar_15: 25000,
+            pich_boltex: 3200,
+            pich_rool: 1800,
+            rollbolt_12: 14500,
+            bast_sabt: 5500,
+            bast_radikali: 6500,
+            plate_25_15: 68000
+        },
+        discounts: {
+            d100: 2,
+            d200: 4,
+            d300: 6,
+            d500: 8,
+            d1000: 10
+        },
+        lastUpdated: null
+    };
+
+    function formatJalaliDateTime(dateObj) {
+        if (!dateObj) dateObj = new Date();
+        const dateStr = new Intl.DateTimeFormat('fa-IR', {
+            year: 'numeric',
+            month: '2-digit',
+            day: '2-digit'
+        }).format(dateObj);
+
+        const timeStr = new Intl.DateTimeFormat('fa-IR', {
+            hour: '2-digit',
+            minute: '2-digit',
+            second: '2-digit',
+            hour12: false
+        }).format(dateObj);
+
+        return `${dateStr} - ${timeStr}`;
     }
 
-    async function saveSettings() {
-        settings.st37 = parseInt(document.getElementById('sSt37').value);
-        settings.galv = parseInt(document.getElementById('sGalv').value);
-        settings.labor = parseInt(document.getElementById('sLabor').value);
-        settings.antiRustWallpost = parseInt(document.getElementById('sAntiRustWallpost').value);
+    function showToast(msg) {
+        const t = document.getElementById('toastBox');
+        t.innerText = msg;
+        t.style.display = 'block';
+        setTimeout(() => { t.style.display = 'none'; }, 3000);
+    }
+
+    async function loadCloudSettings() {
+        try {
+            const res = await fetch(`https://api.jsonbin.io/v3/b/${CLOUD_BIN_ID}/latest`, {
+                headers: { 'X-Master-Key': CLOUD_MASTER_KEY }
+            });
+            if (res.ok) {
+                const data = await res.json();
+                if (data.record && data.record.st37) {
+                    appSettings = { ...appSettings, ...data.record };
+                }
+            }
+        } catch (e) {
+            console.log("آفلاین یا خطا در خواندن از ابر:", e);
+        }
         
+        const updateText = appSettings.lastUpdated || formatJalaliDateTime(new Date());
+        document.getElementById('lastSyncTime').innerText = `آخرین بروزرسانی: ${updateText}`;
+    }
+
+    async function syncToCloud() {
+        appSettings.lastUpdated = formatJalaliDateTime(new Date());
+        document.getElementById('lastSyncTime').innerText = `آخرین بروزرسانی: ${appSettings.lastUpdated}`;
         try {
             await fetch(`https://api.jsonbin.io/v3/b/${CLOUD_BIN_ID}`, {
                 method: 'PUT',
-                headers: {'Content-Type': 'application/json', 'X-Master-Key': CLOUD_MASTER_KEY},
-                body: JSON.stringify(settings)
+                headers: {
+                    'Content-Type': 'application/json',
+                    'X-Master-Key': CLOUD_MASTER_KEY
+                },
+                body: JSON.stringify(appSettings)
             });
-            alert("تغییرات با موفقیت در فضای ابری ذخیره شد.");
-            document.getElementById('modal').style.display = 'none';
-        } catch(e) { alert("خطا در ذخیره‌سازی ابری"); }
+            showToast("تنظیمات با سرور ابری همگام شد.");
+        } catch (e) {
+            showToast("خطا در همگام‌سازی آنلاین.");
+        }
     }
 
-    // --- منطق اصلی (همان کدی که فرستادی) ---
-    function switchTab(tab) {
-        document.getElementById('sectionWallpost').style.display = (tab === 'wallpost') ? 'block' : 'none';
-        document.getElementById('sectionAccessory').style.display = (tab === 'accessory') ? 'block' : 'none';
-        document.getElementById('tabWallpost').className = 'tab-btn ' + (tab === 'wallpost' ? 'active' : '');
-        document.getElementById('tabAccessory').className = 'tab-btn ' + (tab === 'accessory' ? 'active' : '');
+    function handleCategoryChange() {
+        const cat = document.getElementById('prodCategory').value;
+        const dimFields = document.querySelectorAll('.dim-field');
+        const fittingGroup = document.getElementById('groupFittingType');
+        const antirustGroup = document.getElementById('grp_antirust');
+        const lblL = document.getElementById('lbl_l');
+        const lblCount = document.getElementById('lbl_count');
+
+        if (cat === 'fittings') {
+            dimFields.forEach(f => f.style.display = 'none');
+            antirustGroup.style.display = 'none';
+            fittingGroup.style.display = 'flex';
+            lblCount.innerText = 'تعداد (عدد)';
+        } else {
+            dimFields.forEach(f => f.style.display = 'flex');
+            antirustGroup.style.display = 'flex';
+            fittingGroup.style.display = 'none';
+
+            if (cat === 'wallpost') {
+                lblL.innerText = 'طول قطعه (cm)';
+                lblCount.innerText = 'تعداد (قطعه)';
+                document.getElementById('dim_l').value = "40";
+            } else {
+                lblL.innerText = 'ارتفاع شاخه (cm)';
+                lblCount.innerText = 'تعداد (شاخه)';
+                document.getElementById('dim_l').value = "300";
+            }
+        }
     }
 
-    function calc() {
-        const prodType = document.getElementById('prodType').value;
-        const w = parseFloat(document.getElementById('w').value) || 0;
-        const f = parseFloat(document.getElementById('f').value) || 0;
-        const l = parseFloat(document.getElementById('l').value) || 0;
-        const t = parseFloat(document.getElementById('t').value) || 0;
-        const count = parseFloat(document.getElementById('count').value) || 0;
-        const noAntiRust = document.getElementById('noAntiRust').checked;
-        const isPart = sessionStorage.getItem('isPart') === 'true';
-        const sheetType = document.getElementById('sheetType').value;
-
-        let effectiveLength = l;
-        let isVador = (prodType !== 'wallpost');
-        
-        if(prodType === 'vador_mid') effectiveLength = l + (Math.floor(l/100) * 40);
-
-        let pKg = (prodType === 'wallpost' && sheetType === 'galv') ? settings.galv : settings.st37;
-        let weightKg = ((w + 2 * f) * effectiveLength * t * 7.9) / 10000;
-        let baseCost = (weightKg * (pKg + settings.labor)) + (noAntiRust ? 0 : (isVador ? settings.antiRustVador : settings.antiRustWallpost));
-        
-        let disc = count >= 1000 ? settings.d1000 : count >= 800 ? settings.d800 : count >= 600 ? settings.d600 : count >= 400 ? settings.d400 : count >= 250 ? settings.d250 : count >= 100 ? settings.d100 : 0;
-        let final = baseCost * 1.10 * (1 - (disc / 100));
-        if(!isPart) final *= 1.04;
-        
-        let unit = Math.ceil(final / 500) * 500;
-        document.getElementById('resUnit').innerText = "قیمت واحد: " + unit.toLocaleString();
-        document.getElementById('resTotal').innerText = (unit * count).toLocaleString() + " تومان";
-        return { desc: prodType + " - " + l + "cm", unit, count, isDiscounted: disc > 0 };
+    function getDiscountRate(count) {
+        const d = appSettings.discounts;
+        if (count >= 1000) return d.d1000;
+        if (count >= 500) return d.d500;
+        if (count >= 300) return d.d300;
+        if (count >= 200) return d.d200;
+        if (count >= 100) return d.d100;
+        return 0;
     }
 
-    function calcAccessory() {
-        const accType = document.getElementById('accType').value;
-        const count = parseFloat(document.getElementById('accCount').value) || 0;
-        const isPart = sessionStorage.getItem('isPart') === 'true';
-        let base = settings['p_' + accType] || 0;
-        if(!isPart) base *= 1.04;
-        let unit = Math.ceil(base / 500) * 500;
-        document.getElementById('accResUnit').innerText = "قیمت واحد: " + unit.toLocaleString();
-        document.getElementById('accResTotal').innerText = (unit * count).toLocaleString() + " تومان";
-        return { desc: accType, unit, count, isDiscounted: false };
-    }
+    function addItemToOrder() {
+        const cat = document.getElementById('prodCategory').value;
+        const count = parseFloat(document.getElementById('item_count').value) || 0;
+        if (count <= 0) { alert('لطفاً تعداد معتبر وارد کنید.'); return; }
 
-    function addWallpostOrder() { orders.push(calc()); render(); }
-    function addAccessoryOrder() { orders.push(calcAccessory()); render(); }
-    
-    function render() {
-        const list = document.getElementById('orderList');
-        list.innerHTML = "";
-        orders.forEach((o, i) => {
-            list.innerHTML += `<div class="order-item"><button class="btn-del" onclick="orders.splice(${i},1); render()">✕</button><div>${o.desc} (${o.count} عدد)</div><div>${(o.unit*o.count).toLocaleString()} ت</div></div>`;
+        let name = '';
+        let specs = '-';
+        let weightUnit = 0;
+        let unitCost = 0;
+
+        const discRate = getDiscountRate(count);
+        const hasDiscount = discRate > 0;
+
+        if (cat === 'fittings') {
+            const fitSelect = document.getElementById('fittingType');
+            const fitKey = fitSelect.value;
+            name = fitSelect.options[fitSelect.selectedIndex].text;
+            specs = 'اتصال استاندارد';
+            unitCost = appSettings.fittings[fitKey] || 0;
+            weightUnit = 0;
+        } else {
+            const w = parseFloat(document.getElementById('dim_w').value) || 0;
+            const f = parseFloat(document.getElementById('dim_f').value) || 0;
+            const l = parseFloat(document.getElementById('dim_l').value) || 0;
+            const t = parseFloat(document.getElementById('dim_t').value) || 0;
+            const sheet = document.getElementById('sheet_type').value;
+            const noAntiRust = document.getElementById('chk_no_antirust').checked;
+
+            const sheetPricePerKg = (sheet === 'galv') ? appSettings.galv : appSettings.st37;
+            const sheetName = (sheet === 'galv') ? 'گالوانیزه' : 'سیاه';
+
+            if (cat === 'wallpost') {
+                name = 'والپست منقطع';
+                specs = `W:${w} F:${f} L:${l} cm - ضخامت ${t} (${sheetName})`;
+                weightUnit = ((w + 2 * f) * l * t * 7.9) / 10000;
+                const arCost = noAntiRust ? 0 : appSettings.ar_wallpost;
+                unitCost = (weightUnit * (sheetPricePerKg + appSettings.labor)) + arCost;
+            } else if (cat === 'vador_end') {
+                name = 'وادار انتهایی (U)';
+                specs = `W:${w} F:${f} L:${l} cm - ضخامت ${t} (${sheetName})`;
+                weightUnit = ((w + 2 * f) * l * t * 7.9) / 10000;
+                const arCost = noAntiRust ? 0 : appSettings.ar_vador;
+                unitCost = (weightUnit * (sheetPricePerKg + appSettings.labor)) + arCost;
+            } else if (cat === 'vador_mid') {
+                name = 'وادار میانی (H)';
+                specs = `W:${w} F:${f} L:${l} cm - ضخامت ${t} (${sheetName})`;
+                const totalDevLen = l + (Math.floor(l / 100) * 40);
+                weightUnit = ((w + 2 * f) * totalDevLen * t * 7.9) / 10000;
+                const arCost = noAntiRust ? 0 : appSettings.ar_vador;
+                unitCost = (weightUnit * (sheetPricePerKg + appSettings.labor)) + arCost;
+            }
+
+            if (noAntiRust) specs += ' | بدون ضدزنگ';
+        }
+
+        if (hasDiscount) {
+            unitCost = unitCost * (1 - (discRate / 100));
+        }
+
+        const partnerFactor = isPartner ? 1.00 : 1.04;
+        unitCost = unitCost * partnerFactor;
+
+        const finalUnitPrice = Math.ceil(unitCost / 500) * 500;
+        const totalWeight = weightUnit * count;
+        const totalPrice = finalUnitPrice * count;
+
+        orders.push({
+            name,
+            specs,
+            count,
+            weight: totalWeight,
+            unitPrice: finalUnitPrice,
+            totalPrice: totalPrice,
+            hasDiscount: hasDiscount
         });
-        document.getElementById('copyBtn').style.display = orders.length > 0 ? 'block' : 'none';
+
+        renderTable();
+        showToast("به لیست پیش‌فاکتور افزوده شد.");
     }
 
-    function toggleMode() {
-        if(sessionStorage.getItem('isPart') === 'true') { sessionStorage.setItem('isPart', 'false'); document.getElementById('badge').innerText = "وضعیت: مشتری"; }
-        else if(prompt("رمز همکار:") === "2244") { sessionStorage.setItem('isPart', 'true'); document.getElementById('badge').innerText = "وضعیت: همکار"; }
-        calc(); calcAccessory();
-    }
-
-    function openAdmin() {
-        if(prompt("رمز مدیریت:") !== "1132") return;
-        document.getElementById('sSt37').value = settings.st37;
-        document.getElementById('sGalv').value = settings.galv;
-        document.getElementById('modal').style.display = 'flex';
-    }
-
-    function copyEitaa() {
-        let txt = "📋 پیش‌فاکتور اطلس سازه\n";
-        orders.forEach(o => txt += `\n🔸 ${o.desc}: ${(o.unit*o.count).toLocaleString()} ت`);
-        navigator.clipboard.writeText(txt); alert("کپی شد!");
-    }
-
-    window.onload = fetchFromCloud;
-</script>
-</body>
-</html>
+    function renderTable() {
+        const tbody = document.getElementById('tableItemsBody');
