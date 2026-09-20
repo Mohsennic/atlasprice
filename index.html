@@ -808,19 +808,19 @@
 
             if (cat === 'wallpost') {
                 name = 'والپست منقطع';
-                specs = `W:${w} F:${f} L:${l} cm - ضخامت ${t} (${sheetName})`;
+               specs = `${l}*${w} سانت با بال ${f} سانت ضخامت ${t}(${sheetName})`;
                 weightUnit = ((w + 2 * f) * l * t * 7.9) / 10000;
                 const arCost = noAntiRust ? 0 : appSettings.ar_wallpost;
                 unitCost = (weightUnit * (sheetPricePerKg + appSettings.labor)) + arCost;
             } else if (cat === 'vador_end') {
                 name = 'وادار انتهایی (U)';
-                specs = `W:${w} F:${f} L:${l} cm - ضخامت ${t} (${sheetName})`;
+                specs = `${l}*${w} سانت با بال ${f} سانت ضخامت ${t}(${sheetName})`;
                 weightUnit = ((w + 2 * f) * l * t * 7.9) / 10000;
                 const arCost = noAntiRust ? 0 : appSettings.ar_vador;
                 unitCost = (weightUnit * (sheetPricePerKg + appSettings.labor)) + arCost;
             } else if (cat === 'vador_mid') {
                 name = 'وادار میانی (H)';
-                specs = `W:${w} F:${f} L:${l} cm - ضخامت ${t} (${sheetName})`;
+                 specs = `${l}*${w} سانت با بال ${f} سانت ضخامت ${t}(${sheetName})`;
                 const totalDevLen = l + (Math.floor(l / 100) * 40);
                 weightUnit = ((w + 2 * f) * totalDevLen * t * 7.9) / 10000;
                 const arCost = noAntiRust ? 0 : appSettings.ar_vador;
@@ -833,8 +833,60 @@
         if (hasDiscount) {
             unitCost = unitCost * (1 - (discRate / 100));
         }
+    function updateLivePreview() {
+        const cat = document.getElementById('prodCategory').value;
+        const count = parseFloat(document.getElementById('item_count').value) || 0;
+        let unitCost = 0;
 
-        const partnerFactor = isPartner ? 1.00 : 1.04;
+        const discRate = getDiscountRate(count);
+        const hasDiscount = discRate > 0;
+
+        if (cat === 'fittings') {
+            const fitKey = document.getElementById('fittingType').value;
+            unitCost = appSettings.fittings[fitKey] || 0;
+        } else {
+            const w = parseFloat(document.getElementById('dim_w').value) || 0;
+            const f = parseFloat(document.getElementById('dim_f').value) || 0;
+            const l = parseFloat(document.getElementById('dim_l').value) || 0;
+            const t = parseFloat(document.getElementById('dim_t').value) || 0;
+            const sheet = document.getElementById('sheet_type').value;
+            const noAntiRust = document.getElementById('chk_no_antirust').checked;
+
+            const sheetPricePerKg = (sheet === 'galv') ? appSettings.galv : appSettings.st37;
+
+            if (cat === 'wallpost') {
+                const weightUnit = ((w + 2 * f) * l * t * 7.9) / 10000;
+                const arCost = noAntiRust ? 0 : appSettings.ar_wallpost;
+                unitCost = (weightUnit * (sheetPricePerKg + appSettings.labor)) + arCost;
+            } else if (cat === 'vador_end') {
+                const weightUnit = ((w + 2 * f) * l * t * 7.9) / 10000;
+                const arCost = noAntiRust ? 0 : appSettings.ar_vador;
+                unitCost = (weightUnit * (sheetPricePerKg + appSettings.labor)) + arCost;
+            } else if (cat === 'vador_mid') {
+                const totalDevLen = l + (Math.floor(l / 100) * 40);
+                const weightUnit = ((w + 2 * f) * totalDevLen * t * 7.9) / 10000;
+                const arCost = noAntiRust ? 0 : appSettings.ar_vador;
+                unitCost = (weightUnit * (sheetPricePerKg + appSettings.labor)) + arCost;
+            }
+        }
+
+        if (hasDiscount) {
+            unitCost = unitCost * (1 - (discRate / 100));
+        }
+
+        const profitFactor = isPartner ? 1.10 : 1.14;
+        unitCost = unitCost * profitFactor;
+
+        const finalUnitPrice = Math.ceil(unitCost / 500) * 500;
+        const finalTotalPrice = finalUnitPrice * count;
+
+        const elUnit = document.getElementById('previewUnitPrice');
+        const elTotal = document.getElementById('previewTotalPrice');
+        if (elUnit) elUnit.innerText = finalUnitPrice.toLocaleString();
+        if (elTotal) elTotal.innerText = finalTotalPrice.toLocaleString();
+    }
+
+        const partnerFactor = isPartner ? 1.10 : 1.14;
         unitCost = unitCost * partnerFactor;
 
         const finalUnitPrice = Math.ceil(unitCost / 500) * 500;
@@ -1030,6 +1082,17 @@
     window.addEventListener('DOMContentLoaded', () => {
         handleCategoryChange();
         loadCloudSettings();
+          // کد جدید برای محاسبه لحظه‌ای
+        const liveInputs = ['prodCategory', 'fittingType', 'dim_w', 'dim_f', 'dim_l', 'dim_t', 'sheet_type', 'item_count', 'chk_no_antirust'];
+        liveInputs.forEach(id => {
+            const el = document.getElementById(id);
+            if(el) {
+                el.addEventListener('input', updateLivePreview);
+                el.addEventListener('change', updateLivePreview);
+            }
+        });
+        updateLivePreview();
+
     });
 </script>
 </body>
