@@ -485,9 +485,9 @@
                     <label>نوع کالا / بخش محاسباتی</label>
                     <select id="prodCategory" onchange="handleCategoryChange()">
                         <option value="wallpost">والپست منقطع (محاسبه به قطعه)</option>
-                        <option value="vador_end">وادار انتهایی U (محاسبه به شاخه)</option>
-                        <option value="vador_mid">وادار میانی H (محاسبه به شاخه)</option>
-                        <option value="fittings">اتصالات و متعلقات (۱۱ قلم استاندارد)</option>
+                        <option value="vador_end">(محاسبه به شاخه) U وادار انتهایی</option>
+                        <option value="vador_mid">(محاسبه به شاخه) H وادار میانی</option>
+                        <option value="fittings">اتصالات و متعلقات </option>
                     </select>
                 </div>
 
@@ -529,7 +529,7 @@
                 <div class="form-group dim-field" id="grp_sheet">
                     <label>نوع ورق</label>
                     <select id="sheet_type">
-                        <option value="st37">سیاه (ST37)</option>
+                        <option value="st37">ورق سیاه (ST37)</option>
                         <option value="galv">گالوانیزه</option>
                     </select>
                 </div>
@@ -615,19 +615,19 @@
             <div class="form-group"><label>ضدزنگ وادار (شاخه)</label><input type="number" id="adm_ar_vador"></div>
         </div>
 
-        <div class="admin-section-title">قیمت اتصالات و متعلقات ۱۱‌گانه (تومان)</div>
+        <div class="admin-section-title">قیمت اتصالات و متعلقات (تومان)</div>
         <div class="admin-grid">
             <div class="form-group"><label>گیره</label><input type="number" id="adm_fit_girandeh"></div>
             <div class="form-group"><label>قلاب</label><input type="number" id="adm_fit_ghollab"></div>
-            <div class="form-group"><label>بستر ۵.۵ سانت</label><input type="number" id="adm_fit_bastar_5_5"></div>
-            <div class="form-group"><label>بستر ۱۱ سانت</label><input type="number" id="adm_fit_bastar_11"></div>
-            <div class="form-group"><label>بستر ۱۵ سانت</label><input type="number" id="adm_fit_bastar_15"></div>
-            <div class="form-group"><label>پیچ بولتکس</label><input type="number" id="adm_fit_pich_boltex"></div>
+            <div class="form-group"><label>میلگرد بستر ۵.۵ سانت</label><input type="number" id="adm_fit_bastar_5_5"></div>
+            <div class="form-group"><label>میلگرد بستر ۱۱ سانت</label><input type="number" id="adm_fit_bastar_11"></div>
+            <div class="form-group"><label>میلگرد بستر ۱۵ سانت</label><input type="number" id="adm_fit_bastar_15"></div>
+            <div class="form-group"><label>پیچ بولتکس 6 سانت </label><input type="number" id="adm_fit_pich_boltex"></div>
             <div class="form-group"><label>پیچ و رول‌پلاک</label><input type="number" id="adm_fit_pich_rool"></div>
-            <div class="form-group"><label>رول‌بولت ۱۲ (۱۰ سانت)</label><input type="number" id="adm_fit_rollbolt_12"></div>
+            <div class="form-group"><label>رول‌بولت ۱۲(۱۰ سانت)</label><input type="number" id="adm_fit_rollbolt_12"></div>
             <div class="form-group"><label>بست تخت (ثابت)</label><input type="number" id="adm_fit_bast_sabt"></div>
             <div class="form-group"><label>بست رادیکالی</label><input type="number" id="adm_fit_bast_radikali"></div>
-            <div class="form-group"><label>صفحه پلیت ۲۵*۱۵</label><input type="number" id="adm_fit_plate_25_15"></div>
+            <div class="form-group"><label>صفحه پلیت ۲۵*۱۵(ورق 5میل)</label><input type="number" id="adm_fit_plate_25_15"></div>
         </div>
 
         <div class="admin-section-title">درصد تخفیف‌های پلکانی تعدادی (درصد)</div>
@@ -1017,7 +1017,7 @@
         document.getElementById('adminModal').style.display = 'none';
     }
 
-    function saveAdminSettings() {
+   function saveAdminSettings() {
         appSettings.st37 = parseFloat(document.getElementById('adm_st37').value) || 0;
         appSettings.galv = parseFloat(document.getElementById('adm_galv').value) || 0;
         appSettings.labor = parseFloat(document.getElementById('adm_labor').value) || 0;
