@@ -1064,34 +1064,65 @@
             showToast("متن پیش‌فاکتور کپی شد.");
         });
     }
-    function exportPDF() {
+    
+       function exportPDF() {
         if (orders.length === 0) { alert("پیش‌فاکتور خالی است."); return; }
 
-        // دریافت نام مشتری قبل از دانلود
+        // ۱. دریافت نام مشتری
         const customerName = prompt("لطفاً نام یا نام خانوادگی مشتری را وارد کنید (اختیاری):", "");
 
         const element = document.getElementById('invoice-print-area');
 
-        // حذف برچسب نام قبلی در صورت وجود، برای جلوگیری از تکرار
-        const oldTag = document.getElementById('pdf-customer-name-tag');
-        if (oldTag) oldTag.remove();
+        // حذف هدر و فوتر موقت قبلی در صورت وجود
+        const oldHeader = document.getElementById('pdf-custom-header');
+        const oldFooter = document.getElementById('pdf-custom-footer');
+        if (oldHeader) oldHeader.remove();
+        if (oldFooter) oldFooter.remove();
 
-        // اگر نامی وارد شده بود، آن را به بالای محتوای فاکتور اضافه می‌کنیم
-        if (customerName && customerName.trim() !== "") {
-            const nameDiv = document.createElement('div');
-            nameDiv.id = 'pdf-customer-name-tag';
-            nameDiv.style.cssText = "font-size: 13px; font-weight: bold; margin-bottom: 8px; color: #333; text-align: right;";
-            nameDiv.innerText = "مشتری گرامی: " + customerName.trim();
-            element.insertBefore(nameDiv, element.firstChild);
-        }
+        // دریافت تاریخ و ساعت جاری به فرمت فارسی
+        const now = new Date();
+        const dateStr = now.toLocaleDateString('fa-IR') + ' - ' + now.toLocaleTimeString('fa-IR', {hour: '2-digit', minute: '2-digit'});
 
-        // تعیین نام فایل خروجی براساس نام مشتری
+        // ۲. ساخت سربرگ اختصاصی اطلس سازه
+        const headerDiv = document.createElement('div');
+        headerDiv.id = 'pdf-custom-header';
+        headerDiv.style.cssText = "border-bottom: 2px solid #ea580c; padding-bottom: 8px; margin-bottom: 12px; direction: rtl; font-family: inherit;";
+        headerDiv.innerHTML = `
+            <div style="display: flex; justify-content: space-between; align-items: center;">
+                <div>
+                    <h2 style="margin: 0 0 4px 0; font-size: 18px; color: #ea580c; font-weight: bold;"> اطلس سازه</h2>
+                    <div style="font-size: 11px; color: #555;">تاریخ و ساعت: ${dateStr}</div>
+                </div>
+                ${customerName && customerName.trim() !== "" ? `
+                <div style="font-size: 13px; font-weight: bold; color: #222; background: #fff3ed; border: 1px solid #fdba74; padding: 4px 10px; border-radius: 4px;">
+                    مشتری گرامی: ${customerName.trim()}
+                </div>` : ''}
+            </div>
+        `;
+        element.insertBefore(headerDiv, element.firstChild);
+
+        // ۳. ساخت پانویس رسمی اطلس سازه
+        const footerDiv = document.createElement('div');
+        footerDiv.id = 'pdf-custom-footer';
+        footerDiv.style.cssText = "margin-top: 20px; border-top: 1px solid #ddd; padding-top: 12px; direction: rtl; font-family: inherit; page-break-inside: avoid;";
+        footerDiv.innerHTML = `
+            <div style="display: flex; justify-content: space-between; font-size: 12px; color: #444; margin-bottom: 25px; padding: 0 10px;">
+                <span>مهر و امضای فروشنده: ..............................</span>
+                <span>امضای خریدار: ..............................</span>
+            </div>
+            <div style="text-align: center; font-size: 11px; font-weight: bold; color: #ea580c; border-top: 1px dashed #e5e7eb; padding-top: 6px;">
+                اطلس سازه - تامین‌کننده تخصصی والپست و اتصالات نوین
+            </div>
+        `;
+        element.appendChild(footerDiv);
+
+        // ۴. تنظیم نام فایل دانلودی
         const fileName = (customerName && customerName.trim() !== "") 
-            ? `فاکتور-${customerName.trim().replace(/\s+/g, '-')}.pdf` 
+            ? `پیش‌فاکتور-اطلس-سازه-${customerName.trim().replace(/\s+/g, '-')}.pdf` 
             : 'Atlas-Sazeh-Invoice.pdf';
 
         const opt = {
-            margin:       [10, 10, 10, 10],
+            margin:       [8, 8, 8, 8],
             filename:     fileName,
             image:        { type: 'jpeg', quality: 0.98 },
             html2canvas:  { scale: 2, useCORS: true, scrollY: 0 },
@@ -1099,13 +1130,15 @@
             pagebreak:    { mode: ['avoid-all', 'css', 'legacy'] }
         };
 
+        // دانلود PDF و بازگرداندن صفحه به حالت اولیه
         html2pdf().set(opt).from(element).save().then(() => {
-            // پس از دانلود، برچسب از روی صفحه حذف می‌شود تا ظاهر صفحه اصلی تغییر نکند
-            const tag = document.getElementById('pdf-customer-name-tag');
-            if (tag) tag.remove();
+            const h = document.getElementById('pdf-custom-header');
+            const f = document.getElementById('pdf-custom-footer');
+            if (h) h.remove();
+            if (f) f.remove();
         });
     }
-
+    
     // لود اولیه
     window.addEventListener('DOMContentLoaded', () => {
         handleCategoryChange();
