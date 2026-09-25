@@ -1065,18 +1065,46 @@
         });
     }
 
-      function exportPDF() {
+  function exportPDF() {
         if (orders.length === 0) { alert("پیش‌فاکتور خالی است."); return; }
+
+        // دریافت نام مشتری قبل از دانلود
+        const customerName = prompt("لطفاً نام و نام خانوادگی را وارد کنید (اختیاری):", "");
+
         const element = document.getElementById('invoice-print-area');
+
+        // حذف برچسب نام قبلی در صورت وجود، برای جلوگیری از تکرار
+        const oldTag = document.getElementById('pdf-customer-name-tag');
+        if (oldTag) oldTag.remove();
+
+        // اگر نامی وارد شده بود، آن را به بالای محتوای فاکتور اضافه می‌کنیم
+        if (customerName && customerName.trim() !== "") {
+            const nameDiv = document.createElement('div');
+            nameDiv.id = 'pdf-customer-name-tag';
+            nameDiv.style.cssText = "font-size: 13px; font-weight: bold; margin-bottom: 8px; color: #333; text-align: right;";
+            nameDiv.innerText = "مشتری گرامی: " + customerName.trim();
+            element.insertBefore(nameDiv, element.firstChild);
+        }
+
+        // تعیین نام فایل خروجی براساس نام مشتری
+        const fileName = (customerName && customerName.trim() !== "") 
+            ? `فاکتور-${customerName.trim().replace(/\s+/g, '-')}.pdf` 
+            : 'Atlas-Sazeh-Invoice.pdf';
+
         const opt = {
-            margin:       [10, 10, 10, 10], // حاشیه ۱۰ میلی‌متر از بالا، راست، پایین، چپ
-            filename:     'Atlas-Sazeh-Invoice.pdf',
+            margin:       [10, 10, 10, 10],
+            filename:     fileName,
             image:        { type: 'jpeg', quality: 0.98 },
             html2canvas:  { scale: 2, useCORS: true, scrollY: 0 },
             jsPDF:        { unit: 'mm', format: 'a4', orientation: 'portrait' },
-            pagebreak:    { mode: ['avoid-all', 'css', 'legacy'] } // جلوگیری از نصفه شدن و شکستن تمیز صفحات
+            pagebreak:    { mode: ['avoid-all', 'css', 'legacy'] }
         };
-        html2pdf().set(opt).from(element).save();
+
+        html2pdf().set(opt).from(element).save().then(() => {
+            // پس از دانلود، برچسب از روی صفحه حذف می‌شود تا ظاهر صفحه اصلی تغییر نکند
+            const tag = document.getElementById('pdf-customer-name-tag');
+            if (tag) tag.remove();
+        });
     }
 
     // لود اولیه
