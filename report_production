@@ -1,0 +1,423 @@
+<!doctype html>
+<html lang="fa" dir="rtl">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="theme-color" content="#0f172a">
+<title>گزارش روزانه تولید - اطلس سازه</title>
+
+<style>
+:root{
+  color-scheme: light;
+  --navy: #0f172a;
+  --navy2: #1e293b;
+  --blue: #1e3a8a;
+  --orange: #ea580c;
+  --orange2: #f97316;
+  --paper: #f8fafc;
+  --line: #cbd5e1;
+  --muted: #64748b;
+  --white: #ffffff;
+  font-family: Tahoma, Arial, sans-serif;
+  color: var(--navy);
+  background: var(--paper);
+  font-size: 14px;
+}
+*{box-sizing:border-box}
+body{margin:0;padding:12px 10px 28px;background:var(--paper)}
+.wrap{width:min(100%, 850px);margin:auto}
+.card{background:var(--white);border:1px solid var(--line);border-radius:14px;padding:15px;margin:0 0 12px;box-shadow:0 3px 12px rgba(15,23,42,0.05)}
+.hero{background:linear-gradient(135deg, var(--navy), var(--blue));color:#fff;border:0;border-top:5px solid var(--orange2);padding:18px 16px}
+.hero h1{font-size:18px;line-height:1.65;margin:0 0 10px;color:#fff}
+.datebox{display:flex;align-items:center;gap:10px;flex-wrap:wrap}
+.datebox label{color:#e2e8f0;font-size:13px}
+.datebox input{max-width:230px;background:rgba(255,255,255,0.12)!important;color:#fff!important;border:1px solid rgba(255,255,255,0.3)!important;height:38px;padding:6px 10px;border-radius:8px;font:inherit}
+.section-head{display:flex;align-items:center;gap:9px;margin:0 0 12px}
+.section-head:before{content:"";width:5px;height:22px;border-radius:4px;background:var(--orange)}
+h2{font-size:15px;margin:0;color:var(--navy)}
+.row{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:9px;align-items:end;border:1px solid #e2e8f0;border-radius:10px;padding:11px;margin:0 0 9px;background:#fff}
+.field{min-width:0}
+.field label{display:block;font-size:12px;font-weight:700;color:var(--navy2);margin:0 0 5px}
+.field input,.field select{display:block;width:100%;min-width:0;height:42px;padding:8px 10px;border:1px solid var(--line);border-radius:8px;background:#fff;color:var(--navy);font:inherit;font-size:13px;outline:none}
+.field input:focus,.field select:focus{border-color:var(--orange);box-shadow:0 0 0 3px rgba(249,115,22,0.15)}
+.field input::placeholder{color:#94a3b8}
+.row .calc{grid-column:1/-1;background:#fff7ed;border:1px solid #fed7aa;border-radius:8px;padding:9px 10px;color:#9a3412;font-weight:700;font-size:13px}
+.row .remove{grid-column:1/-1}
+.btn{min-height:42px;font:inherit;font-weight:700;border:0;border-radius:8px;padding:10px 14px;cursor:pointer;touch-action:manipulation}
+.btn-add{width:100%;background:#fff7ed;color:#c2410c;border:1px dashed #fb923c}
+.btn-add:hover{background:#ffedd5}
+.btn-remove{background:#fff1f2;color:#be123c;width:100%;min-height:36px;padding:6px;font-size:12px}
+.btn-main{width:100%;background:var(--orange);color:#fff;font-size:15px}
+.btn-main:hover{background:#c2410c}
+.btn-main[disabled]{opacity:.7;cursor:not-allowed}
+.actions{margin-top:14px}
+.totals{margin-top:11px;background:var(--navy);color:#fff;border-radius:9px;padding:12px;font-weight:700;font-size:14px}
+.totals strong{color:#fdba74;font-size:16px}
+.hint{font-size:12px;line-height:1.8;color:var(--muted);margin:8px 2px 0}
+
+/* استایل برگه PDF برای خروجی تمیز و دقیق */
+#pdfStage{
+  position: fixed;
+  left: -99999px;
+  top: 0;
+  width: 794px;
+  padding: 22px;
+  background: #ffffff;
+  direction: rtl;
+  font-family: Tahoma, Arial, sans-serif;
+}
+#pdfStage .print-head{
+  border-bottom: 4px solid var(--orange);
+  padding-bottom: 10px;
+  margin-bottom: 14px;
+}
+#pdfStage .title{
+  font-size: 18px;
+  color: var(--navy);
+  margin: 0 0 8px;
+  font-weight: 800;
+}
+#pdfStage .meta{
+  margin: 0;
+  font-size: 12.5px;
+  color: var(--navy2);
+}
+#pdfStage h2{
+  margin: 16px 0 8px;
+  padding-right: 8px;
+  border-right: 4px solid var(--orange);
+  font-size: 13px;
+  color: var(--navy);
+}
+#pdfStage table{
+  width: 100%;
+  border-collapse: collapse;
+  margin: 8px 0 12px;
+  font-size: 11.5px;
+  table-layout: fixed;
+}
+#pdfStage th, #pdfStage td{
+  border: 1px solid var(--line);
+  padding: 7px 6px;
+  text-align: right;
+  overflow-wrap: anywhere;
+}
+#pdfStage th{
+  background: var(--navy2);
+  color: #fff;
+}
+#pdfStage tbody tr:nth-child(even){background:#f8fafc}
+#pdfStage .print-total{
+  background:#fff7ed;
+  border-right:4px solid var(--orange);
+  padding:10px;
+  font-weight:800;
+  color:#9a3412;
+  margin: 10px 0 0;
+}
+.empty{color:var(--muted);font-size:12px}
+
+@media(min-width:620px){
+  body{padding:22px}
+  .hero{padding:22px}
+  .row.sheet{grid-template-columns:repeat(3,minmax(0,1fr))}
+  .row.sheet .calc{grid-column:1/-1}
+  .row.cut{grid-template-columns:2fr 1fr auto}
+  .row.cut .remove{grid-column:auto}
+  .row.prod{grid-template-columns:2fr 1.2fr 1.5fr 1fr auto}
+  .row.prod .remove{grid-column:auto}
+  .btn-main{width:auto;min-width:240px}
+}
+</style>
+</head>
+
+<body>
+<main class="wrap">
+
+<form class="form-ui" id="entryForm" novalidate>
+  <header class="card hero">
+    <h1>گزارش روزانه تولید - اطلس سازه</h1>
+    <div class="datebox">
+      <label for="reportDate">تاریخ امروز:</label>
+      <input id="reportDate" readonly aria-label="تاریخ شمسی امروز">
+    </div>
+  </header>
+
+  <!-- ورودی ورق -->
+  <section class="card">
+    <div class="section-head"><h2>ورودی ورق</h2></div>
+    <div id="sheets"></div>
+    <button type="button" class="btn btn-add" id="addSheet">＋ افزودن ردیف ورق</button>
+    <div class="totals">جمع کل وزن محاسباتی: <strong id="totalWeight">۰</strong> کیلوگرم</div>
+    <p class="hint">فرمول محاسبه وزن: (طول cm × عرض cm × ضخامت mm × ۷٫۸ × تعداد) ÷ ۱۰۰۰۰</p>
+  </section>
+
+  <!-- برش روزانه -->
+  <section class="card">
+    <div class="section-head"><h2>برش روزانه ورق</h2></div>
+    <div id="cuts"></div>
+    <button type="button" class="btn btn-add" id="addCut">＋ افزودن ردیف برش</button>
+  </section>
+
+  <!-- محصولات تولید شده -->
+  <section class="card">
+    <div class="section-head"><h2>محصولات تولید شده</h2></div>
+    <div id="products"></div>
+    <button type="button" class="btn btn-add" id="addProduct">＋ افزودن ردیف محصول</button>
+  </section>
+
+  <div class="actions">
+    <button type="button" class="btn btn-main" id="pdfButton">📄 دانلود PDF گزارش</button>
+  </div>
+</form>
+
+<!-- کانتینر خروجی PDF -->
+<div id="pdfStage" aria-hidden="true"></div>
+
+</main>
+
+<!-- کتابخانه اختصاصی ساخت مستقیم PDF -->
+<script src="https://cdn.jsdelivr.net/npm/html2pdf.js@0.10.1/dist/html2pdf.bundle.min.js"></script>
+
+<script>
+'use strict';
+
+const SHEET_TYPES = ['سیاه ST37', 'گالوانیزه'];
+const PRODUCT_TYPES = ['والپست منقطع', 'وادار انتهایی', 'وادار میانی', 'اتصالات'];
+
+const faNum = n => new Intl.NumberFormat('fa-IR', {maximumFractionDigits: 2}).format(Number.isFinite(n) ? n : 0);
+
+const dateEl = document.getElementById('reportDate');
+try {
+  dateEl.value = new Intl.DateTimeFormat('fa-IR-u-ca-persian', {dateStyle: 'long'}).format(new Date());
+} catch(_) {
+  dateEl.value = new Date().toLocaleDateString('fa-IR');
+}
+
+const sheets = document.getElementById('sheets');
+const cuts = document.getElementById('cuts');
+const products = document.getElementById('products');
+
+function field(label, control) {
+  const box = document.createElement('div');
+  box.className = 'field';
+  const l = document.createElement('label');
+  l.textContent = label;
+  box.append(l, control);
+  return box;
+}
+
+function input(type='number', placeholder='', min='0', step='any') {
+  const el = document.createElement('input');
+  el.type = type;
+  el.placeholder = placeholder;
+  if(type === 'number') {
+    el.min = min;
+    el.step = step;
+    el.inputMode = 'decimal';
+  }
+  return el;
+}
+
+function selectBox(options) {
+  const s = document.createElement('select');
+  options.forEach(v => {
+    const o = document.createElement('option');
+    o.value = v;
+    o.textContent = v;
+    s.append(o);
+  });
+  return s;
+}
+
+function removeButton(row) {
+  const b = document.createElement('button');
+  b.type = 'button';
+  b.className = 'btn btn-remove remove';
+  b.textContent = '✕ حذف این ردیف';
+  b.addEventListener('click', () => {
+    row.remove();
+    updateWeight();
+  });
+  return b;
+}
+
+function addSheet() {
+  const r = document.createElement('div');
+  r.className = 'row sheet';
+
+  const type = selectBox(SHEET_TYPES);
+  const count = input('number', 'تعداد', '1', '1');
+  const length = input('number', 'طول (cm)', '0.01', 'any');
+  const width = input('number', 'عرض (cm)', '0.01', 'any');
+  const thick = input('number', 'ضخامت (mm)', '0.01', 'any');
+  const scale = input('number', 'وزن باسکول (kg)', '0', 'any');
+
+  r.append(
+    field('نوع ورق', type),
+    field('تعداد', count),
+    field('طول (cm)', length),
+    field('عرض (cm)', width),
+    field('ضخامت (mm)', thick),
+    field('وزن باسکول (kg)', scale)
+  );
+
+  const calc = document.createElement('div');
+  calc.className = 'calc';
+  calc.textContent = 'وزن محاسباتی این ردیف: ۰ کیلوگرم';
+  r.append(calc, removeButton(r));
+
+  r.querySelectorAll('input').forEach(x => x.addEventListener('input', updateWeight));
+  sheets.append(r);
+  updateWeight();
+}
+
+function addCut() {
+  const r = document.createElement('div');
+  r.className = 'row cut';
+  r.append(
+    field('نوع ورق', selectBox(SHEET_TYPES)),
+    field('تعداد ورق برش‌خورده', input('number', 'تعداد ورق', '0', '1')),
+    removeButton(r)
+  );
+  cuts.append(r);
+}
+
+function addProduct() {
+  const r = document.createElement('div');
+  r.className = 'row prod';
+  r.append(
+    field('نام محصول', selectBox(PRODUCT_TYPES)),
+    field('سایز', input('text', 'مثلاً ۱۵')),
+    field('ابعاد', input('text', 'مثلاً ۳ متر')),
+    field('تعداد', input('number', 'تعداد', '0', '1')),
+    removeButton(r)
+  );
+  products.append(r);
+}
+
+function rowData(row) {
+  return [...row.querySelectorAll('input, select')].map(x => x.value.trim());
+}
+
+function weight(sheetRow) {
+  const inputs = [...sheetRow.querySelectorAll('input')];
+  const count = parseFloat(inputs[0].value) || 0;
+  const len = parseFloat(inputs[1].value) || 0;
+  const wid = parseFloat(inputs[2].value) || 0;
+  const thick = parseFloat(inputs[3].value) || 0;
+  return (len * wid * thick * 7.8 * count) / 10000;
+}
+
+function updateWeight() {
+  let total = 0;
+  sheets.querySelectorAll('.sheet').forEach(r => {
+    const kg = weight(r);
+    total += kg;
+    r.querySelector('.calc').textContent = 'وزن محاسباتی این ردیف: ' + faNum(kg) + ' کیلوگرم';
+  });
+  document.getElementById('totalWeight').textContent = faNum(total);
+}
+
+function esc(s) {
+  return String(s).replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+}
+
+function tableHTML(headers, rows) {
+  if(!rows.length) return '<p class="empty">موردی ثبت نشده است.</p>';
+  return '<table><thead><tr>' +
+    headers.map(x => '<th>' + esc(x) + '</th>').join('') +
+    '</tr></thead><tbody>' +
+    rows.map(r => '<tr>' + r.map(x => '<td>' + esc(x || '—') + '</td>').join('') + '</tr>').join('') +
+    '</tbody></table>';
+}
+
+function buildPDFStage() {
+  const stage = document.getElementById('pdfStage');
+
+  let total = 0;
+  const sheetRows = [...sheets.querySelectorAll('.sheet')].map(r => {
+    const [type, count, len, wid, thick, scale] = rowData(r);
+    const kg = weight(r);
+    total += kg;
+    return [type, count, len, wid, thick, faNum(kg), scale];
+  });
+
+  const cutRows = [...cuts.querySelectorAll('.cut')].map(r => rowData(r));
+  const prodRows = [...products.querySelectorAll('.prod')].map(r => rowData(r));
+
+  stage.innerHTML =
+    '<div class="print-head">' +
+      '<div class="title">گزارش روزانه تولید - اطلس سازه</div>' +
+      '<p class="meta"><strong>تاریخ:</strong> ' + esc(dateEl.value) + '</p>' +
+    '</div>' +
+    '<h2>ورودی ورق</h2>' +
+    tableHTML(['نوع ورق', 'تعداد', 'طول (cm)', 'عرض (cm)', 'ضخامت (mm)', 'وزن محاسباتی (kg)', 'وزن باسکول (kg)'], sheetRows) +
+    '<div class="print-total">جمع کل وزن محاسباتی: ' + esc(faNum(total)) + ' کیلوگرم</div>' +
+    '<h2>برش روزانه ورق</h2>' +
+    tableHTML(['نوع ورق', 'تعداد ورق برش‌خورده'], cutRows) +
+    '<h2>محصولات تولید شده</h2>' +
+    tableHTML(['نام محصول', 'سایز', 'ابعاد', 'تعداد'], prodRows);
+}
+
+function isoDateForFileName() {
+  const d = new Date();
+  const y = d.getFullYear();
+  const m = String(d.getMonth()+1).padStart(2,'0');
+  const day = String(d.getDate()).padStart(2,'0');
+  return `${y}-${m}-${day}`;
+}
+
+async function makePDF() {
+  const btn = document.getElementById('pdfButton');
+
+  if (!window.html2pdf) {
+    alert('کتابخانه ساخت PDF بارگذاری نشد. لطفاً مطمئن شوید اینترنت متصل است و صفحه را دوباره باز کنید.');
+    return;
+  }
+
+  btn.disabled = true;
+  const oldText = btn.textContent;
+  btn.textContent = 'در حال ساخت PDF...';
+
+  try {
+    buildPDFStage();
+
+    const element = document.getElementById('pdfStage');
+    const filename = `گزارش-تولید-${isoDateForFileName()}.pdf`;
+
+    const opt = {
+      margin: [10, 10, 12, 10],
+      filename: filename,
+      image: { type: 'jpeg', quality: 0.98 },
+      html2canvas: {
+        scale: 2.2,
+        useCORS: true,
+        backgroundColor: '#ffffff'
+      },
+      jsPDF: { unit: 'mm', format: 'a4', orientation: 'portrait' },
+      pagebreak: { mode: ['css', 'legacy'] }
+    };
+
+    await html2pdf().set(opt).from(element).save();
+  } catch (e) {
+    console.error(e);
+    alert('خطا در تولید فایل PDF. لطفاً مجدداً امتحان کنید.');
+  } finally {
+    btn.disabled = false;
+    btn.textContent = oldText;
+  }
+}
+
+document.getElementById('addSheet').addEventListener('click', addSheet);
+document.getElementById('addCut').addEventListener('click', addCut);
+document.getElementById('addProduct').addEventListener('click', addProduct);
+document.getElementById('pdfButton').addEventListener('click', makePDF);
+
+// درج ردیف اولیه به محض باز شدن فرم
+addSheet();
+addCut();
+addProduct();
+</script>
+</body>
+</html>
