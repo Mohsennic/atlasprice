@@ -711,51 +711,52 @@ function buildPDFStage() {
     '<h3>محصولات تولید شده</h3>' +
     makeTableHTML(['نوع محصول', 'نام قطعه', 'سایز', 'ابعاد', 'تعداد'], prodRows);
 }
+function makePDF() {
+  buildPDFStage();
+  const content = document.getElementById('pdfStage').innerHTML;
 
-async function makePDF() {
-  const btn = document.getElementById('pdfButton');
-
-  if (!window.html2pdf) {
-    alert('کتابخانه PDF بارگذاری نشد. لطفاً اینترنت را بررسی کنید.');
-    return;
-  }
-
-  btn.disabled = true;
-  const oldText = btn.textContent;
-  btn.textContent = '⏳ در حال ساخت فایل PDF...';
-
-  const element = document.getElementById('pdfStage');
-
-  try {
-    buildPDFStage();
-    element.style.opacity = '1';
-    element.style.zIndex = '99999';
-
-    const opt = {
-      margin: [10, 10, 10, 10],
-      filename: `گزارش-تولید-${new Date().toISOString().slice(0,10)}.pdf`,
-      image: { type: 'jpeg', quality: 0.98 },
-      html2canvas: {
-        scale: 2,
-        useCORS: true,
-        backgroundColor: '#ffffff',
-        logging: false,
-        scrollY: 0
-      },
-      jsPDF: { unit: 'mm', format: 'a4', orientation: 'portrait' }
-    };
-
-    await html2pdf().set(opt).from(element).save();
-  } catch (e) {
-    console.error(e);
-    alert('خطا در تولید فایل PDF.');
-  } finally {
-    element.style.opacity = '0';
-    element.style.zIndex = '-999';
-    btn.disabled = false;
-    btn.textContent = oldText;
-  }
+  const win = window.open('', '_blank');
+  win.document.write(`
+    <!doctype html>
+    <html lang="fa" dir="rtl">
+    <head>
+      <meta charset="utf-8">
+      <title>گزارش روزانه تولید - اطلس سازه</title>
+      <link href="https://fonts.googleapis.com/css2?family=Vazirmatn:wght@400;700;900&display=swap" rel="stylesheet">
+      <style>
+        body { font-family: 'Vazirmatn', Tahoma, sans-serif; padding: 25px; direction: rtl; color: #0f172a; }
+        .pdf-header { display: flex; justify-content: space-between; align-items: center; border-bottom: 3px solid #f97316; padding-bottom: 10px; margin-bottom: 15px; }
+        .pdf-title { font-size: 18px; font-weight: 900; }
+        .pdf-meta { font-size: 13px; font-weight: 700; color: #475569; }
+        h3 { font-size: 14px; border-right: 4px solid #f97316; padding-right: 8px; margin: 16px 0 8px; }
+        table { width: 100%; border-collapse: collapse; margin-bottom: 12px; font-size: 12px; }
+        th, td { border: 1px solid #cbd5e1; padding: 7px 6px; text-align: right; }
+        th { background: #0f172a !important; color: #ffffff !important; -webkit-print-color-adjust: exact; print-color-adjust: exact; }
+        tr:nth-child(even) { background-color: #f8fafc; }
+        .pdf-total-box { background: #fff7ed; border-right: 4px solid #f97316; padding: 8px 12px; font-weight: 800; color: #9a3412; font-size: 13px; -webkit-print-color-adjust: exact; print-color-adjust: exact; }
+        @media print {
+          @page { size: A4 portrait; margin: 12mm; }
+          body { padding: 0; }
+        }
+      </style>
+    </head>
+    <body>
+      ${content}
+      <script>
+        window.onload = () => {
+          setTimeout(() => {
+            window.print();
+            window.close();
+          }, 250);
+        };
+      <\/script>
+    </body>
+    </html>
+  `);
+  win.document.close();
 }
+
+
 
 document.getElementById('addSheet').addEventListener('click', addSheet);
 document.getElementById('addCut').addEventListener('click', addCut);
