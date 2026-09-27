@@ -460,7 +460,7 @@
                 </div>
             </div>
 
-            <!-- بخش دکمه‌های مدیریت و وضعیت در هدر -->
+                        <!-- بخش دکمه‌های مدیریت و وضعیت در هدر -->
             <div class="header-controls">
                 <div class="badge-status" id="userStatusBadge">وضعیت: مشتری</div>
                 <button class="btn-header" onclick="togglePartnerMode()">🔄 حالت همکار</button>
@@ -468,13 +468,14 @@
             </div>
         </div>
 
-            <div class="sync-bar">
+        <div class="sync-bar">
             <div style="display: flex; align-items: center; gap: 8px;">
                 <button type="button" id="btnSyncPrice" onclick="const b=this; b.innerText='⏳ در حال دریافت...'; b.style.background='#64748b'; Promise.resolve().then(() => typeof loadCloudSettings === 'function' ? loadCloudSettings() : null).then(() => { try { if (typeof updateLivePreview === 'function') updateLivePreview(); } catch(e){} b.innerText='✅ قیمت‌ها بروز شد'; b.style.background='#10b981'; if (typeof showToast === 'function') showToast('قیمت‌ها با موفقیت بروزرسانی شد'); setTimeout(() => { b.innerText='🔄 بروزرسانی نرخ‌های روز'; b.style.background='#ea580c'; }, 2000); }).catch(() => { b.innerText='🔄 بروزرسانی نرخ‌های روز'; b.style.background='#ea580c'; });" style="background:#ea580c; color:#fff; border:none; border-radius:6px; padding:5px 12px; font-size:12px; cursor:pointer; font-family:inherit; transition: all 0.3s ease;">🔄 بروزرسانی نرخ‌های روز</button>
                 <span style="color: #cbd5e1; font-size: 11px;">(لطفاً قبل از صدور پیش‌فاکتور بروزرسانی کنید)</span>
             </div>
             <span id="lastSyncTime">در حال اتصال...</span>
         </div>
+    </div>
 
     <div class="content-body">
         <!-- فرم ورودی -->
