@@ -6,7 +6,16 @@
     <title>محاسبه قیمت والپست و اتصالات | اطلس سازه</title>
     <link href="https://cdn.jsdelivr.net/gh/rastikerdar/vazirmatn@v33.003/Vazirmatn-font-face.css" rel="stylesheet">
     <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
+
+    <!-- تنظیمات PWA و وب‌اپلیکیشن اطلس سازه -->
+    <link rel="manifest" href="manifest.json">
+    <meta name="theme-color" content="#0f172a">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+    <link rel="apple-touch-icon" href="logo.png">
+
     <style>
+
         :root {
             --navy-dark: #0f172a;
             --navy-main: #1e293b;
@@ -1157,6 +1166,13 @@
         updateLivePreview();
 
     });
+
+    // ثبت وب‌اپلیکیشن اطلس سازه
+    if ('serviceWorker' in navigator) {
+        window.addEventListener('load', () => {
+            navigator.serviceWorker.register('./sw.js').catch(() => {});
+        });
+    }
 </script>
 </body>
 </html>
