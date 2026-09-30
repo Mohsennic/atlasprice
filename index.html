@@ -564,7 +564,7 @@
                 <span>جمع این قلم: <strong id="previewTotalPrice" style="color:var(--orange-hover);">۰</strong> تومان</span>
             </div>
 
-          <button class="btn-add no-print" onclick="addItemToOrder()">
+            <button class="btn-add" onclick="addItemToOrder()">
                 <span>➕</span> افزودن به لیست پیش‌فاکتور
             </button>
         </div>
@@ -608,12 +608,14 @@
 
         <!-- دکمه‌های پیش‌فاکتور -->
         <div class="actions-row">
-            <button class="btn-act no-print" onclick="copyInvoiceText()">📋 کپی متن پیش‌فاکتور</button>
-            <button class="btn-act no-print" onclick="exportPDF()">📄 خروجی PDF رسمی</button>
-            <button class="btn-act no-print" onclick="clearAllOrders()">🗑️ پاک کردن کل لیست</button>
+            <button class="btn-act" onclick="copyInvoiceText()">📋 کپی متن پیش‌فاکتور</button>
+            <button class="btn-act" onclick="exportPDF()">📄 خروجی PDF رسمی</button>
+            <button class="btn-act danger-btn" onclick="clearAllOrders()">🗑️ پاک کردن کل لیست</button>
         </div>
     </div>
 </div>
+
+<!-- مدال پنل مدیریت (رمز 1132) -->
 <div class="modal-overlay" id="adminModal">
     <div class="modal-card">
         <div class="modal-header">
@@ -1020,9 +1022,32 @@
         }
     }
 
-    function openAdminModal() {
-        const pass = prompt("رمز عبور پنل مدیریت:");
-        if (pass === '1132') {
+ // ==================== بخش مدیریت و امنیت (نسخه نهایی) ====================
+
+// این تابع هم اعداد فارسی و هم انگلیسی را به عدد یکسان تبدیل می‌کند
+function simpleHash(str) {
+    if (!str) return "";
+    const normalized = str.toString()
+        .replace(/[۰-۹]/g, d => "۰۱۲۳۴۵۶۷۸۹".indexOf(d))
+        .replace(/[٠-٩]/g, d => "٠١٢٣٤٥٦٧٨٩".indexOf(d))
+        .trim();
+
+    let hash = 0;
+    for (let i = 0; i < normalized.length; i++) {
+        const char = normalized.charCodeAt(i);
+        hash = (hash << 5) - hash + char;
+        hash |= 0; 
+    }
+    return hash.toString();
+}
+
+// هش دقیق و تست‌شده برای رمز "1132"
+const ADMIN_HASH_CODE = "1508479";
+
+function openAdminModal() {
+    const pass = prompt("رمز عبور پنل مدیریت:");
+    if (pass !== null) {
+        if (simpleHash(pass) === ADMIN_HASH_CODE) {
             document.getElementById('adm_st37').value = appSettings.st37;
             document.getElementById('adm_galv').value = appSettings.galv;
             document.getElementById('adm_labor').value = appSettings.labor;
@@ -1050,47 +1075,48 @@
             document.getElementById('adm_d1000').value = d.d1000;
 
             document.getElementById('adminModal').style.display = 'flex';
-        } else if (pass !== null) {
+        } else {
             alert("رمز عبور مدیریت اشتباه است!");
         }
     }
+}
 
-    function closeAdminModal() {
-        document.getElementById('adminModal').style.display = 'none';
-    }
+function closeAdminModal() {
+    document.getElementById('adminModal').style.display = 'none';
+}
 
-   function saveAdminSettings() {
-        appSettings.st37 = parseFloat(document.getElementById('adm_st37').value) || 0;
-        appSettings.galv = parseFloat(document.getElementById('adm_galv').value) || 0;
-        appSettings.labor = parseFloat(document.getElementById('adm_labor').value) || 0;
-        appSettings.ar_wallpost = parseFloat(document.getElementById('adm_ar_wallpost').value) || 0;
-        appSettings.ar_vador = parseFloat(document.getElementById('adm_ar_vador').value) || 0;
+function saveAdminSettings() {
+    appSettings.st37 = parseFloat(document.getElementById('adm_st37').value) || 0;
+    appSettings.galv = parseFloat(document.getElementById('adm_galv').value) || 0;
+    appSettings.labor = parseFloat(document.getElementById('adm_labor').value) || 0;
+    appSettings.ar_wallpost = parseFloat(document.getElementById('adm_ar_wallpost').value) || 0;
+    appSettings.ar_vador = parseFloat(document.getElementById('adm_ar_vador').value) || 0;
 
-        appSettings.fittings = {
-            girandeh: parseFloat(document.getElementById('adm_fit_girandeh').value) || 0,
-            ghollab: parseFloat(document.getElementById('adm_fit_ghollab').value) || 0,
-            bastar_5_5: parseFloat(document.getElementById('adm_fit_bastar_5_5').value) || 0,
-            bastar_11: parseFloat(document.getElementById('adm_fit_bastar_11').value) || 0,
-            bastar_15: parseFloat(document.getElementById('adm_fit_bastar_15').value) || 0,
-            pich_boltex: parseFloat(document.getElementById('adm_fit_pich_boltex').value) || 0,
-            pich_rool: parseFloat(document.getElementById('adm_fit_pich_rool').value) || 0,
-            rollbolt_12: parseFloat(document.getElementById('adm_fit_rollbolt_12').value) || 0,
-            bast_sabt: parseFloat(document.getElementById('adm_fit_bast_sabt').value) || 0,
-            bast_radikali: parseFloat(document.getElementById('adm_fit_bast_radikali').value) || 0,
-            plate_25_15: parseFloat(document.getElementById('adm_fit_plate_25_15').value) || 0
-        };
+    appSettings.fittings = {
+        girandeh: parseFloat(document.getElementById('adm_fit_girandeh').value) || 0,
+        ghollab: parseFloat(document.getElementById('adm_fit_ghollab').value) || 0,
+        bastar_5_5: parseFloat(document.getElementById('adm_fit_bastar_5_5').value) || 0,
+        bastar_11: parseFloat(document.getElementById('adm_fit_bastar_11').value) || 0,
+        bastar_15: parseFloat(document.getElementById('adm_fit_bastar_15').value) || 0,
+        pich_boltex: parseFloat(document.getElementById('adm_fit_pich_boltex').value) || 0,
+        pich_rool: parseFloat(document.getElementById('adm_fit_pich_rool').value) || 0,
+        rollbolt_12: parseFloat(document.getElementById('adm_fit_rollbolt_12').value) || 0,
+        bast_sabt: parseFloat(document.getElementById('adm_fit_bast_sabt').value) || 0,
+        bast_radikali: parseFloat(document.getElementById('adm_fit_bast_radikali').value) || 0,
+        plate_25_15: parseFloat(document.getElementById('adm_fit_plate_25_15').value) || 0
+    };
 
-        appSettings.discounts = {
-            d100: parseFloat(document.getElementById('adm_d100').value) || 0,
-            d200: parseFloat(document.getElementById('adm_d200').value) || 0,
-            d300: parseFloat(document.getElementById('adm_d300').value) || 0,
-            d500: parseFloat(document.getElementById('adm_d500').value) || 0,
-            d1000: parseFloat(document.getElementById('adm_d1000').value) || 0
-        };
+    appSettings.discounts = {
+        d100: parseFloat(document.getElementById('adm_d100').value) || 0,
+        d200: parseFloat(document.getElementById('adm_d200').value) || 0,
+        d300: parseFloat(document.getElementById('adm_d300').value) || 0,
+        d500: parseFloat(document.getElementById('adm_d500').value) || 0,
+        d1000: parseFloat(document.getElementById('adm_d1000').value) || 0
+    };
 
-        closeAdminModal();
-        syncToCloud();
-    }
+    closeAdminModal();
+    syncToCloud(); 
+}
 
     function copyInvoiceText() {
         if (orders.length === 0) { alert("پیش‌فاکتور خالی است."); return; }
