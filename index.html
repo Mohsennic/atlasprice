@@ -11,7 +11,7 @@
     <link rel="manifest" href="manifest.json">
     <meta name="theme-color" content="#0f172a">
     <meta name="apple-mobile-web-app-capable" content="yes">
-    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+    <meta name=" async function syncToCloud() {" content="black-translucent">
     <link rel="apple-touch-icon" href="logo.png">
 
     <style>
@@ -710,30 +710,49 @@
         setTimeout(() => { t.style.display = 'none'; }, 3000);
     }
 
-    async function loadCloudSettings() {
+      async function loadCloudSettings() {
+        // ۱. ابتدا آخرین قیمت‌های ذخیره‌شده روی گوشی یا سیستم را می‌خواند
+        const localSaved = localStorage.getItem('atlas_app_settings');
+        if (localSaved) {
+            try {
+                appSettings = { ...appSettings, ...JSON.parse(localSaved) };
+            } catch (e) {
+                console.error("خطا در خواندن حافظه دستگاه");
+            }
+        }
+
+        // ۲. اگر اینترنت وصل بود، جدیدترین قیمت‌ها را از سرور می‌گیرد
         try {
             const res = await fetch(`https://api.jsonbin.io/v3/b/${CLOUD_BIN_ID}/latest`, {
                 headers: { 'X-Master-Key': CLOUD_MASTER_KEY }
             });
             if (res.ok) {
                 const data = await res.json();
-                if (data.record && data.record.st37) {
+                if (data.record && (data.record.st37 || data.record.sheetSt37)) {
                     appSettings = { ...appSettings, ...data.record };
+                    // قیمت جدید را در حافظه گوشی ذخیره می‌کند تا هیچ‌وقت نپرد
+                    localStorage.setItem('atlas_app_settings', JSON.stringify(appSettings));
                 }
             }
         } catch (e) {
-            console.log("استفاده از حافظه پیش‌فرض:", e);
+            console.log("آفلاین؛ استفاده از قیمت‌های ذخیره‌شده دستگاه.");
         }
         
         const updateText = appSettings.lastUpdated || formatJalaliDateTime(new Date());
-        document.getElementById('lastSyncTime').innerText = `آخرین بروزرسانی: ${updateText}`;
+        const timeElem = document.getElementById('lastSyncTime');
+        if (timeElem) timeElem.innerText = `آخرین بروزرسانی: ${updateText}`;
     }
 
     async function syncToCloud() {
         appSettings.lastUpdated = formatJalaliDateTime(new Date());
-        document.getElementById('lastSyncTime').innerText = `آخرین بروزرسانی: ${appSettings.lastUpdated}`;
+        const timeElem = document.getElementById('lastSyncTime');
+        if (timeElem) timeElem.innerText = `آخرین بروزرسانی: ${appSettings.lastUpdated}`;
+        
+        // ذخیره روی حافظه دائمی مرورگر (گوشی/کامپیوتر)
+        localStorage.setItem('atlas_app_settings', JSON.stringify(appSettings));
+
         try {
-            await fetch(`https://api.jsonbin.io/v3/b/${CLOUD_BIN_ID}`, {
+            const response = await fetch(`https://api.jsonbin.io/v3/b/${CLOUD_BIN_ID}`, {
                 method: 'PUT',
                 headers: {
                     'Content-Type': 'application/json',
@@ -741,11 +760,17 @@
                 },
                 body: JSON.stringify(appSettings)
             });
-            showToast("تنظیمات با سرور ابری همگام شد.");
+            
+            if (response.ok) {
+                showToast("تنظیمات در سرور و حافظه دستگاه ذخیره شد.");
+            } else {
+                showToast("خطا در سرور! فقط در حافظه دستگاه ذخیره شد.");
+            }
         } catch (e) {
-            showToast("ذخیره در سیستم محلی انجام شد.");
+            showToast("آفلاین هستید؛ قیمت‌ها فقط روی همین دستگاه ذخیره شدند.");
         }
     }
+
 
     function handleCategoryChange() {
         const cat = document.getElementById('prodCategory').value;
