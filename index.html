@@ -11,7 +11,7 @@
     <link rel="manifest" href="manifest.json">
     <meta name="theme-color" content="#0f172a">
     <meta name="apple-mobile-web-app-capable" content="yes">
-    <meta name=" async function syncToCloud() {" content="black-translucent">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
     <link rel="apple-touch-icon" href="logo.png">
 
     <style>
@@ -153,14 +153,14 @@
   .section-title {
             font-size: 0.95rem;
             font-weight: 700;
-            color: #ffffff;
+            color: var(--navy-dark);
             margin-bottom: 12px;
             display: flex;
             align-items: center;
             gap: 8px;
             border-right: 4px solid var(--orange-main);
             padding-right: 10px;
-        } }
+        }
 
         .form-card {
             background: var(--bg-light);
@@ -552,11 +552,17 @@
                 </div>
             </div>
 
-            <!-- گزینه بدون ضدزنگ -->
+                        <!-- گزینه بدون ضدزنگ -->
             <label class="checkbox-container" id="grp_antirust">
                 <input type="checkbox" id="chk_no_antirust">
                 <span>بدون ضدزنگ (کسر هزینه رنگ‌آمیزی)</span>
             </label>
+
+            <!-- باکس پیش‌نمایش زنده قیمت -->
+            <div style="background:#e2e8f0; border-radius:8px; padding:10px 14px; margin-bottom:12px; display:flex; justify-content:space-between; align-items:center; font-size:0.85rem;">
+                <span>قیمت واحد: <strong id="previewUnitPrice" style="color:var(--orange-hover);">۰</strong> تومان</span>
+                <span>جمع این قلم: <strong id="previewTotalPrice" style="color:var(--orange-hover);">۰</strong> تومان</span>
+            </div>
 
             <button class="btn-add" onclick="addItemToOrder()">
                 <span>➕</span> افزودن به لیست پیش‌فاکتور
@@ -738,9 +744,10 @@
             console.log("آفلاین؛ استفاده از قیمت‌های ذخیره‌شده دستگاه.");
         }
         
-        const updateText = appSettings.lastUpdated || formatJalaliDateTime(new Date());
+         const updateText = appSettings.lastUpdated || formatJalaliDateTime(new Date());
         const timeElem = document.getElementById('lastSyncTime');
         if (timeElem) timeElem.innerText = `آخرین بروزرسانی: ${updateText}`;
+        if (typeof updateLivePreview === 'function') updateLivePreview();
     }
 
     async function syncToCloud() {
@@ -812,7 +819,7 @@
         return 0;
     }
 
-    function addItemToOrder() {
+       function addItemToOrder() {
         const cat = document.getElementById('prodCategory').value;
         const count = parseFloat(document.getElementById('item_count').value) || 0;
         if (count <= 0) { alert('لطفاً تعداد معتبر وارد کنید.'); return; }
@@ -844,19 +851,19 @@
 
             if (cat === 'wallpost') {
                 name = 'والپست منقطع';
-               specs = `${l}*${w} سانت با بال ${f} سانت ضخامت ${t}(${sheetName})`;
+                specs = `${l}*${w} سانت با بال ${f} سانت ضخامت ${t} میلیمتر (${sheetName})`;
                 weightUnit = ((w + 2 * f) * l * t * 7.9) / 10000;
                 const arCost = noAntiRust ? 0 : appSettings.ar_wallpost;
                 unitCost = (weightUnit * (sheetPricePerKg + appSettings.labor)) + arCost;
             } else if (cat === 'vador_end') {
                 name = 'وادار انتهایی (U)';
-                specs = `${l}*${w} سانت با بال ${f} سانت ضخامت ${t}(${sheetName})`;
+                specs = `${l}*${w} سانت با بال ${f} سانت ضخامت ${t} میلیمتر (${sheetName})`;
                 weightUnit = ((w + 2 * f) * l * t * 7.9) / 10000;
                 const arCost = noAntiRust ? 0 : appSettings.ar_vador;
                 unitCost = (weightUnit * (sheetPricePerKg + appSettings.labor)) + arCost;
             } else if (cat === 'vador_mid') {
                 name = 'وادار میانی (H)';
-                 specs = `${l}*${w} سانت با بال ${f} سانت ضخامت ${t}(${sheetName})`;
+                specs = `${l}*${w} سانت با بال ${f} سانت ضخامت ${t} میلیمتر (${sheetName})`;
                 const totalDevLen = l + (Math.floor(l / 100) * 40);
                 weightUnit = ((w + 2 * f) * totalDevLen * t * 7.9) / 10000;
                 const arCost = noAntiRust ? 0 : appSettings.ar_vador;
@@ -869,6 +876,26 @@
         if (hasDiscount) {
             unitCost = unitCost * (1 - (discRate / 100));
         }
+
+        const partnerFactor = isPartner ? 1.10 : 1.14;
+        unitCost = unitCost * partnerFactor;
+
+        const finalUnitPrice = Math.ceil(unitCost / 500) * 500;
+        const totalPrice = finalUnitPrice * count;
+
+        orders.push({
+            name,
+            specs,
+            count,
+            unitPrice: finalUnitPrice,
+            totalPrice: totalPrice,
+            hasDiscount: hasDiscount
+        });
+
+        renderTable();
+        showToast("آیتم افزوده شد.");
+    }
+
     function updateLivePreview() {
         const cat = document.getElementById('prodCategory').value;
         const count = parseFloat(document.getElementById('item_count').value) || 0;
@@ -879,7 +906,7 @@
 
         if (cat === 'fittings') {
             const fitKey = document.getElementById('fittingType').value;
-            unitCost = appSettings.fittings[fitKey] || 0;
+            unitCost = (appSettings.fittings && appSettings.fittings[fitKey]) ? appSettings.fittings[fitKey] : 0;
         } else {
             const w = parseFloat(document.getElementById('dim_w').value) || 0;
             const f = parseFloat(document.getElementById('dim_f').value) || 0;
@@ -920,25 +947,6 @@
         const elTotal = document.getElementById('previewTotalPrice');
         if (elUnit) elUnit.innerText = finalUnitPrice.toLocaleString();
         if (elTotal) elTotal.innerText = finalTotalPrice.toLocaleString();
-    }
-
-        const partnerFactor = isPartner ? 1.10 : 1.14;
-        unitCost = unitCost * partnerFactor;
-
-        const finalUnitPrice = Math.ceil(unitCost / 500) * 500;
-        const totalPrice = finalUnitPrice * count;
-
-        orders.push({
-            name,
-            specs,
-            count,
-            unitPrice: finalUnitPrice,
-            totalPrice: totalPrice,
-            hasDiscount: hasDiscount
-        });
-
-        renderTable();
-        showToast("آیتم افزوده شد.");
     }
 
     function renderTable() {
