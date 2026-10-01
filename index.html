@@ -819,7 +819,7 @@
         return 0;
     }
 
-       function addItemToOrder() {
+        function addItemToOrder() {
         const cat = document.getElementById('prodCategory').value;
         const count = parseFloat(document.getElementById('item_count').value) || 0;
         if (count <= 0) { alert('لطفاً تعداد معتبر وارد کنید.'); return; }
@@ -853,21 +853,21 @@
                 name = 'والپست منقطع';
                 specs = `${l}*${w} سانت با بال ${f} سانت ضخامت ${t} میلیمتر (${sheetName})`;
                 weightUnit = ((w + 2 * f) * l * t * 7.9) / 10000;
-                const arCost = noAntiRust ? 0 : appSettings.ar_wallpost;
-                unitCost = (weightUnit * (sheetPricePerKg + appSettings.labor)) + arCost;
+                const basePrice = weightUnit * (sheetPricePerKg + appSettings.labor);
+                unitCost = noAntiRust ? (basePrice - appSettings.ar_wallpost) : basePrice;
             } else if (cat === 'vador_end') {
                 name = 'وادار انتهایی (U)';
                 specs = `${l}*${w} سانت با بال ${f} سانت ضخامت ${t} میلیمتر (${sheetName})`;
                 weightUnit = ((w + 2 * f) * l * t * 7.9) / 10000;
-                const arCost = noAntiRust ? 0 : appSettings.ar_vador;
-                unitCost = (weightUnit * (sheetPricePerKg + appSettings.labor)) + arCost;
+                const basePrice = weightUnit * (sheetPricePerKg + appSettings.labor);
+                unitCost = noAntiRust ? basePrice : (basePrice + appSettings.ar_vador);
             } else if (cat === 'vador_mid') {
                 name = 'وادار میانی (H)';
                 specs = `${l}*${w} سانت با بال ${f} سانت ضخامت ${t} میلیمتر (${sheetName})`;
                 const totalDevLen = l + (Math.floor(l / 100) * 40);
                 weightUnit = ((w + 2 * f) * totalDevLen * t * 7.9) / 10000;
-                const arCost = noAntiRust ? 0 : appSettings.ar_vador;
-                unitCost = (weightUnit * (sheetPricePerKg + appSettings.labor)) + arCost;
+                const basePrice = weightUnit * (sheetPricePerKg + appSettings.labor);
+                unitCost = noAntiRust ? basePrice : (basePrice + appSettings.ar_vador);
             }
 
             if (noAntiRust) specs += ' | بدون ضدزنگ';
@@ -887,26 +887,29 @@
             name,
             specs,
             count,
+            weightUnit: Number(weightUnit.toFixed(2)),
+            totalWeight: Number((weightUnit * count).toFixed(2)),
             unitPrice: finalUnitPrice,
             totalPrice: totalPrice,
             hasDiscount: hasDiscount
         });
 
         renderTable();
-        showToast("آیتم افزوده شد.");
+        showToast("آیتم با موفقیت اضافه شد.");
     }
 
     function updateLivePreview() {
         const cat = document.getElementById('prodCategory').value;
-        const count = parseFloat(document.getElementById('item_count').value) || 0;
+        const count = parseFloat(document.getElementById('item_count').value) || 1;
         let unitCost = 0;
 
         const discRate = getDiscountRate(count);
         const hasDiscount = discRate > 0;
 
         if (cat === 'fittings') {
-            const fitKey = document.getElementById('fittingType').value;
-            unitCost = (appSettings.fittings && appSettings.fittings[fitKey]) ? appSettings.fittings[fitKey] : 0;
+            const fitSelect = document.getElementById('fittingType');
+            const fitKey = fitSelect.value;
+            unitCost = appSettings.fittings[fitKey] || 0;
         } else {
             const w = parseFloat(document.getElementById('dim_w').value) || 0;
             const f = parseFloat(document.getElementById('dim_f').value) || 0;
@@ -919,17 +922,17 @@
 
             if (cat === 'wallpost') {
                 const weightUnit = ((w + 2 * f) * l * t * 7.9) / 10000;
-                const arCost = noAntiRust ? 0 : appSettings.ar_wallpost;
-                unitCost = (weightUnit * (sheetPricePerKg + appSettings.labor)) + arCost;
+                const basePrice = weightUnit * (sheetPricePerKg + appSettings.labor);
+                unitCost = noAntiRust ? (basePrice - appSettings.ar_wallpost) : basePrice;
             } else if (cat === 'vador_end') {
                 const weightUnit = ((w + 2 * f) * l * t * 7.9) / 10000;
-                const arCost = noAntiRust ? 0 : appSettings.ar_vador;
-                unitCost = (weightUnit * (sheetPricePerKg + appSettings.labor)) + arCost;
+                const basePrice = weightUnit * (sheetPricePerKg + appSettings.labor);
+                unitCost = noAntiRust ? basePrice : (basePrice + appSettings.ar_vador);
             } else if (cat === 'vador_mid') {
                 const totalDevLen = l + (Math.floor(l / 100) * 40);
                 const weightUnit = ((w + 2 * f) * totalDevLen * t * 7.9) / 10000;
-                const arCost = noAntiRust ? 0 : appSettings.ar_vador;
-                unitCost = (weightUnit * (sheetPricePerKg + appSettings.labor)) + arCost;
+                const basePrice = weightUnit * (sheetPricePerKg + appSettings.labor);
+                unitCost = noAntiRust ? basePrice : (basePrice + appSettings.ar_vador);
             }
         }
 
@@ -943,10 +946,15 @@
         const finalUnitPrice = Math.ceil(unitCost / 500) * 500;
         const finalTotalPrice = finalUnitPrice * count;
 
-        const elUnit = document.getElementById('previewUnitPrice');
-        const elTotal = document.getElementById('previewTotalPrice');
-        if (elUnit) elUnit.innerText = finalUnitPrice.toLocaleString();
-        if (elTotal) elTotal.innerText = finalTotalPrice.toLocaleString();
+        const previewUnitPriceEl = document.getElementById('previewUnitPrice');
+        const previewTotalPriceEl = document.getElementById('previewTotalPrice');
+
+        if (previewUnitPriceEl) {
+            previewUnitPriceEl.innerText = finalUnitPrice.toLocaleString('fa-IR') + ' تومان';
+        }
+        if (previewTotalPriceEl) {
+            previewTotalPriceEl.innerText = finalTotalPrice.toLocaleString('fa-IR') + ' تومان';
+        }
     }
 
     function renderTable() {
