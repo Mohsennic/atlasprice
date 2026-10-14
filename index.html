@@ -746,85 +746,52 @@
         setTimeout(() => { t.style.display = 'none'; }, 3000);
     }
 
-     async function loadCloudSettings() {
-        const overlay = document.getElementById('syncLoadingOverlay');
-        const timeElem = document.getElementById('lastSyncTime');
+   async function loadCloudSettings(isManual = false) {
+    const overlay = document.getElementById('syncLoadingOverlay');
+    if (isManual && overlay) overlay.style.display = 'flex';
+    
+    const controller = new AbortController();
+    const timeoutId = setTimeout(() => controller.abort(), 4000); // تایمر نجات 4 ثانیه‌ای برای جلوگیری از ماندن روی حالت در حال اتصال
+
+    try {
+        // درخواست استاندارد و ایمن بدون ایجاد قفل در مرورگرهای موبایل
+        const res = await fetch(`https://api.jsonbin.io/v3/b/${CLOUD_BIN_ID}/latest`, {
+            method: 'GET',
+            headers: { 
+                'X-Master-Key': CLOUD_MASTER_KEY
+            },
+            signal: controller.signal
+        });
         
-        // تابع کمکی برای بستن قطعی لودینگ تحت هر شرایطی
-        const closeOverlay = () => {
-            if (overlay) {
-                overlay.style.opacity = '0';
-                setTimeout(() => {
-                    overlay.style.display = 'none';
-                    overlay.style.opacity = '1';
-                }, 200);
-            }
-        };
+        clearTimeout(timeoutId);
 
-                  // استفاده از ترفند ضد کش سرور ابری (بایپس کامل کش سه‌لایه JSONBin و مرورگر)
-            const antiCacheId = 'nocache_' + Date.now() + '_' + Math.floor(Math.random() * 100000);
-            const mobileNoCacheUrl = `https://api.jsonbin.io/v3/b/${CLOUD_BIN_ID}/latest?meta=false&_v=${antiCacheId}`;
+        if (res.ok) {
+            const data = await res.json();
+            const record = data.record || data;
             
-            const res = await fetch(mobileNoCacheUrl, {
-                method: 'GET',
-                cache: 'no-store',
-                headers: { 
-                    'X-Master-Key': CLOUD_MASTER_KEY,
-                    'Cache-Control': 'no-cache, no-store',
-                    'Pragma': 'no-cache',
-                    'If-Modified-Since': 'Mon, 26 Jul 1997 05:00:00 GMT' // ترفند کلاسیک اجبار سرور به عدم استفاده از کش
-                },
-                signal: controller.signal
-            });
-         
-            // نمایش موقت ساعت ذخیره‌شده قبلی تا زمان دریافت اطلاعات جدید
-            if (timeElem && appSettings.lastUpdated) {
-                timeElem.innerText = `آخرین بروزرسانی: ${appSettings.lastUpdated}`;
-            }
-
-            // ۲. درخواست سبک و استاندارد بدون هدرهای مزاحم کش (سازگار با موبایل و کامپیوتر)
-            const controller = new AbortController();
-            const fetchTimeout = setTimeout(() => controller.abort(), 3500);
-
-                   // استفاده از روش مدرن no-cache همراه با هدر و پارامتر رندوم قوی برای موبایل
-            const mobileNoCacheUrl = `https://api.jsonbin.io/v3/b/${CLOUD_BIN_ID}/latest?r=${Math.random()}_${Date.now()}`;
-            const res = await fetch(mobileNoCacheUrl, {
-                method: 'GET',
-                cache: 'reload', // مجبور کردن مرورگر موبایل به نادیده گرفتن کامل کش
-                headers: { 
-                    'X-Master-Key': CLOUD_MASTER_KEY,
-                    'Cache-Control': 'no-cache'
-                },
-                signal: controller.signal
-            });
-     });
-            clearTimeout(fetchTimeout);
-
-            if (res.ok) {
-                const data = await res.json();
-                const record = data.record || {};
-                if (record.st37 || record.galv || record.labor) {
-                    appSettings = { ...appSettings, ...record };
-                    try {
-                        localStorage.setItem('atlas_app_settings', JSON.stringify(appSettings));
-                    } catch (eSave) {}
-                }
-            }
-        } catch (e) {
-            console.log("استفاده از آخرین نرخ‌های ذخیره‌شده دستگاه.");
-        } finally {
-            clearTimeout(emergencyTimer);
-            closeOverlay();
-            
-            // بروزرسانی زمان و فرمول‌ها در پایان
-            if (timeElem && appSettings.lastUpdated) {
-                timeElem.innerText = `آخرین بروزرسانی: ${appSettings.lastUpdated}`;
-            }
-            if (typeof updateLivePreview === 'function') {
-                try { updateLivePreview(); } catch (errPrev) {}
+            if (record && (record.st37 !== undefined || record.galv !== undefined)) {
+                // اعمال تنظیمات دریافت شده
+                if (record.st37 !== undefined) appSettings.st37 = record.st37;
+                if (record.galv !== undefined) appSettings.galv = record.galv;
+                if (record.labor !== undefined) appSettings.labor = record.labor;
+                if (record.noAntiRustDedudct !== undefined) appSettings.noAntiRustDedudct = record.noAntiRustDedudct;
+                if (record.valpostNoAntiRustDeduct !== undefined) appSettings.valpostNoAntiRustDeduct = record.valpostNoAntiRustDeduct;
+                if (record.vadarNoAntiRustDeduct !== undefined) appSettings.vadarNoAntiRustDeduct = record.vadarNoAntiRustDeduct;
+                
+                if (typeof saveSettingsLocally === 'function') saveSettingsLocally();
+                if (typeof updateUIFromSettings === 'function') updateUIFromSettings();
+                if (typeof renderTable === 'function') renderTable();
             }
         }
+    } catch (err) {
+        // اگر اینترنت کند بود یا سرور پاسخ نداد، به هیچ وجه صفحه قفل نمی‌شود و از لوکال استوریج می‌خواند
+        console.log("Cloud sync fallback to local:", err);
+    } finally {
+        clearTimeout(timeoutId);
+        if (overlay) overlay.style.display = 'none';
     }
+}
+
     
 async function syncToCloud() {
     showToast("در حال ذخیره و همگام‌سازی در سرور...");
