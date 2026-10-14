@@ -754,10 +754,15 @@ async function loadCloudSettings(isManual = false) {
     const timeoutId = setTimeout(() => controller.abort(), 4000); // تایمر نجات 4 ثانیه‌ای
 
     try {
-        const res = await fetch(`https://api.jsonbin.io/v3/b/${CLOUD_BIN_ID}/latest`, {
+        // اضافه کردن پارامتر تصادفی برای جلوگیری از ماندن در کش مرورگر موبایل
+        const antiCacheUrl = `https://api.jsonbin.io/v3/b/${CLOUD_BIN_ID}/latest?r=${Date.now()}`;
+        const res = await fetch(antiCacheUrl, {
             method: 'GET',
+            cache: 'no-store', // اجبار مرورگر موبایل به دریافت دیتای تازه از سرور
             headers: { 
-                'X-Master-Key': CLOUD_MASTER_KEY
+                'X-Master-Key': CLOUD_MASTER_KEY,
+                'Cache-Control': 'no-cache',
+                'Pragma': 'no-cache'
             },
             signal: controller.signal
         });
@@ -777,7 +782,7 @@ async function loadCloudSettings(isManual = false) {
                 if (record.valpostNoAntiRustDeduct !== undefined) appSettings.valpostNoAntiRustDeduct = record.valpostNoAntiRustDeduct;
                 if (record.vadarNoAntiRustDeduct !== undefined) appSettings.vadarNoAntiRustDeduct = record.vadarNoAntiRustDeduct;
                 
-                // دریافت دقیق تاریخ ثبت‌شده در سرور ابری (توسط ادمین)
+                // دریافت دقیق تاریخ ثبت‌شده در سرور ابری توسط ادمین
                 if (record.lastUpdated) {
                     appSettings.lastUpdated = record.lastUpdated;
                 }
@@ -793,7 +798,7 @@ async function loadCloudSettings(isManual = false) {
         clearTimeout(timeoutId);
         if (overlay) overlay.style.display = 'none';
         
-        // نمایش دقیق تاریخ آخرین ذخیره‌سازی سرور (بدون دستکاری و ساخت تاریخ جعلی)
+        // نمایش دقیق تاریخ آخرین ذخیره‌سازی سرور بدون هیچ مقدار ساختگی
         const syncTimeEl = document.getElementById('lastSyncTime');
         if (syncTimeEl) {
             if (appSettings.lastUpdated) {
