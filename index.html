@@ -785,14 +785,18 @@
             const controller = new AbortController();
             const fetchTimeout = setTimeout(() => controller.abort(), 3500);
 
-            const safeUrl = `https://api.jsonbin.io/v3/b/${CLOUD_BIN_ID}/latest?t=${Date.now()}`;
-            const res = await fetch(safeUrl, {
+                   // استفاده از روش مدرن no-cache همراه با هدر و پارامتر رندوم قوی برای موبایل
+            const mobileNoCacheUrl = `https://api.jsonbin.io/v3/b/${CLOUD_BIN_ID}/latest?r=${Math.random()}_${Date.now()}`;
+            const res = await fetch(mobileNoCacheUrl, {
                 method: 'GET',
+                cache: 'reload', // مجبور کردن مرورگر موبایل به نادیده گرفتن کامل کش
                 headers: { 
-                    'X-Master-Key': CLOUD_MASTER_KEY
+                    'X-Master-Key': CLOUD_MASTER_KEY,
+                    'Cache-Control': 'no-cache'
                 },
                 signal: controller.signal
             });
+     });
             clearTimeout(fetchTimeout);
 
             if (res.ok) {
