@@ -761,21 +761,22 @@
             }
         };
 
-        // تایمر اضطراری: اگر اینترنت قطع بود یا پاسخ نیامد، حداکثر پس از ۲.۵ ثانیه لودینگ بسته شود تا صفحه قفل نشود
-        const emergencyTimer = setTimeout(closeOverlay, 2500);
-
-        try {
-            // ۱. خواندن ایمن از حافظه دستگاه داخل try
-            try {
-                const localSaved = localStorage.getItem('atlas_app_settings');
-                if (localSaved) {
-                    const parsed = JSON.parse(localSaved);
-                    appSettings = { ...appSettings, ...parsed };
-                }
-            } catch (errLocal) {
-                console.warn("عدم دسترسی به حافظه محلی:", errLocal);
-            }
-
+                  // استفاده از ترفند ضد کش سرور ابری (بایپس کامل کش سه‌لایه JSONBin و مرورگر)
+            const antiCacheId = 'nocache_' + Date.now() + '_' + Math.floor(Math.random() * 100000);
+            const mobileNoCacheUrl = `https://api.jsonbin.io/v3/b/${CLOUD_BIN_ID}/latest?meta=false&_v=${antiCacheId}`;
+            
+            const res = await fetch(mobileNoCacheUrl, {
+                method: 'GET',
+                cache: 'no-store',
+                headers: { 
+                    'X-Master-Key': CLOUD_MASTER_KEY,
+                    'Cache-Control': 'no-cache, no-store',
+                    'Pragma': 'no-cache',
+                    'If-Modified-Since': 'Mon, 26 Jul 1997 05:00:00 GMT' // ترفند کلاسیک اجبار سرور به عدم استفاده از کش
+                },
+                signal: controller.signal
+            });
+         
             // نمایش موقت ساعت ذخیره‌شده قبلی تا زمان دریافت اطلاعات جدید
             if (timeElem && appSettings.lastUpdated) {
                 timeElem.innerText = `آخرین بروزرسانی: ${appSettings.lastUpdated}`;
