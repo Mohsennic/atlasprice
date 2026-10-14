@@ -746,63 +746,81 @@
         setTimeout(() => { t.style.display = 'none'; }, 3000);
     }
 
-    async function loadCloudSettings() {
-    const overlay = document.getElementById('syncLoadingOverlay');
-    if (overlay) overlay.style.display = 'flex';
+     async function loadCloudSettings() {
+        const overlay = document.getElementById('syncLoadingOverlay');
+        const timeElem = document.getElementById('lastSyncTime');
+        
+        // تابع کمکی برای بستن قطعی لودینگ تحت هر شرایطی
+        const closeOverlay = () => {
+            if (overlay) {
+                overlay.style.opacity = '0';
+                setTimeout(() => {
+                    overlay.style.display = 'none';
+                    overlay.style.opacity = '1';
+                }, 200);
+            }
+        };
 
-    // ۱. ابتدا لود از حافظه محلی
-    const localSaved = localStorage.getItem('atlas_app_settings');
-    if (localSaved) {
+        // تایمر اضطراری: اگر اینترنت قطع بود یا پاسخ نیامد، حداکثر پس از ۲.۵ ثانیه لودینگ بسته شود تا صفحه قفل نشود
+        const emergencyTimer = setTimeout(closeOverlay, 2500);
+
         try {
-            appSettings = { ...appSettings, ...JSON.parse(localSaved) };
+            // ۱. خواندن ایمن از حافظه دستگاه داخل try
+            try {
+                const localSaved = localStorage.getItem('atlas_app_settings');
+                if (localSaved) {
+                    const parsed = JSON.parse(localSaved);
+                    appSettings = { ...appSettings, ...parsed };
+                }
+            } catch (errLocal) {
+                console.warn("عدم دسترسی به حافظه محلی:", errLocal);
+            }
+
+            // نمایش موقت ساعت ذخیره‌شده قبلی تا زمان دریافت اطلاعات جدید
+            if (timeElem && appSettings.lastUpdated) {
+                timeElem.innerText = `آخرین بروزرسانی: ${appSettings.lastUpdated}`;
+            }
+
+            // ۲. درخواست سبک و استاندارد بدون هدرهای مزاحم کش (سازگار با موبایل و کامپیوتر)
+            const controller = new AbortController();
+            const fetchTimeout = setTimeout(() => controller.abort(), 3500);
+
+            const safeUrl = `https://api.jsonbin.io/v3/b/${CLOUD_BIN_ID}/latest?t=${Date.now()}`;
+            const res = await fetch(safeUrl, {
+                method: 'GET',
+                headers: { 
+                    'X-Master-Key': CLOUD_MASTER_KEY
+                },
+                signal: controller.signal
+            });
+            clearTimeout(fetchTimeout);
+
+            if (res.ok) {
+                const data = await res.json();
+                const record = data.record || {};
+                if (record.st37 || record.galv || record.labor) {
+                    appSettings = { ...appSettings, ...record };
+                    try {
+                        localStorage.setItem('atlas_app_settings', JSON.stringify(appSettings));
+                    } catch (eSave) {}
+                }
+            }
         } catch (e) {
-            console.error("خطا در حافظه دستگاه");
-        }
-    }
-
-    // ۲. درخواست با جلوگیری ۱۰۰٪ از کش مرورگر و تایم‌اوت ۵ ثانیه
-    const controller = new AbortController();
-    const timeoutId = setTimeout(() => controller.abort(), 5000);
-
-    try {
-        const nocacheUrl = `https://api.jsonbin.io/v3/b/${CLOUD_BIN_ID}/latest?nocache=${Date.now()}`;
-        const res = await fetch(nocacheUrl, {
-            method: 'GET',
-            headers: { 
-                'X-Master-Key': CLOUD_MASTER_KEY,
-                'Cache-Control': 'no-cache, no-store, must-revalidate',
-                'Pragma': 'no-cache'
-            },
-            signal: controller.signal
-        });
-
-        if (res.ok) {
-            const data = await res.json();
-            const record = data.record || {};
-            if (record.st37 || record.galv || record.labor) {
-                appSettings = { ...appSettings, ...record };
-                localStorage.setItem('atlas_app_settings', JSON.stringify(appSettings));
+            console.log("استفاده از آخرین نرخ‌های ذخیره‌شده دستگاه.");
+        } finally {
+            clearTimeout(emergencyTimer);
+            closeOverlay();
+            
+            // بروزرسانی زمان و فرمول‌ها در پایان
+            if (timeElem && appSettings.lastUpdated) {
+                timeElem.innerText = `آخرین بروزرسانی: ${appSettings.lastUpdated}`;
+            }
+            if (typeof updateLivePreview === 'function') {
+                try { updateLivePreview(); } catch (errPrev) {}
             }
         }
-    } catch (e) {
-        console.log("استفاده از آخرین نرخ‌های ذخیره‌شده دستگاه.");
-    } finally {
-        clearTimeout(timeoutId);
-        if (overlay) {
-            overlay.style.opacity = '0';
-            setTimeout(() => { 
-                overlay.style.display = 'none'; 
-                overlay.style.opacity = '1'; 
-            }, 250);
-        }
     }
-
-    const updateText = appSettings.lastUpdated || formatJalaliDateTime(new Date());
-    const timeElem = document.getElementById('lastSyncTime');
-    if (timeElem) timeElem.innerText = `آخرین بروزرسانی: ${updateText}`;
-    if (typeof updateLivePreview === 'function') updateLivePreview();
-}
-
+    
 async function syncToCloud() {
     showToast("در حال ذخیره و همگام‌سازی در سرور...");
     appSettings.lastUpdated = formatJalaliDateTime(new Date());
