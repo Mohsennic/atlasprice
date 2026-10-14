@@ -453,9 +453,39 @@
             display: none;
             z-index: 2000;
         }
+#syncLoadingOverlay {
+    position: fixed;
+    top: 0; left: 0; right: 0; bottom: 0;
+    background: rgba(15, 23, 42, 0.88);
+    backdrop-filter: blur(6px);
+    z-index: 99999;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    color: #fff;
+    font-family: inherit;
+    transition: opacity 0.3s ease;
+}
+#syncLoadingOverlay .spinner {
+    width: 48px;
+    height: 48px;
+    border: 4px solid rgba(255, 255, 255, 0.2);
+    border-top-color: #3b82f6;
+    border-radius: 50%;
+    animation: spin 0.8s linear infinite;
+    margin-bottom: 16px;
+}
+@keyframes spin { to { transform: rotate(360deg); } }
+
     </style>
 </head>
 <body>
+<div id="syncLoadingOverlay">
+    <div class="spinner"></div>
+    <div style="font-size: 16px; font-weight: bold;">در حال دریافت آخرین نرخ‌های روز...</div>
+    <div style="font-size: 12px; color: #94a3b8; margin-top: 6px;">لطفاً چند لحظه شکیبا باشید</div>
+</div>
 
 <div class="main-wrapper">
     <!-- هدر برندینگ + کنترل‌های مدیریتی -->
@@ -716,68 +746,90 @@
         setTimeout(() => { t.style.display = 'none'; }, 3000);
     }
 
-      async function loadCloudSettings() {
-        // ۱. ابتدا آخرین قیمت‌های ذخیره‌شده روی گوشی یا سیستم را می‌خواند
-        const localSaved = localStorage.getItem('atlas_app_settings');
-        if (localSaved) {
-            try {
-                appSettings = { ...appSettings, ...JSON.parse(localSaved) };
-            } catch (e) {
-                console.error("خطا در خواندن حافظه دستگاه");
-            }
-        }
+    async function loadCloudSettings() {
+    const overlay = document.getElementById('syncLoadingOverlay');
+    if (overlay) overlay.style.display = 'flex';
 
-        // ۲. اگر اینترنت وصل بود، جدیدترین قیمت‌ها را از سرور می‌گیرد
+    // ۱. ابتدا لود از حافظه محلی
+    const localSaved = localStorage.getItem('atlas_app_settings');
+    if (localSaved) {
         try {
-            const res = await fetch(`https://api.jsonbin.io/v3/b/${CLOUD_BIN_ID}/latest`, {
-                headers: { 'X-Master-Key': CLOUD_MASTER_KEY }
-            });
-            if (res.ok) {
-                const data = await res.json();
-                if (data.record && (data.record.st37 || data.record.sheetSt37)) {
-                    appSettings = { ...appSettings, ...data.record };
-                    // قیمت جدید را در حافظه گوشی ذخیره می‌کند تا هیچ‌وقت نپرد
-                    localStorage.setItem('atlas_app_settings', JSON.stringify(appSettings));
-                }
-            }
+            appSettings = { ...appSettings, ...JSON.parse(localSaved) };
         } catch (e) {
-            console.log("آفلاین؛ استفاده از قیمت‌های ذخیره‌شده دستگاه.");
-        }
-        
-         const updateText = appSettings.lastUpdated || formatJalaliDateTime(new Date());
-        const timeElem = document.getElementById('lastSyncTime');
-        if (timeElem) timeElem.innerText = `آخرین بروزرسانی: ${updateText}`;
-        if (typeof updateLivePreview === 'function') updateLivePreview();
-    }
-
-    async function syncToCloud() {
-        appSettings.lastUpdated = formatJalaliDateTime(new Date());
-        const timeElem = document.getElementById('lastSyncTime');
-        if (timeElem) timeElem.innerText = `آخرین بروزرسانی: ${appSettings.lastUpdated}`;
-        
-        // ذخیره روی حافظه دائمی مرورگر (گوشی/کامپیوتر)
-        localStorage.setItem('atlas_app_settings', JSON.stringify(appSettings));
-
-        try {
-            const response = await fetch(`https://api.jsonbin.io/v3/b/${CLOUD_BIN_ID}`, {
-                method: 'PUT',
-                headers: {
-                    'Content-Type': 'application/json',
-                    'X-Master-Key': CLOUD_MASTER_KEY
-                },
-                body: JSON.stringify(appSettings)
-            });
-            
-            if (response.ok) {
-                showToast("تنظیمات در سرور و حافظه دستگاه ذخیره شد.");
-            } else {
-                showToast("خطا در سرور! فقط در حافظه دستگاه ذخیره شد.");
-            }
-        } catch (e) {
-            showToast("آفلاین هستید؛ قیمت‌ها فقط روی همین دستگاه ذخیره شدند.");
+            console.error("خطا در حافظه دستگاه");
         }
     }
 
+    // ۲. درخواست با جلوگیری ۱۰۰٪ از کش مرورگر و تایم‌اوت ۵ ثانیه
+    const controller = new AbortController();
+    const timeoutId = setTimeout(() => controller.abort(), 5000);
+
+    try {
+        const nocacheUrl = `https://api.jsonbin.io/v3/b/${CLOUD_BIN_ID}/latest?nocache=${Date.now()}`;
+        const res = await fetch(nocacheUrl, {
+            method: 'GET',
+            headers: { 
+                'X-Master-Key': CLOUD_MASTER_KEY,
+                'Cache-Control': 'no-cache, no-store, must-revalidate',
+                'Pragma': 'no-cache'
+            },
+            signal: controller.signal
+        });
+
+        if (res.ok) {
+            const data = await res.json();
+            const record = data.record || {};
+            if (record.st37 || record.galv || record.labor) {
+                appSettings = { ...appSettings, ...record };
+                localStorage.setItem('atlas_app_settings', JSON.stringify(appSettings));
+            }
+        }
+    } catch (e) {
+        console.log("استفاده از آخرین نرخ‌های ذخیره‌شده دستگاه.");
+    } finally {
+        clearTimeout(timeoutId);
+        if (overlay) {
+            overlay.style.opacity = '0';
+            setTimeout(() => { 
+                overlay.style.display = 'none'; 
+                overlay.style.opacity = '1'; 
+            }, 250);
+        }
+    }
+
+    const updateText = appSettings.lastUpdated || formatJalaliDateTime(new Date());
+    const timeElem = document.getElementById('lastSyncTime');
+    if (timeElem) timeElem.innerText = `آخرین بروزرسانی: ${updateText}`;
+    if (typeof updateLivePreview === 'function') updateLivePreview();
+}
+
+async function syncToCloud() {
+    showToast("در حال ذخیره و همگام‌سازی در سرور...");
+    appSettings.lastUpdated = formatJalaliDateTime(new Date());
+    localStorage.setItem('atlas_app_settings', JSON.stringify(appSettings));
+
+    try {
+        const res = await fetch(`https://api.jsonbin.io/v3/b/${CLOUD_BIN_ID}`, {
+            method: 'PUT',
+            headers: {
+                'Content-Type': 'application/json',
+                'X-Master-Key': CLOUD_MASTER_KEY
+            },
+            body: JSON.stringify(appSettings)
+        });
+
+        if (res.ok) {
+            showToast("✅ نرخ‌های جدید با موفقیت ذخیره و منتشر شد.");
+            const timeElem = document.getElementById('lastSyncTime');
+            if (timeElem) timeElem.innerText = `آخرین بروزرسانی: ${appSettings.lastUpdated}`;
+            if (typeof updateLivePreview === 'function') updateLivePreview();
+        } else {
+            showToast("خطا در ارسال به سرور، ذخیره فقط در حافظه این دستگاه انجام شد.");
+        }
+    } catch (e) {
+        showToast("عدم دسترسی به اینترنت؛ ذخیره فقط محلی انجام شد.");
+    }
+}
 
     function handleCategoryChange() {
         const cat = document.getElementById('prodCategory').value;
