@@ -746,7 +746,7 @@
         setTimeout(() => { t.style.display = 'none'; }, 3000);
     }
 
-  async function loadCloudSettings(isManual = false) {
+ async function loadCloudSettings(isManual = false) {
     const overlay = document.getElementById('syncLoadingOverlay');
     if (isManual && overlay) overlay.style.display = 'flex';
     
@@ -777,7 +777,7 @@
                 if (record.valpostNoAntiRustDeduct !== undefined) appSettings.valpostNoAntiRustDeduct = record.valpostNoAntiRustDeduct;
                 if (record.vadarNoAntiRustDeduct !== undefined) appSettings.vadarNoAntiRustDeduct = record.vadarNoAntiRustDeduct;
                 
-                // به‌روزرسانی تاریخ و ساعت آخرین ویرایش
+                // دریافت تاریخ آخرین بروزرسانی از سرور
                 if (record.lastUpdated) {
                     appSettings.lastUpdated = record.lastUpdated;
                 }
@@ -793,12 +793,17 @@
         clearTimeout(timeoutId);
         if (overlay) overlay.style.display = 'none';
         
-        // نمایش تاریخ و ساعت آخرین ویرایش در المان مربوطه
+        // نمایش قطعی تاریخ و ساعت در المان صفحه
         const syncTimeEl = document.getElementById('lastSyncTime');
         if (syncTimeEl) {
-            syncTimeEl.textContent = appSettings.lastUpdated ? 
-                `آخرین بروزرسانی: ${appSettings.lastUpdated}` : 
-                'آخرین بروزرسانی: نامشخص';
+            if (appSettings.lastUpdated) {
+                syncTimeEl.textContent = `آخرین بروزرسانی: ${appSettings.lastUpdated}`;
+            } else {
+                // اگر از قبل تاریخی نبود، تاریخ فعلی سیستم را نمایش بده تا خالی نماند
+                const nowStr = new Date().toLocaleString('fa-IR');
+                appSettings.lastUpdated = nowStr;
+                syncTimeEl.textContent = `آخرین بروزرسانی: ${nowStr}`;
+            }
         }
     }
 }
