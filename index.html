@@ -893,50 +893,27 @@ function addItemToOrder() {
     const discRate = getDiscountRate(count);
     const hasDiscount = discRate > 0;
 
-    if (cat === 'fittings') {
-        const fitSelect = document.getElementById('fittingType');
-        const fitKey = fitSelect.value;
-        name = fitSelect.options[fitSelect.selectedIndex].text;
-        specs = 'اتصال استاندارد';
-        unitCost = appSettings.fittings[fitKey] || 0;
-    } else {
-        const w = parseFloat(document.getElementById('dim_w').value) || 0;
-        const f = parseFloat(document.getElementById('dim_f').value) || 0;
-        const l = parseFloat(document.getElementById('dim_l').value) || 0;
-        const t = parseFloat(document.getElementById('dim_t').value) || 0;
-        const sheet = document.getElementById('sheet_type').value;
-        const noAntiRust = document.getElementById('chk_no_antirust').checked;
-
-        const sheetPricePerKg = (sheet === 'galv') ? appSettings.galv : appSettings.st37;
-        const sheetName = (sheet === 'galv') ? 'گالوانیزه' : 'سیاه';
-
-        const sheetWidth = w + (2 * f);
-        const effectiveLabor = appSettings.labor * getLaborMultiplier(sheetWidth);
-
         if (cat === 'wallpost') {
             name = 'والپست منقطع';
             specs = `${l}*${w} سانت با بال ${f} سانت ضخامت ${t} میلیمتر (${sheetName})`;
             weightUnit = (sheetWidth * l * t * 7.9) / 10000;
             const basePrice = weightUnit * (sheetPricePerKg + effectiveLabor);
-            unitCost = noAntiRust ? (basePrice - appSettings.ar_wallpost) : basePrice;
+            unitCost = noAntiRust ? (basePrice - (appSettings.ar_wallpost || 0)) : basePrice;
         } else if (cat === 'vador_end') {
             name = 'وادار انتهایی (U)';
             specs = `${l}*${w} سانت با بال ${f} سانت ضخامت ${t} میلیمتر (${sheetName})`;
             weightUnit = (sheetWidth * l * t * 7.9) / 10000;
             const basePrice = weightUnit * (sheetPricePerKg + effectiveLabor);
-            unitCost = noAntiRust ? basePrice : (basePrice + appSettings.ar_vador);
+            unitCost = noAntiRust ? (basePrice - (appSettings.ar_vador || 0)) : basePrice;
         } else if (cat === 'vador_mid') {
             name = 'وادار میانی (H)';
             specs = `${l}*${w} سانت با بال ${f} سانت ضخامت ${t} میلیمتر (${sheetName})`;
             const totalDevLen = l + (Math.floor(l / 100) * 40);
             weightUnit = (sheetWidth * totalDevLen * t * 7.9) / 10000;
             const basePrice = weightUnit * (sheetPricePerKg + effectiveLabor);
-            unitCost = noAntiRust ? basePrice : (basePrice + appSettings.ar_vador);
+            unitCost = noAntiRust ? (basePrice - (appSettings.ar_vador || 0)) : basePrice;
         }
-
-        if (noAntiRust) specs += ' | بدون ضدزنگ';
-    }
-
+    
     if (hasDiscount) {
         unitCost = unitCost * (1 - (discRate / 100));
     }
