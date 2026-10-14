@@ -746,15 +746,14 @@
         setTimeout(() => { t.style.display = 'none'; }, 3000);
     }
 
-   async function loadCloudSettings(isManual = false) {
+  async function loadCloudSettings(isManual = false) {
     const overlay = document.getElementById('syncLoadingOverlay');
     if (isManual && overlay) overlay.style.display = 'flex';
     
     const controller = new AbortController();
-    const timeoutId = setTimeout(() => controller.abort(), 4000); // تایمر نجات 4 ثانیه‌ای برای جلوگیری از ماندن روی حالت در حال اتصال
+    const timeoutId = setTimeout(() => controller.abort(), 4000); // تایمر نجات 4 ثانیه‌ای
 
     try {
-        // درخواست استاندارد و ایمن بدون ایجاد قفل در مرورگرهای موبایل
         const res = await fetch(`https://api.jsonbin.io/v3/b/${CLOUD_BIN_ID}/latest`, {
             method: 'GET',
             headers: { 
@@ -778,20 +777,31 @@
                 if (record.valpostNoAntiRustDeduct !== undefined) appSettings.valpostNoAntiRustDeduct = record.valpostNoAntiRustDeduct;
                 if (record.vadarNoAntiRustDeduct !== undefined) appSettings.vadarNoAntiRustDeduct = record.vadarNoAntiRustDeduct;
                 
+                // به‌روزرسانی تاریخ و ساعت آخرین ویرایش
+                if (record.lastUpdated) {
+                    appSettings.lastUpdated = record.lastUpdated;
+                }
+                
                 if (typeof saveSettingsLocally === 'function') saveSettingsLocally();
                 if (typeof updateUIFromSettings === 'function') updateUIFromSettings();
                 if (typeof renderTable === 'function') renderTable();
             }
         }
     } catch (err) {
-        // اگر اینترنت کند بود یا سرور پاسخ نداد، به هیچ وجه صفحه قفل نمی‌شود و از لوکال استوریج می‌خواند
         console.log("Cloud sync fallback to local:", err);
     } finally {
         clearTimeout(timeoutId);
         if (overlay) overlay.style.display = 'none';
+        
+        // نمایش تاریخ و ساعت آخرین ویرایش در المان مربوطه
+        const syncTimeEl = document.getElementById('lastSyncTime');
+        if (syncTimeEl) {
+            syncTimeEl.textContent = appSettings.lastUpdated ? 
+                `آخرین بروزرسانی: ${appSettings.lastUpdated}` : 
+                'آخرین بروزرسانی: نامشخص';
+        }
     }
 }
-
     
 async function syncToCloud() {
     showToast("در حال ذخیره و همگام‌سازی در سرور...");
