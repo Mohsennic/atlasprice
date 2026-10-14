@@ -819,143 +819,157 @@
         return 0;
     }
 
-        function addItemToOrder() {
-        const cat = document.getElementById('prodCategory').value;
-        const count = parseFloat(document.getElementById('item_count').value) || 0;
-        if (count <= 0) { alert('لطفاً تعداد معتبر وارد کنید.'); return; }
+     function getLaborMultiplier(sheetWidth) {
+    if (sheetWidth > 55) return 3.0;       // بیش از ۵۵ سانت: ۲۰۰٪ افزایش اجرت
+    if (sheetWidth > 50) return 2.0;       // ۵۰ تا ۵۵ سانت: ۱۰۰٪ افزایش اجرت
+    if (sheetWidth > 45) return 1.7;       // ۴۵ تا ۵۰ سانت: ۷۰٪ افزایش اجرت
+    if (sheetWidth > 40) return 1.4;       // ۴۰ تا ۴۵ سانت: ۴۰٪ افزایش اجرت
+    if (sheetWidth > 36) return 1.2;       // ۳۶ تا ۴۰ سانت: ۲۰٪ افزایش اجرت
+    return 1.0;                            // ۳۶ سانت و کمتر: اجرت عادی
+}
 
-        let name = '';
-        let specs = '-';
-        let weightUnit = 0;
-        let unitCost = 0;
+function addItemToOrder() {
+    const cat = document.getElementById('prodCategory').value;
+    const count = parseFloat(document.getElementById('item_count').value) || 0;
+    if (count <= 0) { alert('لطفاً تعداد معتبر وارد کنید.'); return; }
 
-        const discRate = getDiscountRate(count);
-        const hasDiscount = discRate > 0;
+    let name = '';
+    let specs = '-';
+    let weightUnit = 0;
+    let unitCost = 0;
 
-        if (cat === 'fittings') {
-            const fitSelect = document.getElementById('fittingType');
-            const fitKey = fitSelect.value;
-            name = fitSelect.options[fitSelect.selectedIndex].text;
-            specs = 'اتصال استاندارد';
-            unitCost = appSettings.fittings[fitKey] || 0;
-        } else {
-            const w = parseFloat(document.getElementById('dim_w').value) || 0;
-            const f = parseFloat(document.getElementById('dim_f').value) || 0;
-            const l = parseFloat(document.getElementById('dim_l').value) || 0;
-            const t = parseFloat(document.getElementById('dim_t').value) || 0;
-            const sheet = document.getElementById('sheet_type').value;
-            const noAntiRust = document.getElementById('chk_no_antirust').checked;
+    const discRate = getDiscountRate(count);
+    const hasDiscount = discRate > 0;
 
-            const sheetPricePerKg = (sheet === 'galv') ? appSettings.galv : appSettings.st37;
-            const sheetName = (sheet === 'galv') ? 'گالوانیزه' : 'سیاه';
+    if (cat === 'fittings') {
+        const fitSelect = document.getElementById('fittingType');
+        const fitKey = fitSelect.value;
+        name = fitSelect.options[fitSelect.selectedIndex].text;
+        specs = 'اتصال استاندارد';
+        unitCost = appSettings.fittings[fitKey] || 0;
+    } else {
+        const w = parseFloat(document.getElementById('dim_w').value) || 0;
+        const f = parseFloat(document.getElementById('dim_f').value) || 0;
+        const l = parseFloat(document.getElementById('dim_l').value) || 0;
+        const t = parseFloat(document.getElementById('dim_t').value) || 0;
+        const sheet = document.getElementById('sheet_type').value;
+        const noAntiRust = document.getElementById('chk_no_antirust').checked;
 
-            if (cat === 'wallpost') {
-                name = 'والپست منقطع';
-                specs = `${l}*${w} سانت با بال ${f} سانت ضخامت ${t} میلیمتر (${sheetName})`;
-                weightUnit = ((w + 2 * f) * l * t * 7.9) / 10000;
-                const basePrice = weightUnit * (sheetPricePerKg + appSettings.labor);
-                unitCost = noAntiRust ? (basePrice - appSettings.ar_wallpost) : basePrice;
-            } else if (cat === 'vador_end') {
-                name = 'وادار انتهایی (U)';
-                specs = `${l}*${w} سانت با بال ${f} سانت ضخامت ${t} میلیمتر (${sheetName})`;
-                weightUnit = ((w + 2 * f) * l * t * 7.9) / 10000;
-                const basePrice = weightUnit * (sheetPricePerKg + appSettings.labor);
-                unitCost = noAntiRust ? basePrice : (basePrice + appSettings.ar_vador);
-            } else if (cat === 'vador_mid') {
-                name = 'وادار میانی (H)';
-                specs = `${l}*${w} سانت با بال ${f} سانت ضخامت ${t} میلیمتر (${sheetName})`;
-                const totalDevLen = l + (Math.floor(l / 100) * 40);
-                weightUnit = ((w + 2 * f) * totalDevLen * t * 7.9) / 10000;
-                const basePrice = weightUnit * (sheetPricePerKg + appSettings.labor);
-                unitCost = noAntiRust ? basePrice : (basePrice + appSettings.ar_vador);
-            }
+        const sheetPricePerKg = (sheet === 'galv') ? appSettings.galv : appSettings.st37;
+        const sheetName = (sheet === 'galv') ? 'گالوانیزه' : 'سیاه';
 
-            if (noAntiRust) specs += ' | بدون ضدزنگ';
+        const sheetWidth = w + (2 * f);
+        const effectiveLabor = appSettings.labor * getLaborMultiplier(sheetWidth);
+
+        if (cat === 'wallpost') {
+            name = 'والپست منقطع';
+            specs = `${l}*${w} سانت با بال ${f} سانت ضخامت ${t} میلیمتر (${sheetName})`;
+            weightUnit = (sheetWidth * l * t * 7.9) / 10000;
+            const basePrice = weightUnit * (sheetPricePerKg + effectiveLabor);
+            unitCost = noAntiRust ? (basePrice - appSettings.ar_wallpost) : basePrice;
+        } else if (cat === 'vador_end') {
+            name = 'وادار انتهایی (U)';
+            specs = `${l}*${w} سانت با بال ${f} سانت ضخامت ${t} میلیمتر (${sheetName})`;
+            weightUnit = (sheetWidth * l * t * 7.9) / 10000;
+            const basePrice = weightUnit * (sheetPricePerKg + effectiveLabor);
+            unitCost = noAntiRust ? basePrice : (basePrice + appSettings.ar_vador);
+        } else if (cat === 'vador_mid') {
+            name = 'وادار میانی (H)';
+            specs = `${l}*${w} سانت با بال ${f} سانت ضخامت ${t} میلیمتر (${sheetName})`;
+            const totalDevLen = l + (Math.floor(l / 100) * 40);
+            weightUnit = (sheetWidth * totalDevLen * t * 7.9) / 10000;
+            const basePrice = weightUnit * (sheetPricePerKg + effectiveLabor);
+            unitCost = noAntiRust ? basePrice : (basePrice + appSettings.ar_vador);
         }
 
-        if (hasDiscount) {
-            unitCost = unitCost * (1 - (discRate / 100));
-        }
-
-        const partnerFactor = isPartner ? 1.10 : 1.14;
-        unitCost = unitCost * partnerFactor;
-
-        const finalUnitPrice = Math.ceil(unitCost / 500) * 500;
-        const totalPrice = finalUnitPrice * count;
-
-        orders.push({
-            name,
-            specs,
-            count,
-            weightUnit: Number(weightUnit.toFixed(2)),
-            totalWeight: Number((weightUnit * count).toFixed(2)),
-            unitPrice: finalUnitPrice,
-            totalPrice: totalPrice,
-            hasDiscount: hasDiscount
-        });
-
-        renderTable();
-        showToast("آیتم با موفقیت اضافه شد.");
+        if (noAntiRust) specs += ' | بدون ضدزنگ';
     }
 
-    function updateLivePreview() {
-        const cat = document.getElementById('prodCategory').value;
-        const count = parseFloat(document.getElementById('item_count').value) || 1;
-        let unitCost = 0;
+    if (hasDiscount) {
+        unitCost = unitCost * (1 - (discRate / 100));
+    }
 
-        const discRate = getDiscountRate(count);
-        const hasDiscount = discRate > 0;
+    const partnerFactor = isPartner ? 1.10 : 1.14;
+    unitCost = unitCost * partnerFactor;
 
-        if (cat === 'fittings') {
-            const fitSelect = document.getElementById('fittingType');
-            const fitKey = fitSelect.value;
-            unitCost = appSettings.fittings[fitKey] || 0;
-        } else {
-            const w = parseFloat(document.getElementById('dim_w').value) || 0;
-            const f = parseFloat(document.getElementById('dim_f').value) || 0;
-            const l = parseFloat(document.getElementById('dim_l').value) || 0;
-            const t = parseFloat(document.getElementById('dim_t').value) || 0;
-            const sheet = document.getElementById('sheet_type').value;
-            const noAntiRust = document.getElementById('chk_no_antirust').checked;
+    const finalUnitPrice = Math.ceil(unitCost / 500) * 500;
+    const totalPrice = finalUnitPrice * count;
 
-            const sheetPricePerKg = (sheet === 'galv') ? appSettings.galv : appSettings.st37;
+    orders.push({
+        name,
+        specs,
+        count,
+        weightUnit: Number(weightUnit.toFixed(2)),
+        totalWeight: Number((weightUnit * count).toFixed(2)),
+        unitPrice: finalUnitPrice,
+        totalPrice: totalPrice,
+        hasDiscount: hasDiscount
+    });
 
-            if (cat === 'wallpost') {
-                const weightUnit = ((w + 2 * f) * l * t * 7.9) / 10000;
-                const basePrice = weightUnit * (sheetPricePerKg + appSettings.labor);
-                unitCost = noAntiRust ? (basePrice - appSettings.ar_wallpost) : basePrice;
-            } else if (cat === 'vador_end') {
-                const weightUnit = ((w + 2 * f) * l * t * 7.9) / 10000;
-                const basePrice = weightUnit * (sheetPricePerKg + appSettings.labor);
-                unitCost = noAntiRust ? basePrice : (basePrice + appSettings.ar_vador);
-            } else if (cat === 'vador_mid') {
-                const totalDevLen = l + (Math.floor(l / 100) * 40);
-                const weightUnit = ((w + 2 * f) * totalDevLen * t * 7.9) / 10000;
-                const basePrice = weightUnit * (sheetPricePerKg + appSettings.labor);
-                unitCost = noAntiRust ? basePrice : (basePrice + appSettings.ar_vador);
-            }
-        }
+    renderTable();
+    showToast("آیتم با موفقیت اضافه شد.");
+}
 
-        if (hasDiscount) {
-            unitCost = unitCost * (1 - (discRate / 100));
-        }
+function updateLivePreview() {
+    const cat = document.getElementById('prodCategory').value;
+    const count = parseFloat(document.getElementById('item_count').value) || 1;
+    let unitCost = 0;
 
-        const profitFactor = isPartner ? 1.10 : 1.14;
-        unitCost = unitCost * profitFactor;
+    const discRate = getDiscountRate(count);
+    const hasDiscount = discRate > 0;
 
-        const finalUnitPrice = Math.ceil(unitCost / 500) * 500;
-        const finalTotalPrice = finalUnitPrice * count;
+    if (cat === 'fittings') {
+        const fitSelect = document.getElementById('fittingType');
+        const fitKey = fitSelect.value;
+        unitCost = appSettings.fittings[fitKey] || 0;
+    } else {
+        const w = parseFloat(document.getElementById('dim_w').value) || 0;
+        const f = parseFloat(document.getElementById('dim_f').value) || 0;
+        const l = parseFloat(document.getElementById('dim_l').value) || 0;
+        const t = parseFloat(document.getElementById('dim_t').value) || 0;
+        const sheet = document.getElementById('sheet_type').value;
+        const noAntiRust = document.getElementById('chk_no_antirust').checked;
 
-        const previewUnitPriceEl = document.getElementById('previewUnitPrice');
-        const previewTotalPriceEl = document.getElementById('previewTotalPrice');
+        const sheetPricePerKg = (sheet === 'galv') ? appSettings.galv : appSettings.st37;
+        const sheetWidth = w + (2 * f);
+        const effectiveLabor = appSettings.labor * getLaborMultiplier(sheetWidth);
 
-        if (previewUnitPriceEl) {
-            previewUnitPriceEl.innerText = finalUnitPrice.toLocaleString('fa-IR') + ' تومان';
-        }
-        if (previewTotalPriceEl) {
-            previewTotalPriceEl.innerText = finalTotalPrice.toLocaleString('fa-IR') + ' تومان';
+        if (cat === 'wallpost') {
+            const weightUnit = (sheetWidth * l * t * 7.9) / 10000;
+            const basePrice = weightUnit * (sheetPricePerKg + effectiveLabor);
+            unitCost = noAntiRust ? (basePrice - appSettings.ar_wallpost) : basePrice;
+        } else if (cat === 'vador_end') {
+            const weightUnit = (sheetWidth * l * t * 7.9) / 10000;
+            const basePrice = weightUnit * (sheetPricePerKg + effectiveLabor);
+            unitCost = noAntiRust ? basePrice : (basePrice + appSettings.ar_vador);
+        } else if (cat === 'vador_mid') {
+            const totalDevLen = l + (Math.floor(l / 100) * 40);
+            const weightUnit = (sheetWidth * totalDevLen * t * 7.9) / 10000;
+            const basePrice = weightUnit * (sheetPricePerKg + effectiveLabor);
+            unitCost = noAntiRust ? basePrice : (basePrice + appSettings.ar_vador);
         }
     }
+
+    if (hasDiscount) {
+        unitCost = unitCost * (1 - (discRate / 100));
+    }
+
+    const profitFactor = isPartner ? 1.10 : 1.14;
+    unitCost = unitCost * profitFactor;
+
+    const finalUnitPrice = Math.ceil(unitCost / 500) * 500;
+    const finalTotalPrice = finalUnitPrice * count;
+
+    const previewUnitPriceEl = document.getElementById('previewUnitPrice');
+    const previewTotalPriceEl = document.getElementById('previewTotalPrice');
+
+    if (previewUnitPriceEl) {
+        previewUnitPriceEl.innerText = finalUnitPrice.toLocaleString('fa-IR') + ' تومان';
+    }
+    if (previewTotalPriceEl) {
+        previewTotalPriceEl.innerText = finalTotalPrice.toLocaleString('fa-IR') + ' تومان';
+    }
+}
 
     function renderTable() {
         const tbody = document.getElementById('tableItemsBody');
@@ -1092,34 +1106,44 @@ function openAdminModal() {
 function closeAdminModal() {
     document.getElementById('adminModal').style.display = 'none';
 }
+function parseSafeNumber(val) {
+    if (!val && val !== 0) return 0;
+    let s = String(val)
+        .replace(/[۰-۹]/g, d => "۰۱۲۳۴۵۶۷۸۹".indexOf(d))
+        .replace(/[٠-٩]/g, d => "٠١٢٣٤٥٦٧٨٩".indexOf(d))
+        .replace(/,/g, '')
+        .replace(/،/g, '')
+        .trim();
+    return parseFloat(s) || 0;
+}
 
 function saveAdminSettings() {
-    appSettings.st37 = parseFloat(document.getElementById('adm_st37').value) || 0;
-    appSettings.galv = parseFloat(document.getElementById('adm_galv').value) || 0;
-    appSettings.labor = parseFloat(document.getElementById('adm_labor').value) || 0;
-    appSettings.ar_wallpost = parseFloat(document.getElementById('adm_ar_wallpost').value) || 0;
-    appSettings.ar_vador = parseFloat(document.getElementById('adm_ar_vador').value) || 0;
+    appSettings.st37 = parseSafeNumber(document.getElementById('adm_st37').value);
+    appSettings.galv = parseSafeNumber(document.getElementById('adm_galv').value);
+    appSettings.labor = parseSafeNumber(document.getElementById('adm_labor').value);
+    appSettings.ar_wallpost = parseSafeNumber(document.getElementById('adm_ar_wallpost').value);
+    appSettings.ar_vador = parseSafeNumber(document.getElementById('adm_ar_vador').value);
 
     appSettings.fittings = {
-        girandeh: parseFloat(document.getElementById('adm_fit_girandeh').value) || 0,
-        ghollab: parseFloat(document.getElementById('adm_fit_ghollab').value) || 0,
-        bastar_5_5: parseFloat(document.getElementById('adm_fit_bastar_5_5').value) || 0,
-        bastar_11: parseFloat(document.getElementById('adm_fit_bastar_11').value) || 0,
-        bastar_15: parseFloat(document.getElementById('adm_fit_bastar_15').value) || 0,
-        pich_boltex: parseFloat(document.getElementById('adm_fit_pich_boltex').value) || 0,
-        pich_rool: parseFloat(document.getElementById('adm_fit_pich_rool').value) || 0,
-        rollbolt_12: parseFloat(document.getElementById('adm_fit_rollbolt_12').value) || 0,
-        bast_sabt: parseFloat(document.getElementById('adm_fit_bast_sabt').value) || 0,
-        bast_radikali: parseFloat(document.getElementById('adm_fit_bast_radikali').value) || 0,
-        plate_25_15: parseFloat(document.getElementById('adm_fit_plate_25_15').value) || 0
+        girandeh: parseSafeNumber(document.getElementById('adm_fit_girandeh').value),
+        ghollab: parseSafeNumber(document.getElementById('adm_fit_ghollab').value),
+        bastar_5_5: parseSafeNumber(document.getElementById('adm_fit_bastar_5_5').value),
+        bastar_11: parseSafeNumber(document.getElementById('adm_fit_bastar_11').value),
+        bastar_15: parseSafeNumber(document.getElementById('adm_fit_bastar_15').value),
+        pich_boltex: parseSafeNumber(document.getElementById('adm_fit_pich_boltex').value),
+        pich_rool: parseSafeNumber(document.getElementById('adm_fit_pich_rool').value),
+        rollbolt_12: parseSafeNumber(document.getElementById('adm_fit_rollbolt_12').value),
+        bast_sabt: parseSafeNumber(document.getElementById('adm_fit_bast_sabt').value),
+        bast_radikali: parseSafeNumber(document.getElementById('adm_fit_bast_radikali').value),
+        plate_25_15: parseSafeNumber(document.getElementById('adm_fit_plate_25_15').value)
     };
 
     appSettings.discounts = {
-        d100: parseFloat(document.getElementById('adm_d100').value) || 0,
-        d200: parseFloat(document.getElementById('adm_d200').value) || 0,
-        d300: parseFloat(document.getElementById('adm_d300').value) || 0,
-        d500: parseFloat(document.getElementById('adm_d500').value) || 0,
-        d1000: parseFloat(document.getElementById('adm_d1000').value) || 0
+        d100: parseSafeNumber(document.getElementById('adm_d100').value),
+        d200: parseSafeNumber(document.getElementById('adm_d200').value),
+        d300: parseSafeNumber(document.getElementById('adm_d300').value),
+        d500: parseSafeNumber(document.getElementById('adm_d500').value),
+        d1000: parseSafeNumber(document.getElementById('adm_d1000').value)
     };
 
     closeAdminModal();
