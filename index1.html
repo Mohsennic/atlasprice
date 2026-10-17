@@ -1,0 +1,590 @@
+<!DOCTYPE html>
+<html lang="fa" dir="rtl">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>محاسبه قیمت والپست و اتصالات | اطلس سازه</title>
+<link href="https://cdn.jsdelivr.net/gh/rastikerdar/vazirmatn@v33.003/Vazirmatn-font-face.css" rel="stylesheet">
+<script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
+<link rel="manifest" href="manifest.json">
+<meta name="theme-color" content="#07111e">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<link rel="apple-touch-icon" href="logo.png">
+<style>
+:root{--bg:#07111e;--panel:#0d1c31;--panel2:#12294a;--edge:#274670;--navy:#0c2340;--orange:#f26b1d;--orange2:#ff8a47;--ink:#eaf0f8;--mute:#8ea3c0;--red:#e5484d}
+*{box-sizing:border-box;margin:0;padding:0;font-family:'Vazirmatn',Tahoma,sans-serif}
+html{color-scheme:dark}
+body{background-color:var(--bg);color:var(--ink);font-size:14px;line-height:1.7;min-height:100vh;
+ background-image:radial-gradient(1100px 520px at 85% -8%,#1b3d6b66,transparent 60%),linear-gradient(#ffffff09 1px,transparent 1px),linear-gradient(90deg,#ffffff09 1px,transparent 1px);
+ background-size:auto,48px 48px,48px 48px;background-attachment:fixed}
+button{cursor:pointer;font-family:inherit}
+:focus-visible{outline:2px solid var(--orange2);outline-offset:2px}
+.wrap{max-width:1240px;margin:0 auto;padding:0 24px}
+header{border-bottom:1px solid var(--edge);background:#07111ee8}
+.top-row{display:flex;justify-content:space-between;align-items:center;gap:14px;flex-wrap:wrap;padding:14px 0}
+.brand{display:flex;align-items:center;gap:14px}
+.brand img{height:58px;width:auto;object-fit:contain}
+.brand h1{font-size:1.4rem;font-weight:900;line-height:1.25}
+.brand p{font-size:.78rem;color:var(--mute)}
+.tools{display:flex;gap:8px;align-items:center;flex-wrap:wrap}
+.badge{border:1px solid var(--orange);color:var(--orange2);padding:3px 12px;font-size:.78rem;font-weight:700;border-radius:2px}
+.badge.on{background:var(--orange);color:#fff}
+.btn-h{background:transparent;color:var(--ink);border:1px solid var(--edge);padding:5px 14px;font-size:.8rem;font-weight:600;border-radius:2px}
+.btn-h:hover{border-color:var(--orange);color:var(--orange2)}
+.syncbar{border-top:1px solid #1a3050;display:flex;justify-content:space-between;align-items:center;gap:10px;flex-wrap:wrap;padding:8px 0;font-size:.75rem;color:var(--mute)}
+#btnSyncPrice{background:var(--orange);color:#fff;border:0;padding:4px 14px;font-weight:700;font-size:.78rem;border-radius:2px;margin-inline-end:10px}
+#btnSyncPrice:hover{background:var(--orange2)}
+.workspace{margin-top:26px;display:grid;grid-template-columns:minmax(330px,420px) 1fr;gap:22px;align-items:start;margin-bottom:34px}
+.panel{background:linear-gradient(180deg,var(--panel2),var(--panel));border:1px solid var(--edge);border-radius:4px;position:relative;overflow:hidden}
+.panel-h{display:flex;align-items:center;gap:10px;padding:13px 18px;border-bottom:1px solid var(--edge);font-weight:800;font-size:.98rem}
+.panel-h::before{content:"";width:8px;height:8px;background:var(--orange)}
+.panel-b{padding:18px}
+.grid{display:grid;grid-template-columns:repeat(2,1fr);gap:14px}
+.span2{grid-column:span 2}
+.fg{display:flex;flex-direction:column;gap:5px}
+.fg label{font-size:.76rem;color:var(--mute);font-weight:600}
+input[type=number],select{width:100%;padding:10px 12px;background:#081426;border:1px solid #2d4d7a;border-radius:3px;color:#fff;font-size:.95rem;font-weight:600}
+input[type=number]{direction:ltr;text-align:right;padding-left:46px}
+select option{background:#0d1c31}
+input[type=number]:focus,select:focus{border-color:var(--orange);outline:0;box-shadow:0 0 0 3px #f26b1d33}
+.u{position:relative}
+.u i{position:absolute;left:12px;top:50%;transform:translateY(-50%);font-style:normal;font-size:.72rem;color:var(--mute);pointer-events:none}
+.chk{display:flex;align-items:center;gap:10px;margin-top:16px;padding:11px 13px;border:1px dashed #3a5a8a;border-radius:3px;font-weight:600;font-size:.82rem;cursor:pointer}
+.chk input{width:18px;height:18px;accent-color:var(--orange)}
+/* 3D stage */
+.stage{position:relative;height:clamp(340px,54vh,540px);background:radial-gradient(circle at 50% 42%,#1d4274 0,#0b1b30 72%);border-bottom:1px solid var(--edge)}
+.stage::before{content:"";position:absolute;inset:0;background-image:linear-gradient(#ffffff0d 1px,transparent 1px),linear-gradient(90deg,#ffffff0d 1px,transparent 1px);background-size:26px 26px}
+.stage::after{content:"";position:absolute;inset:12px;pointer-events:none;
+ background:linear-gradient(var(--orange),var(--orange)) 0 0/22px 2px no-repeat,linear-gradient(var(--orange),var(--orange)) 0 0/2px 22px no-repeat,
+ linear-gradient(var(--orange),var(--orange)) 100% 0/22px 2px no-repeat,linear-gradient(var(--orange),var(--orange)) 100% 0/2px 22px no-repeat,
+ linear-gradient(var(--orange),var(--orange)) 0 100%/22px 2px no-repeat,linear-gradient(var(--orange),var(--orange)) 0 100%/2px 22px no-repeat,
+ linear-gradient(var(--orange),var(--orange)) 100% 100%/22px 2px no-repeat,linear-gradient(var(--orange),var(--orange)) 100% 100%/2px 22px no-repeat}
+#viewer{position:absolute;inset:0;z-index:1;touch-action:pan-y;cursor:grab}
+#viewer:active{cursor:grabbing}
+#viewer canvas{width:100%;height:100%;display:block}
+.vbar{position:absolute;top:24px;right:26px;z-index:2;display:flex;gap:6px}
+.vbar button{background:#07111ecc;color:var(--ink);border:1px solid var(--edge);padding:4px 12px;font-size:.75rem;font-weight:600;border-radius:2px}
+.vbar button:hover{border-color:var(--orange);color:var(--orange2)}
+.hint,#cutNote{position:absolute;bottom:22px;z-index:2;font-size:.7rem;color:var(--mute)}
+.hint{left:28px}#cutNote{right:28px;color:var(--orange2);display:none}
+.fitmsg{display:none;position:absolute;inset:0;z-index:2;align-items:center;justify-content:center;text-align:center;padding:30px;color:var(--mute)}
+.is-fit .stage{height:190px}.is-fit #viewer,.is-fit .vbar,.is-fit .hint,.is-fit #cutNote,.is-fit .tb{display:none!important}.is-fit .fitmsg{display:flex}
+.tb{display:grid;grid-template-columns:repeat(6,1fr);border-bottom:1px solid var(--edge)}
+.tb div{padding:9px 12px;border-inline-start:1px solid var(--edge);font-size:.7rem;color:var(--mute)}
+.tb div:first-child{border-inline-start:0}
+.tb b{display:block;font-size:.95rem;color:#fff;font-weight:800;white-space:nowrap}
+.pbar{display:grid;grid-template-columns:1fr 1fr 1.5fr auto;align-items:stretch}
+.pbar>div{padding:14px 18px;border-inline-start:1px solid var(--edge);font-size:.75rem;color:var(--mute)}
+.pbar>div:first-child{border-inline-start:0}
+.pbar b{display:block;font-size:1.15rem;color:#fff;font-weight:800}
+.pbar .tot b{font-size:1.75rem;color:var(--orange2);line-height:1.3}
+.btn-add{background:var(--orange);color:#fff;border:0;padding:0 30px;font-size:1rem;font-weight:800;min-height:64px}
+.btn-add:hover{background:var(--orange2)}
+/* invoice paper */
+#invoice-print-area{background:#fff;color:#0f172a;border-radius:4px;border-top:6px solid var(--orange);padding:22px}
+#invoice-print-area h3{font-size:1.05rem;font-weight:900;color:#0c2340;margin-bottom:12px}
+.tbl-wrap{overflow-x:auto;border:1px solid #cdd6e2}
+table{width:100%;border-collapse:collapse;text-align:center;font-size:.82rem;min-width:700px}
+th{background:#0c2340;color:#fff;padding:10px 8px;font-weight:700;border-bottom:3px solid var(--orange);white-space:nowrap}
+td{padding:10px 8px;border-bottom:1px solid #dde4ee;color:#0f172a}
+tr:nth-child(even) td{background:#f4f7fb}
+td.sp{text-align:right;max-width:280px}
+.tag{display:inline-block;background:var(--orange);color:#fff;font-size:.65rem;padding:0 6px;font-weight:700}
+.del{background:#fff;color:var(--red);border:1px solid var(--red);width:28px;height:28px;font-weight:800;border-radius:2px}
+.del:hover{background:var(--red);color:#fff}
+.sum{display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:10px;background:#0c2340;color:#fff;border-inline-start:8px solid var(--orange);padding:14px 20px;margin-top:14px}
+.sum span{font-size:.8rem;color:#b8c8de}.sum strong{font-size:1.1rem;margin-inline:6px}.sum .big{font-size:1.5rem;color:var(--orange2)}
+.actions{display:grid;grid-template-columns:repeat(auto-fit,minmax(180px,1fr));gap:10px;margin:16px 0 40px}
+.btn-act{background:transparent;border:1px solid var(--edge);color:var(--ink);padding:12px;font-weight:700;font-size:.85rem;border-radius:3px}
+.btn-act:hover{border-color:var(--orange);color:var(--orange2)}
+.btn-act.danger{color:#ff8b8e}.btn-act.danger:hover{border-color:var(--red);color:#fff;background:var(--red)}
+footer{border-top:1px solid var(--edge);padding:16px 0;color:var(--mute);font-size:.75rem;text-align:center}
+.modal{position:fixed;inset:0;background:#030a14d9;display:none;align-items:center;justify-content:center;z-index:1000;padding:14px;backdrop-filter:blur(3px)}
+.modal-card{background:var(--panel);border:1px solid var(--edge);border-top:4px solid var(--orange);width:100%;max-width:720px;max-height:92vh;overflow-y:auto;border-radius:4px}
+.modal-head{display:flex;justify-content:space-between;align-items:center;padding:14px 20px;border-bottom:1px solid var(--edge);position:sticky;top:0;background:var(--panel2);font-weight:800}
+.modal-head button{background:none;border:0;color:var(--ink);font-size:1.3rem}
+.modal-body{padding:6px 20px 22px}
+.modal-body .grid{grid-template-columns:repeat(auto-fit,minmax(150px,1fr))}
+.adm-t{font-size:.85rem;font-weight:800;color:var(--orange2);margin:18px 0 10px;padding-bottom:6px;border-bottom:1px solid var(--edge)}
+.modal-body .btn-add{width:100%;margin-top:20px;min-height:48px}
+.dlg-msg{padding:20px 20px 8px;font-weight:700}.dlg-in{padding:0 20px}.dlg-in input{width:100%;padding:10px 12px;background:#081426;border:1px solid #2d4d7a;border-radius:3px;color:#fff;font-size:1rem;direction:ltr;text-align:center}.dlg-act{display:flex;gap:10px;padding:16px 20px 20px}.dlg-act button{flex:1;padding:10px;border-radius:3px;font-weight:700;border:1px solid var(--edge);background:transparent;color:var(--ink)}.dlg-act .ok{background:var(--orange);border-color:var(--orange);color:#fff}
+.toast{position:fixed;bottom:22px;left:50%;transform:translateX(-50%);background:#0c2340;border:1px solid var(--orange);color:#fff;padding:10px 22px;font-size:.85rem;display:none;z-index:2000;border-radius:3px}
+#syncLoadingOverlay{position:fixed;inset:0;background:#07111eeb;z-index:99999;display:none;flex-direction:column;align-items:center;justify-content:center;color:#fff}
+.spinner{width:48px;height:48px;border:4px solid #ffffff33;border-top-color:var(--orange);border-radius:50%;animation:spin .8s linear infinite;margin-bottom:14px}
+@keyframes spin{to{transform:rotate(360deg)}}
+@media(max-width:900px){.workspace{grid-template-columns:1fr}.tb{grid-template-columns:repeat(3,1fr)}.pbar{grid-template-columns:1fr 1fr}.pbar .tot{grid-column:span 2;border-inline-start:0;border-top:1px solid var(--edge)}.btn-add{grid-column:span 2;min-height:54px}.wrap{padding:0 14px}.tb div:nth-child(4){border-inline-start:0}}
+@media(prefers-reduced-motion:reduce){.spinner{animation:none}}
+</style>
+</head>
+<body>
+<div id="syncLoadingOverlay"><div class="spinner"></div><b>در حال دریافت آخرین نرخ‌های روز...</b><small style="color:#8ea3c0;margin-top:6px">لطفاً چند لحظه شکیبا باشید</small></div>
+<header>
+ <div class="wrap">
+  <div class="top-row">
+   <div class="brand"><img src="logo.png" alt="اطلس سازه"><div><h1>اطلس سازه</h1><p>سامانه هوشمند قیمت‌گذاری والپست و اتصالات</p></div></div>
+   <div class="tools"><span class="badge" id="userStatusBadge">وضعیت: مشتری</span><button class="btn-h" data-on="togglePartnerMode()">حالت همکار</button><button class="btn-h" data-on="openAdminModal()">پنل مدیریت</button></div>
+  </div>
+  <div class="syncbar"><div><button type="button" id="btnSyncPrice" data-on="syncPrices()">بروزرسانی نرخ‌های روز</button>قبل از صدور پیش‌فاکتور بروزرسانی کنید</div><span id="lastSyncTime">در حال اتصال...</span></div>
+ </div>
+</header>
+
+<div class="wrap">
+ 
+ <div class="workspace">
+  <section class="panel">
+   <div class="panel-h">مشخصات سفارش</div>
+   <div class="panel-b">
+    <div class="grid">
+     <div class="fg span2"><label for="prodCategory">نوع کالا</label>
+      <select id="prodCategory">
+       <option value="wallpost">والپست منقطع (محاسبه به قطعه)</option>
+       <option value="vador_end">وادار انتهایی U (محاسبه به شاخه)</option>
+       <option value="vador_mid">وادار میانی H (محاسبه به شاخه)</option>
+       <option value="fittings">اتصالات و متعلقات</option>
+      </select></div>
+     <div class="fg span2" id="groupFittingType" style="display:none"><label for="fittingType">نوع اتصال</label>
+      <select id="fittingType">
+       <option value="girandeh">گیره</option><option value="ghollab">قلاب</option>
+       <option value="bastar_5_5">میلگرد بستر عرض ۵.۵ سانت</option><option value="bastar_11">میلگرد بستر عرض ۱۱ سانت</option><option value="bastar_15">میلگرد بستر عرض ۱۵ سانت</option>
+       <option value="pich_boltex">پیچ بولتکس</option><option value="pich_rool">پیچ و رول‌پلاک</option><option value="rollbolt_12">رول‌بولت ۱۲ طول ۱۰ خارجی</option>
+       <option value="bast_sabt">بست تخت (ثابت)</option><option value="bast_radikali">بست رادیکالی</option><option value="plate_25_15">صفحه پلیت ۲۵*۱۵ سانت</option>
+      </select></div>
+     <div class="fg dim-field"><label for="dim_w">عرض (دهنه)</label><div class="u"><input type="number" id="dim_w" value="15" min="1"><i>cm</i></div></div>
+     <div class="fg dim-field"><label for="dim_f">بال</label><div class="u"><input type="number" id="dim_f" value="7" min="1"><i>cm</i></div></div>
+     <div class="fg dim-field"><label for="dim_l" id="lbl_l">طول قطعه (cm)</label><div class="u"><input type="number" id="dim_l" value="40" min="1"><i>cm</i></div></div>
+     <div class="fg dim-field"><label for="dim_t">ضخامت</label><div class="u"><input type="number" id="dim_t" value="2" step="0.1" min="0.5"><i>mm</i></div></div>
+     <div class="fg dim-field span2"><label for="sheet_type">نوع ورق</label><select id="sheet_type"><option value="st37">ورق سیاه (ST37)</option><option value="galv">گالوانیزه</option></select></div>
+     <div class="fg span2"><label for="item_count" id="lbl_count">تعداد (قطعه)</label><input type="number" id="item_count" value="1" min="1" style="padding-left:12px"></div>
+    </div>
+    <label class="chk" id="grp_antirust"><input type="checkbox" id="chk_no_antirust"><span>بدون ضدزنگ (کسر هزینه رنگ‌آمیزی)</span></label>
+   </div>
+  </section>
+
+  <section class="panel" id="drawBox">
+   <div class="panel-h">مدل سه‌بعدی محصول</div>
+   <div class="stage">
+    <div id="viewer"></div>
+    <div class="vbar"><button data-on="setView('iso')">ایزومتریک</button><button data-on="setView('front')">روبرو</button><button data-on="setView('section')">مقطع</button><button id="vInside" data-on="setView('inside')" style="display:none">نمای داخل</button></div>
+    <div class="hint">برای چرخاندن بکشید، برای بزرگ‌نمایی اسکرول کنید</div>
+    <div id="cutNote">* طول در نمایش کوتاه‌شده است</div>
+    <div class="fitmsg" id="viewerMsg">اتصالات و متعلقات بر اساس تعداد قیمت‌گذاری می‌شوند و مدل ابعادی ندارند.</div>
+   </div>
+   <div class="tb">
+    <div>جنس و پوشش<b id="dv_m">-</b></div><div>عرض (دهنه)<b id="dv_w">-</b></div><div>بال<b id="dv_f">-</b></div>
+    <div id="dl_l">طول<b id="dv_l">-</b></div><div>ضخامت<b id="dv_t">-</b></div><div>وزن واحد<b id="dv_wt">-</b></div>
+   </div>
+   <div class="pbar" aria-live="polite">
+    <div>قیمت واحد (تومان)<b id="previewUnitPrice">۰</b></div>
+    <div>وزن واحد<b id="previewWeight">-</b></div>
+    <div class="tot">جمع این قلم (تومان)<b id="previewTotalPrice">۰</b></div>
+    <button class="btn-add" data-on="addItemToOrder()">افزودن به پیش‌فاکتور</button>
+   </div>
+  </section>
+ </div>
+
+ <div id="invoice-print-area">
+  <h3>اقلام پیش‌فاکتور</h3>
+  <div class="tbl-wrap"><table>
+   <thead><tr><th>ردیف</th><th>شرح کالا</th><th>مشخصات</th><th>تعداد</th><th>قیمت واحد (تومان)</th><th>مبلغ کل (تومان)</th><th>حذف</th></tr></thead>
+   <tbody id="tableItemsBody"></tbody>
+  </table></div>
+  <div class="sum"><div><span>تعداد کل اقلام:</span><strong id="sumTotalCount">۰</strong></div><div><span>مبلغ قابل پرداخت:</span><strong class="big" id="sumTotalPrice">۰ تومان</strong></div></div>
+ </div>
+
+ <div class="actions">
+  <button class="btn-act" data-on="copyInvoiceText()">کپی متن پیش‌فاکتور</button>
+  <button class="btn-act" data-on="exportPDF()">دریافت PDF رسمی</button>
+  <button class="btn-act danger" data-on="clearAllOrders()">پاک کردن کل لیست</button>
+ </div>
+</div>
+<footer>اطلس سازه - تامین‌کننده تخصصی والپست و اتصالات نوین</footer>
+
+<div class="modal" id="adminModal">
+ <div class="modal-card">
+  <div class="modal-head"><span>تنظیمات نرخ پایه و ضرایب</span><button data-on="closeAdminModal()" aria-label="بستن">✕</button></div>
+  <div class="modal-body">
+   <div class="adm-t">مواد اولیه و خدمات (تومان)</div><div class="grid" id="admBase"></div>
+   <div class="adm-t">اتصالات و متعلقات (تومان)</div><div class="grid" id="admFit"></div>
+   <div class="adm-t">تخفیف پلکانی تعدادی (درصد)</div><div class="grid" id="admDisc"></div>
+   <button class="btn-add" data-on="saveAdminSettings()">ذخیره و همگام‌سازی ابری</button>
+  </div>
+ </div>
+</div>
+<div class="modal" id="dlgModal" style="z-index:3000"><div class="modal-card" style="max-width:380px"><div class="dlg-msg" id="dlgMsg"></div><div class="dlg-in" id="dlgInWrap"><input id="dlgIn" autocomplete="off"></div><div class="dlg-act"><button class="ok" id="dlgOk">تأیید</button><button id="dlgNo">انصراف</button></div></div></div>
+<div class="toast" id="toastBox"></div>
+
+<script>
+const CLOUD_BIN_ID='6aacef5bac6210605adb76b4';
+const CLOUD_MASTER_KEY='$2a$10$YS.0unbKgsmiwKQBqMwLVehbD1mds2wcclc4tQtoL55QQY69dL/9q';
+const ADMIN_HASH_CODE="1508479";
+const $=id=>document.getElementById(id);
+// ---- ابزارهای مستقل از مرورگر (بدون prompt/alert و با حافظه امن) ----
+const LS={get:k=>{try{return window.localStorage.getItem(k)}catch(e){return null}},set:(k,v)=>{try{window.localStorage.setItem(k,v)}catch(e){}}};
+function dlg(msg,o={}){
+  return new Promise(res=>{
+    const M=$('dlgModal'),I=$('dlgIn');$('dlgMsg').innerText=msg;
+    $('dlgInWrap').style.display=o.input?'block':'none';I.type=o.pass?'password':'text';I.value=o.def||'';
+    M.style.display='flex';if(o.input)setTimeout(()=>I.focus(),30);
+    const done=v=>{M.style.display='none';$('dlgOk').onclick=$('dlgNo').onclick=I.onkeydown=null;res(v)};
+    $('dlgOk').onclick=()=>done(o.input?I.value:true);
+    $('dlgNo').onclick=()=>done(o.input?null:false);
+    I.onkeydown=e=>{if(e.key==='Enter')done(I.value);if(e.key==='Escape')done(null)};
+  });
+}
+document.addEventListener('click',e=>{
+  const t=e.target.closest('[data-on]');if(!t)return;
+  const m=t.dataset.on.match(/^(\w+)\((.*)\)$/);if(!m||typeof window[m[1]]!=='function')return;
+  window[m[1]](...(m[2]?[m[2].replace(/'/g,'')]:[]));
+});
+
+const nf=v=>Math.round(v).toLocaleString('fa-IR');
+let isPartner=false, orders=[];
+
+let appSettings={st37:32000,galv:41000,labor:3500,ar_wallpost:3000,ar_vador:25000,
+  fittings:{girandeh:4500,ghollab:4500,bastar_5_5:18000,bastar_11:22000,bastar_15:25000,pich_boltex:3200,pich_rool:1800,rollbolt_12:14500,bast_sabt:5500,bast_radikali:6500,plate_25_15:68000},
+  discounts:{d100:2,d200:4,d300:6,d500:8,d1000:10},lastUpdated:null};
+
+const BASE_FIELDS=[['st37','ورق سیاه (kg)'],['galv','ورق گالوانیزه (kg)'],['labor','مزد ساخت (kg)'],['ar_wallpost','ضدزنگ والپست (قطعه)'],['ar_vador','ضدزنگ وادار (شاخه)']];
+const DISC_FIELDS=[['d100','۱۰۰ عدد'],['d200','۲۰۰ عدد'],['d300','۳۰۰ عدد'],['d500','۵۰۰ عدد'],['d1000','۱۰۰۰ عدد']];
+
+function formatJalaliDateTime(d=new Date()){
+  try{return new Intl.DateTimeFormat('fa-IR',{year:'numeric',month:'2-digit',day:'2-digit'}).format(d)+' - '+new Intl.DateTimeFormat('fa-IR',{hour:'2-digit',minute:'2-digit',second:'2-digit',hour12:false}).format(d)}
+  catch(e){return new Date().toLocaleDateString('fa-IR')}
+}
+function showToast(m){const t=$('toastBox');t.innerText=m;t.style.display='block';setTimeout(()=>t.style.display='none',3000)}
+
+function mergeSettings(s){
+  if(!s||typeof s!=='object')return false;
+  ['st37','galv','labor','ar_wallpost','ar_vador','lastUpdated'].forEach(k=>{if(s[k]!==undefined&&s[k]!==null)appSettings[k]=s[k]});
+  if(s.fittings)appSettings.fittings={...appSettings.fittings,...s.fittings};
+  if(s.discounts)appSettings.discounts={...appSettings.discounts,...s.discounts};
+  return true;
+}
+function loadSettingsLocally(){
+  try{const l=LS.get('atlas_app_settings');if(l)return mergeSettings(JSON.parse(l))}catch(e){console.warn(e)}
+  return false;
+}
+function updateSyncTimeDisplay(){$('lastSyncTime').textContent='آخرین بروزرسانی: '+(appSettings.lastUpdated||'ثبت نشده')}
+
+async function loadCloudSettings(isManual=false){
+  const ov=$('syncLoadingOverlay');
+  if(isManual)ov.style.display='flex';
+  loadSettingsLocally();updateSyncTimeDisplay();updateLivePreview();renderTable();
+  const ctl=new AbortController(), to=setTimeout(()=>ctl.abort(),7000);
+  try{
+    const res=await fetch(`https://api.jsonbin.io/v3/b/${CLOUD_BIN_ID}/latest?r=${Date.now()}`,{cache:'no-store',headers:{'X-Master-Key':CLOUD_MASTER_KEY,'Cache-Control':'no-cache',Pragma:'no-cache'},signal:ctl.signal});
+    if(res.ok){
+      const data=await res.json(), rec=data.record||data;
+      if(rec&&(rec.st37!==undefined||rec.galv!==undefined)){
+        mergeSettings(rec);
+        LS.set('atlas_app_settings',JSON.stringify(appSettings));
+        updateLivePreview();renderTable();
+      }
+    }
+  }catch(e){console.log('استفاده از نرخ‌های ذخیره‌شده محلی:',e)}
+  finally{clearTimeout(to);ov.style.display='none';updateSyncTimeDisplay()}
+}
+async function syncPrices(){
+  const b=$('btnSyncPrice');b.innerText='در حال دریافت...';
+  await loadCloudSettings(true);
+  b.innerText='نرخ‌ها بروز شد';showToast('قیمت‌ها بروزرسانی شد');
+  setTimeout(()=>b.innerText='بروزرسانی نرخ‌های روز',2000);
+}
+async function syncToCloud(){
+  showToast('در حال ذخیره نرخ‌ها...');
+  appSettings.lastUpdated=formatJalaliDateTime();
+  LS.set('atlas_app_settings',JSON.stringify(appSettings));
+  updateSyncTimeDisplay();updateLivePreview();renderTable();
+  const ctl=new AbortController(), to=setTimeout(()=>ctl.abort(),8000);
+  try{
+    const res=await fetch(`https://api.jsonbin.io/v3/b/${CLOUD_BIN_ID}`,{method:'PUT',headers:{'Content-Type':'application/json','X-Master-Key':CLOUD_MASTER_KEY},body:JSON.stringify(appSettings),signal:ctl.signal});
+    showToast(res.ok?'نرخ‌های جدید ذخیره و در سرور ابری منتشر شد.':'ذخیره در این دستگاه انجام شد؛ اما سرور ابری پاسخ نداد.');
+  }catch(e){showToast('اینترنت قطع است؛ نرخ‌ها در حافظه دستگاه ذخیره شد.')}
+  finally{clearTimeout(to)}
+}
+
+function handleCategoryChange(){
+  const cat=$('prodCategory').value, fit=cat==='fittings';
+  document.querySelectorAll('.dim-field').forEach(f=>f.style.display=fit?'none':'flex');
+  $('grp_antirust').style.display=fit?'none':'flex';
+  $('groupFittingType').style.display=fit?'flex':'none';
+  $('drawBox').classList.toggle('is-fit',fit);
+  if(fit){$('lbl_count').innerText='تعداد (عدد)'}
+  else if(cat==='wallpost'){$('lbl_l').innerText='طول قطعه (cm)';$('lbl_count').innerText='تعداد (قطعه)';$('dim_l').value='40'}
+  else{$('lbl_l').innerText='ارتفاع شاخه (cm)';$('lbl_count').innerText='تعداد (شاخه)';$('dim_l').value='300'}
+  updateLivePreview();
+}
+function getDiscountRate(c){const d=appSettings.discounts;return c>=1000?d.d1000:c>=500?d.d500:c>=300?d.d300:c>=200?d.d200:c>=100?d.d100:0}
+function getLaborMultiplier(w){return w>55?3.0:w>50?2.0:w>45?1.7:w>40?1.4:w>36?1.2:1.0}
+
+// محاسبه مشترک بین پیش‌نمایش و افزودن به لیست (منطق قیمت‌گذاری بدون تغییر)
+function calc(count){
+  const cat=$('prodCategory').value, S=appSettings;
+  const disc=getDiscountRate(count);
+  let name='',specs='-',weight=0,cost=0;
+  if(cat==='fittings'){
+    const sel=$('fittingType');
+    name=sel.options[sel.selectedIndex].text;specs='اتصال استاندارد';cost=S.fittings[sel.value]||0;
+  }else{
+    const w=parseFloat($('dim_w').value)||0,f=parseFloat($('dim_f').value)||0,l=parseFloat($('dim_l').value)||0,t=parseFloat($('dim_t').value)||0;
+    const galv=$('sheet_type').value==='galv', noAR=$('chk_no_antirust').checked;
+    const sheetName=galv?'گالوانیزه':'سیاه', kg=galv?S.galv:S.st37;
+    const sw=w+2*f, labor=S.labor*getLaborMultiplier(sw);
+    const len=cat==='vador_mid'?l+Math.floor(l/100)*40:l;
+    weight=(sw*len*t*7.9)/10000;
+    const base=weight*(kg+labor);
+    name=cat==='wallpost'?'والپست منقطع':cat==='vador_end'?'وادار انتهایی (U)':'وادار میانی (H)';
+    specs=`${l}*${w} سانت با بال ${f} سانت ضخامت ${t} میلیمتر (${sheetName})`+(noAR?' | بدون ضدزنگ':'');
+    cost=cat==='wallpost'?(noAR?base-S.ar_wallpost:base):(noAR?base:base+S.ar_vador);
+    drawProfile(w,f,t);
+  }
+  if(disc>0)cost*=1-disc/100;
+  cost*=isPartner?1.10:1.14;
+  const unit=Math.ceil(cost/500)*500;
+  return{name,specs,weight,unit,disc};
+}
+function updateLivePreview(){
+  const count=parseFloat($('item_count').value)||1, r=calc(count);
+  $('previewUnitPrice').innerText=nf(r.unit);
+  $('previewTotalPrice').innerText=nf(r.unit*count);
+  $('previewWeight').innerText=$('dv_wt').innerText=r.weight?r.weight.toFixed(2).replace('.','٫')+' kg':'-';
+}
+function drawProfile(w,f,t){updateViewer(w,f,t)}
+function addItemToOrder(){
+  const count=parseFloat($('item_count').value)||0;
+  if(count<=0){showToast('لطفاً تعداد معتبر وارد کنید.');return}
+  const r=calc(count);
+  orders.push({name:r.name,specs:r.specs,count,weightUnit:+r.weight.toFixed(2),totalWeight:+(r.weight*count).toFixed(2),unitPrice:r.unit,totalPrice:r.unit*count,hasDiscount:r.disc>0});
+  renderTable();showToast('آیتم با موفقیت اضافه شد.');
+}
+function renderTable(){
+  const tb=$('tableItemsBody');
+  if(!orders.length){
+    tb.innerHTML='<tr><td colspan="7" style="padding:26px;color:var(--mute)">لیست خالی است. مشخصات را وارد کنید و «افزودن به پیش‌فاکتور» را بزنید.</td></tr>';
+    $('sumTotalCount').innerText='۰';$('sumTotalPrice').innerText='۰ تومان';return;
+  }
+  let tc=0,tp=0;
+  tb.innerHTML=orders.map((o,i)=>{tc+=o.count;tp+=o.totalPrice;
+    return`<tr><td>${nf(i+1)}</td><td><strong>${o.name}</strong>${o.hasDiscount?'<br><span class="tag">تخفیف تعدادی</span>':''}</td><td class="sp">${o.specs}</td><td><strong>${nf(o.count)}</strong></td><td>${nf(o.unitPrice)}</td><td><strong>${nf(o.totalPrice)}</strong></td><td><button class="del" data-on="deleteOrderItem(${i})" title="حذف" aria-label="حذف ردیف ${i+1}">✕</button></td></tr>`}).join('');
+  $('sumTotalCount').innerText=nf(tc);$('sumTotalPrice').innerText=nf(tp)+' تومان';
+}
+function deleteOrderItem(i){orders.splice(i,1);renderTable()}
+async function clearAllOrders(){if(orders.length&&await dlg('آیا از پاک کردن کل پیش‌فاکتور اطمینان دارید؟')){orders=[];renderTable();showToast('لیست خالی شد.')}}
+
+async function togglePartnerMode(){
+  const pass=await dlg('رمز عبور همکار را وارد کنید:',{input:true,pass:true});
+  if(pass==='2244'){
+    isPartner=!isPartner;
+    const b=$('userStatusBadge');
+    b.innerText=isPartner?'وضعیت: همکار':'وضعیت: مشتری';
+    b.classList.toggle('on',isPartner);
+    showToast(isPartner?'حالت همکار فعال شد.':'حالت مشتری فعال شد.');
+    updateLivePreview();
+  }else if(pass!==null)showToast('رمز عبور اشتباه است!');
+}
+
+function normDigits(s){return String(s).replace(/[۰-۹]/g,d=>'۰۱۲۳۴۵۶۷۸۹'.indexOf(d)).replace(/[٠-٩]/g,d=>'٠١٢٣٤٥٦٧٨٩'.indexOf(d))}
+function simpleHash(str){
+  if(!str)return'';const s=normDigits(str).trim();let h=0;
+  for(let i=0;i<s.length;i++){h=(h<<5)-h+s.charCodeAt(i);h|=0}
+  return h.toString();
+}
+function parseSafeNumber(v){if(!v&&v!==0)return 0;return parseFloat(normDigits(v).replace(/[,،]/g,'').trim())||0}
+
+function buildAdminFields(){
+  const mk=(id,label)=>`<div class="fg"><label for="${id}">${label}</label><input type="number" id="${id}"></div>`;
+  $('admBase').innerHTML=BASE_FIELDS.map(([k,l])=>mk('adm_'+k,l)).join('');
+  $('admFit').innerHTML=[...$('fittingType').options].map(o=>mk('adm_fit_'+o.value,o.text)).join('');
+  $('admDisc').innerHTML=DISC_FIELDS.map(([k,l])=>mk('adm_'+k,l)).join('');
+}
+async function openAdminModal(){
+  const pass=await dlg('رمز عبور پنل مدیریت:',{input:true,pass:true});
+  if(pass===null)return;
+  if(simpleHash(pass)!==ADMIN_HASH_CODE){showToast('رمز عبور مدیریت اشتباه است!');return}
+  BASE_FIELDS.forEach(([k])=>$('adm_'+k).value=appSettings[k]);
+  Object.keys(appSettings.fittings).forEach(k=>{const e=$('adm_fit_'+k);if(e)e.value=appSettings.fittings[k]});
+  DISC_FIELDS.forEach(([k])=>$('adm_'+k).value=appSettings.discounts[k]);
+  $('adminModal').style.display='flex';
+}
+function closeAdminModal(){$('adminModal').style.display='none'}
+function saveAdminSettings(){
+  BASE_FIELDS.forEach(([k])=>appSettings[k]=parseSafeNumber($('adm_'+k).value));
+  const f={};Object.keys(appSettings.fittings).forEach(k=>f[k]=parseSafeNumber($('adm_fit_'+k).value));
+  appSettings.fittings=f;
+  const d={};DISC_FIELDS.forEach(([k])=>d[k]=parseSafeNumber($('adm_'+k).value));
+  appSettings.discounts=d;
+  closeAdminModal();syncToCloud();
+}
+
+function copyInvoiceText(){
+  if(!orders.length){showToast('پیش‌فاکتور خالی است.');return}
+  let t=`پیش‌فاکتور رسمی اطلس سازه\nتاریخ: ${formatJalaliDateTime()}\n----------------------------------\n`;
+  orders.forEach((o,i)=>t+=`${i+1}. ${o.name} | مشخصات: ${o.specs} | تعداد: ${o.count} | فی: ${o.unitPrice.toLocaleString()} تومان | کل: ${o.totalPrice.toLocaleString()} تومان\n`);
+  t+=`----------------------------------\nمبلغ قابل پرداخت: ${$('sumTotalPrice').innerText}\nاطلس سازه - تامین‌کننده تخصصی والپست و اتصالات نوین`;
+  const ok=()=>showToast('متن پیش‌فاکتور کپی شد.');
+  const fb=()=>{const a=document.createElement('textarea');a.value=t;document.body.appendChild(a);a.select();try{document.execCommand('copy');ok()}catch(e){showToast('کپی انجام نشد')}a.remove()};
+  (navigator.clipboard?navigator.clipboard.writeText(t).then(ok):Promise.reject()).catch(fb);
+}
+async function exportPDF(){
+  if(!orders.length){showToast('پیش‌فاکتور خالی است.');return}
+  const cust=((await dlg('نام یا نام خانوادگی مشتری را وارد کنید (اختیاری):',{input:true}))||'').trim();
+  const el=$('invoice-print-area');
+  ['pdf-custom-header','pdf-custom-footer'].forEach(i=>{const o=$(i);if(o)o.remove()});
+  const now=new Date(), ds=now.toLocaleDateString('fa-IR')+' - '+now.toLocaleTimeString('fa-IR',{hour:'2-digit',minute:'2-digit'});
+  const h=document.createElement('div');h.id='pdf-custom-header';
+  h.style.cssText='border-bottom:3px solid #f26b1d;padding-bottom:8px;margin-bottom:12px;direction:rtl';
+  h.innerHTML=`<div style="display:flex;justify-content:space-between;align-items:center"><div><h2 style="font-size:18px;color:#0c2340;font-weight:800;margin:0 0 4px">اطلس سازه</h2><div style="font-size:11px;color:#555">تاریخ و ساعت: ${ds}</div></div>${cust?`<div style="font-size:13px;font-weight:bold;border:2px solid #0c2340;padding:4px 10px">مشتری گرامی: ${cust}</div>`:''}</div>`;
+  el.insertBefore(h,el.firstChild);
+  const f=document.createElement('div');f.id='pdf-custom-footer';
+  f.style.cssText='margin-top:20px;border-top:1px solid #ddd;padding-top:12px;direction:rtl;page-break-inside:avoid';
+  f.innerHTML=`<div style="display:flex;justify-content:space-between;font-size:12px;color:#444;margin-bottom:25px;padding:0 10px"><span>مهر و امضای فروشنده: ..............................</span><span>امضای خریدار: ..............................</span></div><div style="text-align:center;font-size:11px;font-weight:bold;color:#0c2340;border-top:2px solid #f26b1d;padding-top:6px">اطلس سازه - تامین‌کننده تخصصی والپست و اتصالات نوین</div>`;
+  el.appendChild(f);
+  const opt={margin:[8,8,8,8],filename:cust?`پیش‌فاکتور-اطلس-سازه-${cust.replace(/\s+/g,'-')}.pdf`:'Atlas-Sazeh-Invoice.pdf',image:{type:'jpeg',quality:.98},html2canvas:{scale:2,useCORS:true,scrollY:0},jsPDF:{unit:'mm',format:'a4',orientation:'portrait'},pagebreak:{mode:['avoid-all','css','legacy']}};
+  html2pdf().set(opt).from(el).save().then(()=>{h.remove();f.remove()});
+}
+
+window.addEventListener('DOMContentLoaded',()=>{
+  initViewer();
+  $('prodCategory').addEventListener('change',handleCategoryChange);
+  const lg=document.querySelector('.brand img');if(lg)lg.addEventListener('error',()=>lg.style.display='none');
+  $('syncLoadingOverlay').style.display='none';
+  buildAdminFields();loadSettingsLocally();updateSyncTimeDisplay();handleCategoryChange();renderTable();loadCloudSettings();
+  ['fittingType','dim_w','dim_f','dim_l','dim_t','sheet_type','item_count','chk_no_antirust'].forEach(id=>{
+    const e=$(id);e.addEventListener('input',updateLivePreview);e.addEventListener('change',updateLivePreview);
+  });
+  updateLivePreview();
+});
+window.addEventListener('load',()=>{try{if('serviceWorker' in navigator)navigator.serviceWorker.register('./sw.js').catch(()=>{})}catch(e){}});
+// ===================== نمایشگر سه‌بعدی (Three.js) =====================
+let V={ready:false,key:''};
+const fa=n=>(+n).toLocaleString('fa-IR',{maximumFractionDigits:2});
+
+function initViewer(){
+  const box=$('viewer');
+  if(!window.THREE||!box){if($('viewerMsg')){$('viewerMsg').innerText='نمایش سه‌بعدی بارگذاری نشد؛ اتصال اینترنت را بررسی کنید.';$('drawBox').classList.add('is-fit')}return}
+  try{
+    const r=new THREE.WebGLRenderer({antialias:true,alpha:true});
+    r.setPixelRatio(Math.min(window.devicePixelRatio||1,2));
+    box.appendChild(r.domElement);
+    const sc=new THREE.Scene(), cam=new THREE.PerspectiveCamera(35,1,0.1,5000);
+    sc.add(new THREE.HemisphereLight(0xffffff,0x1b2a44,0.95));
+    const d1=new THREE.DirectionalLight(0xffffff,0.85);d1.position.set(60,100,90);sc.add(d1);
+    const d2=new THREE.DirectionalLight(0xffb27a,0.45);d2.position.set(-90,30,-60);sc.add(d2);
+    const grp=new THREE.Group();grp.rotation.order='YXZ';sc.add(grp);
+    V={r,sc,cam,grp,ready:true,key:'',rotY:-0.6,rotX:0.28,tRotY:-0.6,tRotX:0.28,zoom:1,dist:120,auto:true,drag:false};
+    const fit=()=>{const w=box.clientWidth||300,h=box.clientHeight||300;r.setSize(w,h,false);cam.aspect=w/h;cam.updateProjectionMatrix();if(V.model)frame()};
+    new ResizeObserver(fit).observe(box);fit();
+    const el=r.domElement;let lx=0,ly=0;
+    el.addEventListener('pointerdown',e=>{V.drag=true;V.auto=false;lx=e.clientX;ly=e.clientY;el.setPointerCapture(e.pointerId)});
+    el.addEventListener('pointermove',e=>{if(!V.drag)return;V.tRotY+=(e.clientX-lx)*0.01;V.tRotX=V.horiz?V.tRotX+(e.clientY-ly)*0.01:Math.max(-1.6,Math.min(1.6,V.tRotX+(e.clientY-ly)*0.006));lx=e.clientX;ly=e.clientY});
+    ['pointerup','pointercancel'].forEach(t=>el.addEventListener(t,()=>V.drag=false));
+    el.addEventListener('wheel',e=>{e.preventDefault();V.zoom=Math.max(0.5,Math.min(3,V.zoom*(e.deltaY<0?1.1:0.9)));frame()},{passive:false});
+    (function loop(){
+      requestAnimationFrame(loop);
+      if(V.auto){if(V.horiz){V.tRotY=-0.35;V.tRotX+=0.006}else V.tRotY+=0.004}
+      V.rotY+=(V.tRotY-V.rotY)*0.14;V.rotX+=(V.tRotX-V.rotX)*0.14;
+      grp.rotation.y=V.rotY;grp.rotation.x=V.rotX;
+      r.render(sc,cam);
+    })();
+    if(document.fonts&&document.fonts.ready)document.fonts.ready.then(()=>{V.key='';updateLivePreview()});
+  }catch(e){console.warn('WebGL',e);$('viewerMsg').innerText='مرورگر شما از نمایش سه‌بعدی پشتیبانی نمی‌کند.';$('drawBox').classList.add('is-fit');V.ready=false}
+}
+function setView(n){
+  if(!V.ready)return;V.auto=false;
+  if(V.horiz){const k=Math.round(V.rotX/(2*Math.PI))*2*Math.PI;V.rotX-=k;V.tRotX=V.rotX}
+  const p=(V.horiz?{iso:[-0.35,Math.PI+0.25],front:[0,Math.PI],inside:[-0.35,0.25],section:[-1.5708,-1.5708]}:{iso:[-0.6,0.28],front:[0,0],section:[0,-1.5708]})[n];V.tRotY=p[0];V.tRotX=p[1];
+}
+function frame(){
+  const t=Math.tan(17.5*Math.PI/180),a=V.cam.aspect||1,hx=V.hx||60,hy=V.hy||60;
+  let dist=Math.max(hy/t,hx/(t*a))*1.18;
+  dist=Math.max(dist,hx*1.6);
+  V.cam.position.set(0,0,dist/V.zoom);V.cam.lookAt(0,0,0);
+}
+function slotPath(cx,cy,len,wd){
+  const rr=wd/2,h=Math.max(len/2-rr,0.01),p=new THREE.Path();
+  p.moveTo(cx-h,cy-rr);p.lineTo(cx+h,cy-rr);p.absarc(cx+h,cy,rr,-Math.PI/2,Math.PI/2,false);
+  p.lineTo(cx-h,cy+rr);p.absarc(cx-h,cy,rr,Math.PI/2,Math.PI*1.5,false);return p;
+}
+function mkLabel(txt,h){
+  const c=document.createElement('canvas'),x=c.getContext('2d'),F='bold 40px Vazirmatn,Tahoma,sans-serif';
+  x.font=F;const tw=Math.ceil(x.measureText(txt).width)+30,th=64;c.width=tw;c.height=th;
+  x.fillStyle='rgba(7,17,30,.92)';x.strokeStyle='#f26b1d';x.lineWidth=4;
+  x.beginPath();if(x.roundRect)x.roundRect(3,3,tw-6,th-6,10);else x.rect(3,3,tw-6,th-6);x.fill();x.stroke();
+  x.fillStyle='#fff';x.font=F;x.textAlign='center';x.textBaseline='middle';x.fillText(txt,tw/2,th/2+2);
+  const sp=new THREE.Sprite(new THREE.SpriteMaterial({map:new THREE.CanvasTexture(c),depthTest:false,transparent:true}));
+  sp.scale.set(h*tw/th,h,1);sp.renderOrder=10;return sp;
+}
+function dimLine(m,a,b,tk){
+  const g=new THREE.BufferGeometry().setFromPoints([a,b,a.clone().sub(tk),a.clone().add(tk),b.clone().sub(tk),b.clone().add(tk)]);
+  const l=new THREE.LineSegments(g,new THREE.LineBasicMaterial({color:0xf26b1d,depthTest:false,transparent:true}));l.renderOrder=9;m.add(l);
+}
+function disposeTree(o){o.traverse(c=>{if(c.geometry)c.geometry.dispose();if(c.material){if(c.material.map)c.material.map.dispose();c.material.dispose()}})}
+
+function updateViewer(w,f,t){
+  const cat=$('prodCategory').value,l=parseFloat($('dim_l').value)||0,sheet=$('sheet_type').value,noAR=$('chk_no_antirust').checked;
+  const mat=sheet==='galv'?'گالوانیزه':(noAR?'ورق سیاه (خام)':'ورق سیاه + ضدزنگ');
+  $('dv_m').innerText=mat;$('dv_w').innerText=fa(w)+' cm';$('dv_f').innerText=fa(f)+' cm';$('dv_l').innerText=fa(l)+' cm';$('dv_t').innerText=fa(t)+' mm';
+  $('dl_l').firstChild.nodeValue=cat==='wallpost'?'طول قطعه':'ارتفاع شاخه';
+  if(!V.ready)return;
+  const key=[w,f,l,t,sheet,noAR,cat].join('|');if(key===V.key)return;V.key=key;
+  if(!(w>0&&f>0&&l>0&&t>0))return;
+  const isW=cat==='wallpost',isMid=cat==='vador_mid',hz=!isW;
+  if(V.horiz!==hz){V.horiz=hz;V.auto=true;$('vInside').style.display=hz?'':'none';const p=hz?[-0.35,Math.PI+0.25]:[-0.6,0.28];V.rotY=V.tRotY=p[0];V.rotX=V.tRotX=p[1]}
+  if(V.model){V.grp.remove(V.model);disposeTree(V.model)}
+  const m=new THREE.Group();V.model=m;
+  const L=isW?Math.min(l,Math.max(60,(w+2*f)*3.2)):Math.min(l,420), cut=l>L, T=Math.max(t/10,0.25);
+  $('cutNote').style.display=cut?'block':'none';
+  const color=sheet==='galv'?0xc5ced8:(noAR?0x56606d:0x93402a);
+  const material=new THREE.MeshStandardMaterial({color,metalness:sheet==='galv'?0.75:0.3,roughness:sheet==='galv'?0.38:0.55,side:THREE.DoubleSide});
+  const rows=Math.max(2,Math.min(24,Math.round(L/12))),mg=Math.min(7,L*0.14);
+  const ys=[...Array(rows)].map((_,i)=>-L/2+mg+i*(L-2*mg)/(rows-1));
+  // جان (صفحه اصلی)
+  const web=new THREE.Shape();web.moveTo(-w/2,-L/2);web.lineTo(w/2,-L/2);web.lineTo(w/2,L/2);web.lineTo(-w/2,L/2);web.closePath();
+  const cols=w>=10?[-w*0.22,w*0.22]:[0],sl=Math.min(Math.max(w*0.26,2.5),6),sw=Math.min(sl*0.32,1.6);
+  if(isW)ys.forEach(y=>cols.forEach(cx=>web.holes.push(slotPath(cx,y,sl,sw))));
+  m.add(new THREE.Mesh(new THREE.ExtrudeGeometry(web,{depth:T,bevelEnabled:false}),material));
+  // بال‌ها
+  const fl=new THREE.Shape();fl.moveTo(0,-L/2);fl.lineTo(f,-L/2);fl.lineTo(f,L/2);fl.lineTo(0,L/2);fl.closePath();
+  const fs=Math.min(Math.max(f*0.5,2),4),fw=Math.min(fs*0.32,1.2);
+  if(isW&&f>=4)ys.forEach(y=>fl.holes.push(slotPath(f/2,y,fs,fw)));
+  const fg=new THREE.ExtrudeGeometry(fl,{depth:T,bevelEnabled:false});
+  const fr=new THREE.Mesh(fg,material);fr.rotation.y=-Math.PI/2;fr.position.x=w/2+T;m.add(fr);
+  const fL=new THREE.Mesh(fg,material);fL.rotation.y=-Math.PI/2;fL.position.x=-w/2;m.add(fL);
+  const ref=Math.max(w+2*T,2*f,10),off=Math.max(1.2,ref*0.12),hh=Math.max(ref*0.12,Math.max(w+2*T,L,f)*0.022);
+  // وادار میانی: به ازای هر ۱ متر یک ناودانی منقطع ۴۰ سانتی پشت U جوش می‌شود
+  if(isMid){
+    const PL=40,n=Math.floor(L/100),rc=(x0,x1)=>{const q=new THREE.Shape();q.moveTo(x0,-PL/2);q.lineTo(x1,-PL/2);q.lineTo(x1,PL/2);q.lineTo(x0,PL/2);q.closePath();return new THREE.ExtrudeGeometry(q,{depth:T,bevelEnabled:false})};
+    const pwg=rc(-w/2,w/2),pfg=rc(-f,0);
+    for(let k=0;k<n;k++){
+      const yc=-L/2+(k+0.5)*100;
+      const a=new THREE.Mesh(pwg,material);a.position.set(0,yc,-T);m.add(a);
+      const b=new THREE.Mesh(pfg,material);b.rotation.y=-Math.PI/2;b.position.set(w/2+T,yc,-T);m.add(b);
+      const c=new THREE.Mesh(pfg,material);c.rotation.y=-Math.PI/2;c.position.set(-w/2,yc,-T);m.add(c);
+    }
+    if(n>0){const sp=mkLabel('ناودانی منقطع ۴۰ cm، هر ۱ متر',hh*0.9);sp.position.set(w/2+T+off*1.5+sp.scale.x/2,-L/2+50,-f-T);m.add(sp)}
+  }
+  // اندازه‌گذاری
+    const V3=(x,y,z)=>new THREE.Vector3(x,y,z),zf=f+off*0.6;
+  dimLine(m,V3(-w/2,-L/2-off,zf),V3(w/2,-L/2-off,zf),V3(0,off*0.35,0));
+  let s=mkLabel('عرض '+fa(w)+' cm',hh);s.position.set(0,-L/2-off-hh*0.8,zf);m.add(s);
+  const xf=w/2+T+off;
+  dimLine(m,V3(xf,-L/2-off,0),V3(xf,-L/2-off,f),V3(off*0.35,0,0));
+  s=mkLabel('بال '+fa(f)+' cm',hh);s.position.set(xf+off*0.6+s.scale.x/2,-L/2-off,f/2);m.add(s);
+  const xl=-w/2-T-off;
+  dimLine(m,V3(xl,-L/2,zf),V3(xl,L/2,zf),V3(off*0.35,0,0));
+  s=mkLabel('طول '+fa(l)+' cm',hh);s.position.set(xl-off*0.6-s.scale.x/2,0,zf);m.add(s);
+  m.position.z=isMid?T/2:-f/2;if(hz)m.rotation.z=Math.PI/2;V.grp.add(m);
+  // اندازه واقعی کل مدل (به‌همراه برچسب‌ها و خطوط ابعاد) برای قاب‌بندی دقیق
+  const g=V.grp,ry=g.rotation.y,rx=g.rotation.x;g.rotation.set(0,0,0);g.updateMatrixWorld(true);
+  const bb=new THREE.Box3().setFromObject(m);g.rotation.set(rx,ry,0);
+  const ex=Math.max(Math.abs(bb.min.x),Math.abs(bb.max.x)),ey=Math.max(Math.abs(bb.min.y),Math.abs(bb.max.y)),ez=Math.max(Math.abs(bb.min.z),Math.abs(bb.max.z));
+  if(hz){V.hx=Math.hypot(ex,ez);V.hy=Math.hypot(ey,ez)}
+  else V.hx=V.hy=Math.hypot(ex,ey,ez)*0.9;
+  frame();
+}
+
+</script>
+</body>
+</html>
