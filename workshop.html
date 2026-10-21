@@ -1,0 +1,683 @@
+<!DOCTYPE html>
+<html lang="fa" dir="rtl">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>سیستم مدیریت هوشمند کارگاه - وال‌پست و برش ورق</title>
+<script src="https://cdn.tailwindcss.com"></script>
+<script>tailwind.config = { theme: { extend: { fontFamily: { sans: ['Tahoma', 'Arial', 'sans-serif'] } } } }</script>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.110.1"></script>
+<script defer src="https://cdn.jsdelivr.net/npm/alpinejs@3.14.1/dist/cdn.min.js"></script>
+<style type="text/tailwindcss">
+@layer components {
+  .card { @apply bg-slate-800 border border-slate-700 rounded-xl p-5 shadow; }
+  .inp { @apply w-full bg-slate-900 border border-slate-700 rounded-lg p-2 text-white; }
+  .lbl { @apply block text-xs text-slate-400 mb-1; }
+  .btn { @apply w-full bg-amber-600 hover:bg-amber-500 text-slate-950 font-bold py-2.5 rounded-lg transition mt-3; }
+  .btn2 { @apply bg-slate-700 hover:bg-slate-600 text-white text-xs px-4 py-2 rounded-lg transition; }
+  .h3a { @apply text-base font-bold text-amber-400 mb-4 pb-2 border-b border-slate-700; }
+  .h3b { @apply text-base font-bold text-slate-200 mb-4 pb-2 border-b border-slate-700; }
+  .thead { @apply bg-slate-900 text-slate-400; }
+  .stat { @apply bg-slate-900 p-3 rounded-lg border border-slate-700 text-center; }
+  .tab { @apply px-4 py-2 rounded-lg text-sm transition; }
+  .td { @apply p-2.5; }
+}
+[x-cloak] { display: none !important; }
+.print-only { display: none; }
+@media print {
+  .no-print, header, footer, nav { display: none !important; }
+  .print-only { display: block !important; }
+  body { background: #fff !important; }
+  * { color: #000 !important; background: transparent !important; border-color: #888 !important; box-shadow: none !important; }
+  table { font-size: 11px; }
+}
+</style>
+</head>
+<body class="bg-slate-900 text-slate-100 font-sans min-h-screen flex flex-col" x-data="workshopApp()">
+
+<header class="bg-slate-800 border-b border-slate-700 shadow-md px-6 py-4 flex justify-between items-center">
+  <div class="flex items-center space-x-3 space-x-reverse">
+    <div class="bg-amber-600 text-white font-bold p-2.5 rounded-lg shadow">⚙️ کارگاه صنعتی</div>
+    <div>
+      <h1 class="text-lg font-bold text-slate-100">سامانه جامع مدیریت تولید و انبار ورق</h1>
+      <p class="text-xs text-slate-400">باسکول، برش، محصولات و دستمزد ماهانه</p>
+    </div>
+  </div>
+  <template x-if="currentUser">
+    <div class="flex items-center space-x-4 space-x-reverse">
+      <div class="text-left bg-slate-900/60 px-3 py-1.5 rounded-lg border border-slate-700">
+        <div class="text-xs text-amber-400 font-semibold" x-text="roleTitle(currentUser.role)"></div>
+        <div class="text-sm font-bold text-white" x-text="currentUser.name"></div>
+      </div>
+      <button @click="logout()" class="bg-rose-600/80 hover:bg-rose-700 text-white text-xs px-3 py-2 rounded-lg transition shadow">خروج از سیستم 🚪</button>
+    </div>
+  </template>
+</header>
+
+<main class="flex-grow container mx-auto px-4 py-6 max-w-7xl">
+  <template x-if="!configured"><div class="max-w-xl mx-auto mb-4 bg-rose-950/50 border border-rose-700 text-rose-200 text-sm rounded-xl p-4 text-center">اتصال به دیتابیس تنظیم نشده است. آدرس و کلید Supabase را در ابتدای بخش اسکریپت فایل وارد کنید.</div></template>
+  <template x-if="errMsg"><div class="mb-4 bg-amber-950/50 border border-amber-700 text-amber-200 text-xs rounded-lg p-3 text-center" x-text="errMsg"></div></template>
+
+  <!-- ورود -->
+  <template x-if="!currentUser && ready">
+    <div class="max-w-md mx-auto bg-slate-800 border border-slate-700 rounded-2xl shadow-2xl p-8 mt-12">
+      <div class="text-center mb-6">
+        <div class="text-4xl mb-2">🔐</div>
+        <h2 class="text-xl font-bold text-white">ورود به پنل کاربری کارگاه</h2>
+        <p class="text-xs text-slate-400 mt-1">لطفاً نام کاربری و رمز عبور خود را وارد کنید</p>
+      </div>
+      <form @submit.prevent="login" class="space-y-4">
+        <div><label class="lbl">ایمیل:</label><input type="email" x-model="loginForm.username" required autocomplete="username" dir="ltr" class="inp px-4 py-2.5 text-sm" placeholder="email@example.com"></div>
+        <div><label class="lbl">رمز عبور:</label><input type="password" x-model="loginForm.password" required autocomplete="current-password" dir="ltr" class="inp px-4 py-2.5 text-sm" placeholder="رمز عبور"></div>
+        <template x-if="loginError"><div class="text-rose-400 text-xs text-center bg-rose-950/40 p-2 rounded border border-rose-800" x-text="loginError"></div></template>
+        <button type="submit" :disabled="busy" class="btn text-sm py-3 shadow-lg disabled:opacity-50">ورود به سیستم 🚀</button>
+      </form>
+    </div>
+  </template>
+
+  <template x-if="currentUser">
+    <div class="space-y-6">
+
+      <nav class="flex flex-wrap gap-2 bg-slate-800 p-2 rounded-xl border border-slate-700 shadow">
+        <template x-for="t in tabs()" :key="t.id">
+          <button @click="activeTab = t.id" class="tab" :class="activeTab === t.id ? 'bg-amber-600 text-slate-950 font-bold shadow' : 'text-slate-300 hover:bg-slate-700'" x-text="t.label"></button>
+        </template>
+      </nav>
+
+      <!-- ===== ورود ورق و باسکول ===== -->
+      <div x-show="activeTab === 'sheets'" x-cloak class="grid grid-cols-1 lg:grid-cols-3 gap-6">
+        <template x-if="can('enter_sheets')">
+          <div class="card no-print">
+            <h3 class="h3a">➕ اطلاع ورود ورق به کارگاه (هر سایز یک ردیف)</h3>
+            <form @submit.prevent="addSheetEntry" class="space-y-3 text-sm">
+              <div><label class="lbl">تاریخ ورود (شمسی):</label>
+                <input type="text" x-model="sheetForm.date" required inputmode="numeric" dir="ltr" placeholder="1405/07/29" pattern="[0-9۰-۹]{4}/[0-9۰-۹]{1,2}/[0-9۰-۹]{1,2}" class="inp"></div>
+              <div class="grid grid-cols-2 gap-2">
+                <div><label class="lbl">نوع ورق:</label><select x-model="sheetForm.type" class="inp"><option value="سیاه">ورق سیاه</option><option value="گالوانیزه">ورق گالوانیزه</option></select></div>
+                <div><label class="lbl">ضخامت (میلیمتر):</label><select x-model="sheetForm.thickness" class="inp"><option value="2">۲ میل</option><option value="1.8">۱.۸ میل</option></select></div>
+              </div>
+              <div class="grid grid-cols-2 gap-2">
+                <div><label class="lbl">عرض (سانتی‌متر):</label><input type="number" step="0.1" min="1" x-model.number="sheetForm.width" required class="inp" placeholder="مثلا 125.5"></div>
+                <div><label class="lbl">طول (سانتی‌متر):</label><input type="number" step="0.1" min="1" x-model.number="sheetForm.length" required class="inp" placeholder="مثلا 250"></div>
+              </div>
+              <div class="grid grid-cols-2 gap-2">
+                <div><label class="lbl">تعداد برگ:</label><input type="number" min="1" x-model.number="sheetForm.count" required class="inp"></div>
+                <div><label class="lbl">شماره فاکتور / حواله:</label><input type="text" x-model="sheetForm.invoiceNo" class="inp" placeholder="اختیاری"></div>
+              </div>
+              <div class="bg-slate-900/80 p-3 rounded-lg border border-slate-700 text-xs">
+                وزن محاسباتی این ردیف: <span class="font-bold text-cyan-400" x-text="fmt(sheetWeight(sheetForm), 1) + ' کیلوگرم'"></span>
+              </div>
+              <button type="submit" class="btn">ثبت اطلاع ورود ورق 📥</button>
+              <p class="text-[11px] text-slate-400">پس از ثبت، دفتر وزن باسکول هر ردیف را وارد و تایید می‌کند.</p>
+            </form>
+          </div>
+        </template>
+
+        <div class="card overflow-hidden" :class="can('enter_sheets') ? 'lg:col-span-2' : 'lg:col-span-3'">
+          <div class="flex justify-between items-center mb-4 pb-2 border-b border-slate-700">
+            <h3 class="text-base font-bold text-slate-200">📋 ورق‌های ورودی، وزن محاسباتی و باسکول</h3>
+            <button @click="window.print()" class="btn2 no-print">🖨️ چاپ</button>
+          </div>
+          <div class="overflow-x-auto">
+            <table class="w-full text-right text-xs">
+              <thead class="thead"><tr>
+                <th class="td">تاریخ</th><th class="td">فاکتور</th><th class="td">نوع / ضخامت</th><th class="td">ابعاد (سانتی‌متر)</th><th class="td">تعداد</th>
+                <th class="td">وزن محاسباتی</th><th class="td text-amber-400">وزن باسکول</th><th class="td">اختلاف</th><th class="td">وضعیت</th><th class="td no-print"></th>
+              </tr></thead>
+              <tbody class="divide-y divide-slate-700">
+                <template x-for="s in sortedSheets()" :key="s.id">
+                  <tr>
+                    <td class="td text-slate-300"><div x-text="fa(s.date)"></div><div class="text-[10px] text-slate-500" x-text="s.enteredBy || ''"></div></td>
+                    <td class="td text-slate-300" x-text="s.invoiceNo ? fa(s.invoiceNo) : '-'"></td>
+                    <td class="td font-bold" x-text="s.type + ' ' + fa(s.thickness) + ' میل'"></td>
+                    <td class="td" x-text="fa(s.width) + ' × ' + fa(s.length)"></td>
+                    <td class="td font-bold" x-text="fmt(s.count) + ' برگ'"></td>
+                    <td class="td text-cyan-400" x-text="fmt(sheetWeight(s), 1) + ' ک‌گ'"></td>
+                    <td class="td">
+                      <template x-if="can('confirm_weight') && !s.confirmed">
+                        <input type="number" step="0.1" x-model.number="s.weighbridgeWeight" class="w-24 bg-slate-900 border border-amber-500/50 rounded px-2 py-1 text-amber-300 font-bold" placeholder="کیلوگرم">
+                      </template>
+                      <template x-if="!(can('confirm_weight') && !s.confirmed)">
+                        <span class="font-bold" :class="s.weighbridgeWeight ? 'text-amber-300' : 'text-slate-500'" x-text="s.weighbridgeWeight ? fmt(s.weighbridgeWeight, 1) + ' ک‌گ' : 'ثبت نشده'"></span>
+                      </template>
+                    </td>
+                    <td class="td" x-text="s.weighbridgeWeight ? diffText(s) : '-'" :class="s.weighbridgeWeight && Math.abs(diffPct(s)) > 3 ? 'text-rose-400 font-bold' : 'text-emerald-400'"></td>
+                    <td class="td">
+                      <span x-show="s.confirmed" class="text-emerald-400 font-bold">✔ تایید شد</span>
+                      <span x-show="!s.confirmed" class="text-slate-400">در انتظار تایید</span>
+                    </td>
+                    <td class="td no-print whitespace-nowrap">
+                      <template x-if="can('confirm_weight')">
+                        <span>
+                          <button x-show="!s.confirmed" @click="confirmSheet(s)" class="bg-emerald-600 hover:bg-emerald-500 text-slate-950 font-bold px-2 py-1 rounded">تایید</button>
+                        </span>
+                      </template>
+                      <template x-if="can('delete_records')">
+                        <span>
+                          <button x-show="s.confirmed" @click="unconfirmSheet(s)" class="bg-slate-700 hover:bg-slate-600 text-white px-2 py-1 rounded">لغو تایید</button>
+                          <button @click="removeSheet(s.id)" class="text-rose-400 hover:text-rose-300 p-1">🗑️</button>
+                        </span>
+                      </template>
+                    </td>
+                  </tr>
+                </template>
+                <template x-if="sheets.length === 0"><tr><td colspan="10" class="text-center py-6 text-slate-500">هنوز ورقی توسط تولید ثبت نشده است.</td></tr></template>
+              </tbody>
+              <tfoot x-show="sheets.length > 0" class="bg-slate-900 font-bold">
+                <tr><td class="td" colspan="4">جمع کل</td><td class="td" x-text="fmt(sheets.reduce((a,s)=>a+Number(s.count),0)) + ' برگ'"></td>
+                  <td class="td text-cyan-400" x-text="fmt(sheets.reduce((a,s)=>a+sheetWeight(s),0), 0) + ' ک‌گ'"></td>
+                  <td class="td text-amber-300" x-text="fmt(totalConfirmedWeight(), 0) + ' ک‌گ (تاییدشده)'" colspan="4"></td></tr>
+              </tfoot>
+            </table>
+          </div>
+        </div>
+      </div>
+
+      <!-- ===== برش ورق ===== -->
+      <div x-show="activeTab === 'cutting'" x-cloak class="grid grid-cols-1 lg:grid-cols-3 gap-6">
+        <template x-if="can('enter_cuts')">
+          <div class="card no-print">
+            <h3 class="h3a">✂️ ثبت برش ورق</h3>
+            <form @submit.prevent="addCutEntry" class="space-y-3 text-sm">
+              <div><label class="lbl">انتخاب از موجودی انبار (اختیاری):</label>
+                <select x-model="pick" @change="applyPick()" class="inp">
+                  <option value="">— انتخاب سایز موجود —</option>
+                  <template x-for="g in stockList().filter(g => g.remCount > 0)" :key="g.key">
+                    <option :value="g.key" x-text="g.type + ' ' + fa(g.thickness) + ' میل | ' + fa(g.width) + '×' + fa(g.length) + ' | موجودی ' + fa(g.remCount) + ' برگ'"></option>
+                  </template>
+                </select></div>
+              <div><label class="lbl">تاریخ برش (شمسی):</label>
+                <input type="text" x-model="cutForm.date" required inputmode="numeric" dir="ltr" placeholder="1405/07/29" pattern="[0-9۰-۹]{4}/[0-9۰-۹]{1,2}/[0-9۰-۹]{1,2}" class="inp"></div>
+              <div class="grid grid-cols-2 gap-2">
+                <div><label class="lbl">نوع ورق:</label><select x-model="cutForm.type" class="inp"><option value="سیاه">ورق سیاه</option><option value="گالوانیزه">ورق گالوانیزه</option></select></div>
+                <div><label class="lbl">ضخامت:</label><select x-model="cutForm.thickness" class="inp"><option value="2">۲ میل</option><option value="1.8">۱.۸ میل</option></select></div>
+              </div>
+              <div class="grid grid-cols-2 gap-2">
+                <div><label class="lbl">عرض ورق (سانتی‌متر):</label><input type="number" step="0.1" min="1" x-model.number="cutForm.width" required class="inp"></div>
+                <div><label class="lbl">طول ورق (سانتی‌متر):</label><input type="number" step="0.1" min="1" x-model.number="cutForm.length" required class="inp"></div>
+              </div>
+              <div class="grid grid-cols-2 gap-2">
+                <div><label class="lbl">تعداد برگ برش‌خورده:</label><input type="number" min="1" x-model.number="cutForm.count" required class="inp"></div>
+                <div><label class="lbl">مسئول برش:</label><input type="text" x-model="cutForm.worker" class="inp" placeholder="نام کارگر"></div>
+              </div>
+              <div><label class="lbl">توضیحات:</label><input type="text" x-model="cutForm.note" class="inp" placeholder="مثلا نوارهای ۲۰ سانتی"></div>
+              <div class="bg-slate-900/80 p-3 rounded-lg border border-slate-700 text-xs">
+                وزن ورق برش‌خورده: <span class="font-bold text-cyan-400" x-text="fmt(cutWeight(cutForm), 1) + ' کیلوگرم'"></span>
+              </div>
+              <button type="submit" class="btn">ثبت برش ✂️</button>
+            </form>
+          </div>
+        </template>
+
+        <div class="space-y-6" :class="can('enter_cuts') ? 'lg:col-span-2' : 'lg:col-span-3'">
+          <div class="card">
+            <h3 class="text-base font-bold text-slate-200 mb-3">📊 موجودی ورق خام در سالن (بر اساس سایز)</h3>
+            <div class="grid grid-cols-2 md:grid-cols-4 gap-4 mb-4">
+              <div class="stat"><div class="text-xs text-slate-400">ورق تاییدشده ورودی</div><div class="text-lg font-bold text-white mt-1" x-text="fmt(totalConfirmedWeight()) + ' ک‌گ'"></div></div>
+              <div class="stat"><div class="text-xs text-slate-400">کل برش‌خورده</div><div class="text-lg font-bold text-amber-400 mt-1" x-text="fmt(totalCutWeight()) + ' ک‌گ'"></div></div>
+              <div class="stat"><div class="text-xs text-slate-400">موجودی سالن</div><div class="text-lg font-bold text-emerald-400 mt-1" x-text="fmt(remainingWeightAt(null)) + ' ک‌گ'"></div></div>
+              <div class="stat"><div class="text-xs text-slate-400">برگ باقی‌مانده</div><div class="text-lg font-bold text-cyan-400 mt-1" x-text="fmt(stockList().reduce((a,g)=>a+g.remCount,0)) + ' برگ'"></div></div>
+            </div>
+            <div class="overflow-x-auto">
+              <table class="w-full text-right text-xs">
+                <thead class="thead"><tr><th class="td">نوع / ضخامت</th><th class="td">ابعاد (سانتی‌متر)</th><th class="td">ورودی تاییدشده</th><th class="td">برش‌خورده</th><th class="td">باقی‌مانده</th><th class="td">وزن باقی‌مانده</th></tr></thead>
+                <tbody class="divide-y divide-slate-700">
+                  <template x-for="g in stockList()" :key="g.key">
+                    <tr>
+                      <td class="td font-bold" x-text="g.type + ' ' + fa(g.thickness) + ' میل'"></td>
+                      <td class="td" x-text="fa(g.width) + ' × ' + fa(g.length)"></td>
+                      <td class="td" x-text="fmt(g.inCount)"></td><td class="td" x-text="fmt(g.cutCount)"></td>
+                      <td class="td font-bold text-emerald-400" x-text="fmt(g.remCount)"></td>
+                      <td class="td text-cyan-400" x-text="fmt(g.remWeight) + ' ک‌گ'"></td>
+                    </tr>
+                  </template>
+                  <template x-if="stockList().length === 0"><tr><td colspan="6" class="text-center py-4 text-slate-500">موجودی تاییدشده‌ای وجود ندارد.</td></tr></template>
+                </tbody>
+              </table>
+            </div>
+          </div>
+
+          <div class="card overflow-hidden">
+            <div class="flex flex-wrap justify-between items-center gap-2 mb-4 pb-2 border-b border-slate-700">
+              <h3 class="text-base font-bold text-slate-200">📋 گزارش برش‌های ثبت‌شده</h3>
+              <div class="flex items-center gap-2 no-print">
+                <input type="text" x-model="fromDate" dir="ltr" placeholder="از 1405/07/01" class="inp !w-32 !p-1.5 text-xs">
+                <input type="text" x-model="toDate" dir="ltr" placeholder="تا 1405/07/30" class="inp !w-32 !p-1.5 text-xs">
+                <button @click="window.print()" class="btn2">🖨️ چاپ</button>
+              </div>
+            </div>
+            <div class="overflow-x-auto">
+              <table class="w-full text-right text-xs">
+                <thead class="thead"><tr><th class="td">تاریخ</th><th class="td">نوع / ضخامت</th><th class="td">ابعاد ورق (سانتی‌متر)</th><th class="td">تعداد</th><th class="td">وزن (ک‌گ)</th><th class="td">کارگر</th><th class="td">توضیحات</th><th class="td no-print"></th></tr></thead>
+                <tbody class="divide-y divide-slate-700">
+                  <template x-for="c in filteredCuts()" :key="c.id">
+                    <tr>
+                      <td class="td text-slate-300" x-text="fa(c.date)"></td>
+                      <td class="td font-bold" x-text="c.type + ' ' + fa(c.thickness) + ' میل'"></td>
+                      <td class="td" x-text="fa(c.width) + ' × ' + fa(c.length)"></td>
+                      <td class="td text-amber-300 font-bold" x-text="fmt(c.count) + ' برگ'"></td>
+                      <td class="td text-cyan-400" x-text="fmt(cutWeight(c), 1)"></td>
+                      <td class="td text-slate-300" x-text="c.worker || '-'"></td>
+                      <td class="td text-slate-400" x-text="c.note || '-'"></td>
+                      <td class="td no-print"><template x-if="can('delete_records')"><button @click="removeCut(c.id)" class="text-rose-400 hover:text-rose-300 p-1">🗑️</button></template></td>
+                    </tr>
+                  </template>
+                  <template x-if="filteredCuts().length === 0"><tr><td colspan="8" class="text-center py-6 text-slate-500">هیچ برشی ثبت نشده است.</td></tr></template>
+                </tbody>
+                <tfoot x-show="filteredCuts().length > 0" class="bg-slate-900 font-bold">
+                  <tr><td class="td" colspan="3">جمع</td><td class="td" x-text="fmt(filteredCuts().reduce((a,c)=>a+Number(c.count),0)) + ' برگ'"></td>
+                    <td class="td text-cyan-400" colspan="4" x-text="fmt(filteredCuts().reduce((a,c)=>a+cutWeight(c),0)) + ' ک‌گ'"></td></tr>
+                </tfoot>
+              </table>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- ===== تولید محصول ===== -->
+      <div x-show="activeTab === 'products'" x-cloak class="grid grid-cols-1 lg:grid-cols-3 gap-6">
+        <template x-if="can('enter_products')">
+          <div class="card no-print">
+            <h3 class="h3a">🏭 ثبت محصول نهایی تولیدی</h3>
+            <form @submit.prevent="addProductEntry" class="space-y-3 text-sm">
+              <div><label class="lbl">تاریخ تولید (شمسی):</label>
+                <input type="text" x-model="productForm.date" required inputmode="numeric" dir="ltr" placeholder="1405/07/29" pattern="[0-9۰-۹]{4}/[0-9۰-۹]{1,2}/[0-9۰-۹]{1,2}" class="inp"></div>
+              <div class="grid grid-cols-2 gap-2">
+                <div><label class="lbl">نوع محصول:</label>
+                  <select x-model="productForm.productType" class="inp font-bold text-amber-300">
+                    <option>ناودانی</option><option>وادار انتهایی</option><option>وادار میانی</option><option>اتصالات</option>
+                  </select></div>
+                <div><label class="lbl">ضخامت ورق:</label><select x-model="productForm.thickness" class="inp"><option value="2">۲ میل</option><option value="1.8">۱.۸ میل</option></select></div>
+              </div>
+              <div class="grid grid-cols-3 gap-2">
+                <div><label class="lbl">بال (سانتی‌متر):</label><input type="number" step="0.1" min="0" x-model.number="productForm.wing" required class="inp" placeholder="7"></div>
+                <div><label class="lbl">دهنه (سانتی‌متر):</label><input type="number" step="0.1" min="0" x-model.number="productForm.span" required class="inp" placeholder="15"></div>
+                <div><label class="lbl">طول (سانتی‌متر):</label><input type="number" step="0.1" min="1" x-model.number="productForm.length" required class="inp" placeholder="30"></div>
+              </div>
+              <div><label class="lbl">تعداد تولید:</label><input type="number" min="1" x-model.number="productForm.count" required class="inp"></div>
+              <div><label class="lbl">نام مشتری / پروژه:</label><input type="text" x-model="productForm.customer" required class="inp" placeholder="مثال: پروژه برج نگین"></div>
+              <div><label class="lbl">توضیحات:</label><input type="text" x-model="productForm.note" class="inp"></div>
+              <div class="bg-slate-900/80 p-3 rounded-lg border border-slate-700 text-xs space-y-1">
+                <div>عرض ورق مصرفی: <span class="font-bold text-white" x-text="fa(+(productForm.wing*2 + productForm.span).toFixed(2)) + ' سانتی‌متر'"></span>
+                  <span class="text-slate-400" x-text="'(' + fa(productForm.wing) + ' + ' + fa(productForm.span) + ' + ' + fa(productForm.wing) + ')'"></span></div>
+                <div>وزن هر قطعه: <span class="font-bold text-white" x-text="fmt(productWeight({...productForm, count: 1}), 2) + ' ک‌گ'"></span></div>
+                <div>وزن کل: <span class="font-bold text-cyan-400" x-text="fmt(productWeight(productForm), 1) + ' ک‌گ'"></span></div>
+              </div>
+              <button type="submit" class="btn">ثبت در گزارش تولید 📦</button>
+            </form>
+          </div>
+        </template>
+
+        <div class="card overflow-hidden" :class="can('enter_products') ? 'lg:col-span-2' : 'lg:col-span-3'">
+          <div class="print-only mb-4 text-center">
+            <h2 class="text-lg font-bold">گزارش تولید محصولات نهایی — جهت ورود به انبار</h2>
+            <p class="text-xs">کارگاه مهندس صادقیان | تاریخ چاپ: <span x-text="fa(todayJalali())"></span>
+              <span x-show="fromDate || toDate" x-text="' | بازه: ' + fa(fromDate || '...') + ' تا ' + fa(toDate || '...')"></span></p>
+          </div>
+          <div class="flex flex-wrap justify-between items-center gap-2 mb-4 pb-2 border-b border-slate-700">
+            <h3 class="text-base font-bold text-slate-200">📋 گزارش تولید</h3>
+            <div class="flex items-center gap-2 no-print">
+              <input type="text" x-model="fromDate" dir="ltr" placeholder="از 1405/07/01" class="inp !w-32 !p-1.5 text-xs">
+              <input type="text" x-model="toDate" dir="ltr" placeholder="تا 1405/07/30" class="inp !w-32 !p-1.5 text-xs">
+              <button @click="window.print()" class="btn2">🖨️ چاپ برای حسابدار</button>
+            </div>
+          </div>
+          <div class="overflow-x-auto">
+            <table class="w-full text-right text-xs">
+              <thead class="thead"><tr><th class="td">تاریخ</th><th class="td">محصول</th><th class="td">ضخامت</th><th class="td">بال + دهنه + بال = عرض ورق</th><th class="td">طول (سانتی‌متر)</th><th class="td">تعداد</th><th class="td">وزن (ک‌گ)</th><th class="td">پروژه / مشتری</th><th class="td no-print"></th></tr></thead>
+              <tbody class="divide-y divide-slate-700">
+                <template x-for="p in filteredProducts()" :key="p.id">
+                  <tr>
+                    <td class="td text-slate-300" x-text="fa(p.date)"></td>
+                    <td class="td font-bold text-amber-300" x-text="p.productType"></td>
+                    <td class="td" x-text="fa(p.thickness) + ' میل'"></td>
+                    <td class="td" x-text="fa(p.wing) + ' + ' + fa(p.span) + ' + ' + fa(p.wing) + ' = ' + fa(+(p.span + 2*p.wing).toFixed(2))"></td>
+                    <td class="td" x-text="fa(p.length)"></td>
+                    <td class="td font-bold text-white" x-text="fmt(p.count)"></td>
+                    <td class="td text-cyan-400 font-bold" x-text="fmt(p.weight, 1)"></td>
+                    <td class="td text-slate-200" x-text="p.customer + (p.note ? ' — ' + p.note : '')"></td>
+                    <td class="td no-print"><template x-if="can('delete_records')"><button @click="removeProduct(p.id)" class="text-rose-400 hover:text-rose-300 p-1">🗑️</button></template></td>
+                  </tr>
+                </template>
+                <template x-if="filteredProducts().length === 0"><tr><td colspan="9" class="text-center py-6 text-slate-500">محصولی ثبت نشده است.</td></tr></template>
+              </tbody>
+              <tfoot x-show="filteredProducts().length > 0" class="bg-slate-900 font-bold">
+                <tr><td class="td" colspan="5">جمع کل</td><td class="td" x-text="fmt(filteredProducts().reduce((a,p)=>a+Number(p.count),0))"></td>
+                  <td class="td text-cyan-400" colspan="3" x-text="fmt(filteredProducts().reduce((a,p)=>a+Number(p.weight),0), 1) + ' ک‌گ'"></td></tr>
+              </tfoot>
+            </table>
+          </div>
+          <div class="print-only mt-12 grid grid-cols-3 text-center text-xs">
+            <div>تحویل‌دهنده (تولید)<br><br><br>.....................</div>
+            <div>مسئول دفتر<br><br><br>.....................</div>
+            <div>تحویل‌گیرنده (حسابدار / انبار)<br><br><br>.....................</div>
+          </div>
+        </div>
+      </div>
+
+      <!-- ===== دستمزد ماهانه ===== -->
+      <template x-if="can('view_wages')">
+        <div x-show="activeTab === 'wages'" x-cloak>
+          <div class="card p-6">
+            <div class="flex flex-col md:flex-row justify-between md:items-center pb-4 border-b border-slate-700 gap-4">
+              <div>
+                <h3 class="text-lg font-bold text-amber-400">💰 محاسبه دستمزد ماهانه</h3>
+                <p class="text-xs text-slate-400 mt-1 leading-6">
+                  تا <span class="text-white font-bold" x-text="fmt(LIMIT) + ' کیلوگرم'"></span> در ماه: کیلویی <span class="text-white font-bold" x-text="fmt(R1) + ' تومان'"></span>
+                  — مازاد بر آن: کیلویی <span class="text-white font-bold" x-text="fmt(R2) + ' تومان'"></span><br>
+                  وزن ماه = ورق تاییدشده ورودی ماه + مانده ماه قبل − مانده انبار پایان ماه (مانده به ماه بعد منتقل می‌شود)
+                </p>
+              </div>
+              <div class="flex items-center gap-3">
+                <div class="bg-slate-900 px-4 py-3 rounded-xl border border-amber-500/40 text-center">
+                  <div class="text-xs text-slate-400">جمع دستمزد همه ماه‌ها</div>
+                  <div class="text-xl font-bold text-amber-300 mt-1" x-text="fmt(wageRows().reduce((a,r)=>a+r.total,0)) + ' تومان'"></div>
+                </div>
+                <button @click="window.print()" class="btn2 no-print">🖨️ چاپ</button>
+              </div>
+            </div>
+            <div class="overflow-x-auto mt-4">
+              <table class="w-full text-right text-xs">
+                <thead class="thead"><tr>
+                  <th class="td">ماه</th><th class="td">ورق ورودی ماه (باسکول)</th><th class="td">+ مانده ماه قبل</th><th class="td">− مانده پایان ماه</th>
+                  <th class="td text-amber-400">وزن مشمول دستمزد</th><th class="td">تا سقف (نرخ بالا)</th><th class="td">مازاد (نرخ پایین)</th><th class="td text-amber-400">دستمزد (تومان)</th>
+                </tr></thead>
+                <tbody class="divide-y divide-slate-700">
+                  <template x-for="r in wageRows()" :key="r.mk">
+                    <tr>
+                      <td class="td font-bold" x-text="monthName(r.mk)"></td>
+                      <td class="td" x-text="fmt(r.incoming) + ' ک‌گ'"></td>
+                      <td class="td text-emerald-400" x-text="fmt(r.carryIn) + ' ک‌گ'"></td>
+                      <td class="td text-rose-400" x-text="fmt(r.carryOut) + ' ک‌گ'"></td>
+                      <td class="td font-bold text-amber-300" x-text="fmt(r.weight) + ' ک‌گ'"></td>
+                      <td class="td" x-text="fmt(r.w1) + ' ک‌گ → ' + fmt(r.t1)"></td>
+                      <td class="td" x-text="fmt(r.w2) + ' ک‌گ → ' + fmt(r.t2)"></td>
+                      <td class="td font-bold text-amber-300" x-text="fmt(r.total)"></td>
+                    </tr>
+                  </template>
+                  <template x-if="wageRows().length === 0"><tr><td colspan="8" class="text-center py-6 text-slate-500">هنوز داده‌ای برای محاسبه وجود ندارد.</td></tr></template>
+                </tbody>
+              </table>
+            </div>
+            <p class="text-[11px] text-slate-500 mt-3">فقط ورق‌های تاییدشده توسط دفتر در محاسبه لحاظ می‌شوند. مانده انبار بر اساس میانگین وزن باسکول هر سایز محاسبه می‌شود.</p>
+          </div>
+        </div>
+      </template>
+
+      <!-- ===== داشبورد مدیریت (فقط گزارش) ===== -->
+      <template x-if="can('view_dashboard')">
+        <div x-show="activeTab === 'dashboard'" x-cloak>
+          <div class="card p-6 space-y-6">
+            <div class="flex justify-between items-center pb-4 border-b border-slate-700">
+              <div><h3 class="text-lg font-bold text-amber-400">📊 داشبورد مدیریت</h3><p class="text-xs text-slate-400 mt-1">گزارش کلی کارگاه، انبار و دستمزد</p></div>
+              <button @click="window.print()" class="btn2 no-print">🖨️ چاپ گزارش / PDF</button>
+            </div>
+            <div class="grid grid-cols-2 lg:grid-cols-4 gap-4">
+              <div class="stat"><div class="text-xs text-slate-400">ورق تاییدشده ورودی</div><div class="text-xl font-bold text-white mt-1" x-text="fmt(totalConfirmedWeight()) + ' ک‌گ'"></div></div>
+              <div class="stat"><div class="text-xs text-slate-400">ورق برش‌خورده</div><div class="text-xl font-bold text-amber-400 mt-1" x-text="fmt(totalCutWeight()) + ' ک‌گ'"></div></div>
+              <div class="stat"><div class="text-xs text-slate-400">موجودی سالن</div><div class="text-xl font-bold text-emerald-400 mt-1" x-text="fmt(remainingWeightAt(null)) + ' ک‌گ'"></div></div>
+              <div class="stat"><div class="text-xs text-slate-400">ورق‌های در انتظار تایید دفتر</div><div class="text-xl font-bold text-rose-400 mt-1" x-text="fmt(sheets.filter(s=>!s.confirmed).length) + ' ردیف'"></div></div>
+              <div class="stat"><div class="text-xs text-slate-400">وزن محصولات تولیدی</div><div class="text-xl font-bold text-cyan-400 mt-1" x-text="fmt(totalProductWeight()) + ' ک‌گ'"></div></div>
+              <div class="stat"><div class="text-xs text-slate-400">اختلاف ورق برش‌خورده و محصول</div>
+                <div class="text-xl font-bold mt-1" :class="Math.abs(totalCutWeight()-totalProductWeight()) > 0.05*Math.max(totalCutWeight(),1) ? 'text-rose-400' : 'text-emerald-400'" x-text="fmt(totalCutWeight() - totalProductWeight()) + ' ک‌گ'"></div></div>
+              <div class="stat"><div class="text-xs text-slate-400">کل دستمزد ماه‌ها</div><div class="text-xl font-bold text-emerald-400 mt-1" x-text="fmt(wageRows().reduce((a,r)=>a+r.total,0)) + ' ت'"></div></div>
+              <div class="stat"><div class="text-xs text-slate-400">تعداد کل محصول</div><div class="text-xl font-bold text-white mt-1" x-text="fmt(products.reduce((a,p)=>a+Number(p.count),0)) + ' عدد'"></div></div>
+            </div>
+            <div class="bg-slate-900 p-5 rounded-xl border border-slate-700">
+              <h4 class="text-sm font-bold text-slate-200 mb-4">📦 آمار محصولات تولیدشده</h4>
+              <div class="grid grid-cols-2 md:grid-cols-4 gap-4">
+                <template x-for="n in ['ناودانی','وادار انتهایی','وادار میانی','اتصالات']" :key="n">
+                  <div class="bg-slate-800 p-3 rounded-lg border border-slate-700 text-center">
+                    <div class="text-xs text-slate-400" x-text="n"></div>
+                    <div class="text-lg font-bold text-amber-300 mt-1" x-text="fmt(productSummary(n).count) + ' عدد'"></div>
+                    <div class="text-xs text-cyan-400" x-text="fmt(productSummary(n).weight) + ' ک‌گ'"></div>
+                  </div>
+                </template>
+              </div>
+            </div>
+          </div>
+        </div>
+      </template>
+
+      <!-- ===== تنظیمات ===== -->
+      <template x-if="can('view_dashboard')">
+        <div x-show="activeTab === 'settings'" x-cloak>
+          <div class="card p-6 space-y-4">
+            <h3 class="text-lg font-bold text-amber-400 pb-2 border-b border-slate-700">⚙️ پشتیبان‌گیری و امنیت داده‌ها</h3>
+            <p class="text-xs text-slate-300 leading-relaxed">اطلاعات روی دیتابیس مشترک ذخیره می‌شود و برای همه کاربران یکسان است. پلن رایگان پشتیبان خودکار ندارد؛ هفته‌ای یک بار فایل پشتیبان را دانلود کنید و در درایو شخصی نگه دارید.</p>
+            <div class="flex flex-wrap gap-4 pt-2">
+              <button @click="exportData()" class="bg-emerald-600 hover:bg-emerald-500 text-slate-950 font-bold px-5 py-2.5 rounded-lg text-sm transition shadow">📥 دانلود فایل پشتیبان (JSON)</button>
+            </div>
+          </div>
+        </div>
+      </template>
+
+    </div>
+  </template>
+</main>
+
+<footer class="bg-slate-950 border-t border-amber-600/40 mt-auto">
+  <div class="max-w-7xl mx-auto px-6 py-8 grid grid-cols-1 md:grid-cols-3 gap-8 text-xs text-slate-400">
+    <div>
+      <div class="flex items-center gap-2 mb-3"><span class="bg-amber-600 text-white font-bold p-2 rounded-lg">⚙️</span><span class="text-sm font-bold text-slate-100">کارگاه مهندس صادقیان</span></div>
+      <p class="leading-6">سامانه مدیریت باسکول، برش ورق، تولید محصولات نهایی و محاسبه دستمزد ماهانه.</p>
+    </div>
+    <div>
+      <h4 class="text-sm font-bold text-amber-400 mb-3">بخش‌های سیستم</h4>
+      <ul class="space-y-1.5"><li>📦 ورود ورق و تایید باسکول</li><li>✂️ برش ورق و موجودی سالن</li><li>🏭 گزارش تولید قابل چاپ</li><li>💰 دستمزد ماهانه با مانده انتقالی</li></ul>
+    </div>
+    <div>
+      <h4 class="text-sm font-bold text-amber-400 mb-3">وضعیت سیستم</h4>
+      <ul class="space-y-1.5">
+        <li class="flex items-center gap-2"><span class="w-2 h-2 rounded-full bg-emerald-500"></span> متصل به دیتابیس مشترک</li>
+        <li>📅 امروز: <span class="text-slate-200 font-bold" x-text="fa(todayJalali())"></span></li>
+        <li>💾 هفته‌ای یک بار پشتیبان بگیرید</li>
+      </ul>
+    </div>
+  </div>
+  <div class="border-t border-slate-800 py-3 text-center text-[11px] text-slate-500">© <span x-text="fa(todayJalali().split('/')[0])"></span> کارگاه مهندس صادقیان | تمامی حقوق محفوظ است</div>
+</footer>
+
+<script>
+/* ---------- تاریخ شمسی ---------- */
+function gregorianToJalali(gy, gm, gd) {
+  const g = [0,31,59,90,120,151,181,212,243,273,304,334];
+  const gy2 = gm > 2 ? gy + 1 : gy;
+  let days = 355666 + 365*gy + Math.floor((gy2+3)/4) - Math.floor((gy2+99)/100) + Math.floor((gy2+399)/400) + gd + g[gm-1];
+  let jy = -1595 + 33*Math.floor(days/12053); days %= 12053;
+  jy += 4*Math.floor(days/1461); days %= 1461;
+  if (days > 365) { jy += Math.floor((days-1)/365); days = (days-1) % 365; }
+  const jm = days < 186 ? 1 + Math.floor(days/31) : 7 + Math.floor((days-186)/30);
+  const jd = 1 + (days < 186 ? days % 31 : (days-186) % 30);
+  return [jy, jm, jd];
+}
+function toLatin(s) { return String(s).replace(/[۰-۹]/g, d => '۰۱۲۳۴۵۶۷۸۹'.indexOf(d)).replace(/[٠-٩]/g, d => '٠١٢٣٤٥٦٧٨٩'.indexOf(d)); }
+function fa(s) { return String(s ?? '').replace(/\d/g, d => '۰۱۲۳۴۵۶۷۸۹'[d]); }
+function fmt(n, d = 0) { return fa(Number(n || 0).toLocaleString('en-US', { maximumFractionDigits: d })); }
+function pad2(n) { return String(n).padStart(2, '0'); }
+function todayJalali() { const n = new Date(); const [y, m, d] = gregorianToJalali(n.getFullYear(), n.getMonth()+1, n.getDate()); return y + '/' + pad2(m) + '/' + pad2(d); }
+function normDate(s) {
+  const m = toLatin(s || '').match(/(\d{4})\D+(\d{1,2})\D+(\d{1,2})/);
+  if (!m) return s;
+  let y = +m[1], mo = +m[2], d = +m[3];
+  if (y > 1700) [y, mo, d] = gregorianToJalali(y, mo, d);
+  return y + '/' + pad2(mo) + '/' + pad2(d);
+}
+const MONTHS = ['فروردین','اردیبهشت','خرداد','تیر','مرداد','شهریور','مهر','آبان','آذر','دی','بهمن','اسفند'];
+const DENSITY = 7.85; // کیلوگرم بر متر مربع به ازای هر میلیمتر ضخامت
+
+/* ===== تنظیمات اتصال به Supabase: این دو مقدار را از Project Settings > API کپی کنید ===== */
+const SUPABASE_URL = 'https://rxngmcghsegqunfewycu.supabase.co';
+const SUPABASE_ANON_KEY = 'sb_publishable_OXCeaiyfp_zUrGo1m9SfQw_wezRdJ8M';
+
+function workshopApp() {
+  return {
+    LIMIT: 15000, R1: 7350, R2: 4900, // سقف ماهانه (کیلوگرم)، نرخ تا سقف، نرخ مازاد (تومان)
+    sb: null, ready: false, busy: false, errMsg: '', configured: !SUPABASE_URL.includes('YOUR_'),
+    currentUser: null, loginForm: { username: '', password: '' }, loginError: '', activeTab: 'sheets',
+    sheets: [], cuts: [], products: [], pick: '', fromDate: '', toDate: '',
+
+    sheetForm: { date: todayJalali(), type: 'سیاه', thickness: '2', width: 125, length: 250, count: 10, invoiceNo: '' },
+    cutForm: { date: todayJalali(), type: 'سیاه', thickness: '2', width: 125, length: 250, count: 5, worker: '', note: '' },
+    productForm: { date: todayJalali(), productType: 'ناودانی', thickness: '2', wing: 7, span: 15, length: 30, count: 10, customer: '', note: '' },
+
+    async init() {
+      if (!this.configured) return;
+      this.sb = supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+      const { data } = await this.sb.auth.getSession();
+      if (data.session) await this.startSession(data.session.user);
+      this.ready = true;
+      setInterval(() => { if (this.currentUser && !document.hidden) this.loadAll(); }, 20000);
+      document.addEventListener('visibilitychange', () => { if (!document.hidden && this.currentUser) this.loadAll(); });
+    },
+    async startSession(user) {
+      const { data: prof, error } = await this.sb.from('profiles').select('full_name, role').eq('id', user.id).single();
+      if (error || !prof) { await this.sb.auth.signOut(); this.loginError = 'برای این کاربر نقشی تعریف نشده است. با مدیر سیستم تماس بگیرید.'; return false; }
+      this.currentUser = { id: user.id, role: prof.role, name: prof.full_name };
+      this.activeTab = this.tabs()[0].id;
+      await this.loadAll();
+      return true;
+    },
+    async loadAll() {
+      const [s, c, p] = await Promise.all([
+        this.sb.from('sheets').select('*').order('id'),
+        this.sb.from('cuts').select('*').order('id'),
+        this.sb.from('products').select('*').order('id')]);
+      if (s.error || c.error || p.error) { this.errMsg = 'خطا در دریافت اطلاعات از سرور. اتصال اینترنت را بررسی کنید.'; return; }
+      this.errMsg = '';
+      const keep = {};
+      this.sheets.forEach(x => { if (!x.confirmed && x.weighbridgeWeight !== '' && x.weighbridgeWeight !== null) keep[x.id] = x.weighbridgeWeight; });
+      this.sheets = s.data.map(r => ({ id: r.id, date: r.date, type: r.type, thickness: String(r.thickness), width: +r.width, length: +r.length, count: r.count, invoiceNo: r.invoice_no || '',
+        weighbridgeWeight: (!r.confirmed && keep[r.id] !== undefined) ? keep[r.id] : (r.weighbridge_weight ?? ''), confirmed: r.confirmed, confirmedAt: r.confirmed_at, enteredBy: r.entered_by }));
+      this.cuts = c.data.map(r => ({ id: r.id, date: r.date, type: r.type, thickness: String(r.thickness), width: +r.width, length: +r.length, count: r.count, worker: r.worker || '', note: r.note || '', enteredBy: r.entered_by }));
+      this.products = p.data.map(r => ({ id: r.id, date: r.date, productType: r.product_type, thickness: String(r.thickness), wing: +r.wing, span: +r.span, length: +r.length, count: r.count, customer: r.customer, note: r.note || '', weight: +r.weight, enteredBy: r.entered_by }));
+    },
+    async run(fn) {
+      this.busy = true;
+      try { const { error } = await fn(); if (error) throw error; await this.loadAll(); }
+      catch (e) { alert('عملیات انجام نشد: ' + (e.message || e)); }
+      this.busy = false;
+    },
+
+    /* ---------- کاربران و دسترسی ---------- */
+    async login() {
+      this.loginError = ''; this.busy = true;
+      const { data, error } = await this.sb.auth.signInWithPassword({ email: this.loginForm.username.trim(), password: this.loginForm.password });
+      if (error) this.loginError = 'ایمیل یا رمز عبور اشتباه است.';
+      else if (await this.startSession(data.user)) this.loginForm = { username: '', password: '' };
+      this.busy = false;
+    },
+    async logout() { await this.sb.auth.signOut(); this.currentUser = null; this.sheets = []; this.cuts = []; this.products = []; },
+    roleTitle(r) { return { manager: 'مدیر کل', office: 'امور اداری و باسکول', worker: 'نیروی تولید' }[r] || ''; },
+    can(a) {
+      if (!this.currentUser) return false;
+      const r = this.currentUser.role;
+      switch (a) {
+        case 'confirm_weight': return r === 'office';
+        case 'enter_sheets': case 'enter_cuts': case 'enter_products': return r === 'worker';
+        case 'view_wages': return r === 'manager' || r === 'worker';
+        case 'view_dashboard': case 'delete_records': return r === 'manager';
+        default: return false;
+      }
+    },
+    tabs() {
+      const r = this.currentUser ? this.currentUser.role : '', t = [];
+      t.push({ id: 'sheets', label: r === 'worker' ? '📦 اطلاع ورود ورق' : r === 'office' ? '⚖️ باسکول و تایید ورق' : '📦 گزارش ورود ورق' });
+      t.push({ id: 'cutting', label: r === 'worker' ? '✂️ ثبت برش ورق' : '✂️ گزارش برش و موجودی' });
+      t.push({ id: 'products', label: r === 'worker' ? '🏭 ثبت تولید محصول' : '🏭 گزارش تولید' });
+      if (this.can('view_wages')) t.push({ id: 'wages', label: '💰 دستمزد ماهانه' });
+      if (this.can('view_dashboard')) { t.push({ id: 'dashboard', label: '📊 داشبورد مدیریتی' }); t.push({ id: 'settings', label: '⚙️ پشتیبان‌گیری' }); }
+      return t;
+    },
+
+    /* ---------- وزن‌ها (ابعاد به سانتی‌متر) ---------- */
+    sheetWeight(o) { return (o.width / 100) * (o.length / 100) * Number(o.thickness) * DENSITY * Number(o.count || 0) || 0; },
+    cutWeight(o) { return this.sheetWeight(o); },
+    productWeight(p) { return ((Number(p.span) + 2 * Number(p.wing)) / 100) * (p.length / 100) * Number(p.thickness) * DENSITY * Number(p.count || 0) || 0; },
+    diffPct(s) { const t = this.sheetWeight(s); return t ? (Number(s.weighbridgeWeight) - t) / t * 100 : 0; },
+    diffText(s) { const d = Number(s.weighbridgeWeight) - this.sheetWeight(s); return (d > 0 ? '+' : '') + fmt(d, 1) + ' ک‌گ (' + fa(this.diffPct(s).toFixed(1)) + '٪)'; },
+
+    /* ---------- ورق ورودی ---------- */
+    sortedSheets() { return [...this.sheets].sort((a, b) => (b.date + b.id).localeCompare(a.date + a.id)); },
+    async addSheetEntry() {
+      const f = this.sheetForm;
+      await this.run(() => this.sb.from('sheets').insert({ date: normDate(f.date), type: f.type, thickness: Number(f.thickness), width: f.width, length: f.length, count: f.count, invoice_no: f.invoiceNo || null, entered_by: this.currentUser.name }));
+    },
+    async confirmSheet(s) {
+      if (!(Number(s.weighbridgeWeight) > 0)) { alert('ابتدا وزن باسکول را وارد کنید.'); return; }
+      if (Math.abs(this.diffPct(s)) > 3 && !confirm('اختلاف وزن باسکول با وزن محاسباتی بیش از ۳٪ است. تایید شود؟')) return;
+      await this.run(() => this.sb.from('sheets').update({ weighbridge_weight: Number(s.weighbridgeWeight), confirmed: true, confirmed_at: todayJalali() }).eq('id', s.id));
+    },
+    async unconfirmSheet(s) { if (confirm('تایید این ردیف لغو شود؟')) await this.run(() => this.sb.from('sheets').update({ confirmed: false, confirmed_at: null }).eq('id', s.id)); },
+    async removeSheet(id) { if (confirm('این ردیف حذف شود؟')) await this.run(() => this.sb.from('sheets').delete().eq('id', id)); },
+    totalConfirmedWeight() { return this.sheets.filter(s => s.confirmed).reduce((a, s) => a + Number(s.weighbridgeWeight), 0); },
+
+    /* ---------- موجودی بر اساس سایز ---------- */
+    gkey(o) { return [o.type, +o.thickness, +o.width, +o.length].join('|'); },
+    groups(upTo) {
+      const m = {}, mk = o => m[this.gkey(o)] ||= { key: this.gkey(o), type: o.type, thickness: +o.thickness, width: +o.width, length: +o.length, inCount: 0, inWeight: 0, cutCount: 0 };
+      this.sheets.filter(s => s.confirmed && (!upTo || s.date <= upTo)).forEach(s => { const g = mk(s); g.inCount += Number(s.count); g.inWeight += Number(s.weighbridgeWeight); });
+      this.cuts.filter(c => !upTo || c.date <= upTo).forEach(c => { mk(c).cutCount += Number(c.count); });
+      return Object.values(m).map(g => {
+        const remCount = Math.max(0, g.inCount - g.cutCount);
+        const avg = g.inCount ? g.inWeight / g.inCount : this.sheetWeight({ ...g, count: 1 });
+        return { ...g, remCount, remWeight: remCount * avg };
+      });
+    },
+    stockList() { return this.groups(null).sort((a, b) => a.type.localeCompare(b.type) || a.thickness - b.thickness || a.width - b.width); },
+    remainingWeightAt(upTo) { return this.groups(upTo).reduce((a, g) => a + g.remWeight, 0); },
+    applyPick() {
+      const g = this.stockList().find(x => x.key === this.pick);
+      if (g) Object.assign(this.cutForm, { type: g.type, thickness: String(g.thickness), width: g.width, length: g.length });
+    },
+
+    /* ---------- برش ---------- */
+    inRange(d) { const f = this.fromDate ? normDate(this.fromDate) : '', t = this.toDate ? normDate(this.toDate) : '9999'; return d >= f && d <= t; },
+    filteredCuts() { return this.cuts.filter(c => this.inRange(c.date)).sort((a, b) => (b.date + b.id).localeCompare(a.date + a.id)); },
+    async addCutEntry() {
+      const f = this.cutForm;
+      const g = this.stockList().find(x => x.key === this.gkey(f));
+      if (!g || g.remCount <= 0) { alert('این سایز در موجودی تاییدشده انبار وجود ندارد. ثبت برش ممکن نیست. سایز را از لیست «انتخاب از موجودی انبار» انتخاب کنید یا از دفتر بخواهید ورق را تایید کند.'); return; }
+      if (Number(f.count) > g.remCount) { alert('تعداد برش (' + fa(f.count) + ') از موجودی این سایز (' + fa(g.remCount) + ' برگ) بیشتر است.'); return; }
+      await this.run(() => this.sb.from('cuts').insert({ date: normDate(f.date), type: f.type, thickness: Number(f.thickness), width: f.width, length: f.length, count: f.count, worker: f.worker || null, note: f.note || null, entered_by: this.currentUser.name }));
+      this.pick = '';
+    },
+    async removeCut(id) { if (confirm('حذف شود؟')) await this.run(() => this.sb.from('cuts').delete().eq('id', id)); },
+    totalCutWeight() { return this.cuts.reduce((a, c) => a + this.cutWeight(c), 0); },
+
+    /* ---------- محصولات ---------- */
+    filteredProducts() { return this.products.filter(p => this.inRange(p.date)).sort((a, b) => (b.date + b.id).localeCompare(a.date + a.id)); },
+    async addProductEntry() {
+      const f = this.productForm;
+      await this.run(() => this.sb.from('products').insert({ date: normDate(f.date), product_type: f.productType, thickness: Number(f.thickness), wing: f.wing, span: f.span, length: f.length, count: f.count, customer: f.customer, note: f.note || null, weight: +this.productWeight(f).toFixed(2), entered_by: this.currentUser.name }));
+    },
+    async removeProduct(id) { if (confirm('حذف شود؟')) await this.run(() => this.sb.from('products').delete().eq('id', id)); },
+    totalProductWeight() { return this.products.reduce((a, p) => a + Number(p.weight), 0); },
+    productSummary(t) { const l = this.products.filter(p => p.productType === t); return { count: l.reduce((a, p) => a + Number(p.count), 0), weight: l.reduce((a, p) => a + Number(p.weight), 0) }; },
+
+    /* ---------- دستمزد ماهانه ---------- */
+    monthName(mk) { const [y, m] = mk.split('/'); return MONTHS[+m - 1] + ' ' + fa(y); },
+    wageRows() {
+      const keys = [...new Set([...this.sheets.filter(s => s.confirmed).map(s => s.date), ...this.cuts.map(c => c.date)].map(d => d.slice(0, 7)))].sort();
+      return keys.map((mk, i) => {
+        const incoming = this.sheets.filter(s => s.confirmed && s.date.startsWith(mk)).reduce((a, s) => a + Number(s.weighbridgeWeight), 0);
+        const carryIn = i > 0 ? this.remainingWeightAt(keys[i - 1] + '/99') : 0;
+        const carryOut = this.remainingWeightAt(mk + '/99');
+        const weight = Math.max(0, incoming + carryIn - carryOut);
+        const w1 = Math.min(weight, this.LIMIT), w2 = Math.max(0, weight - this.LIMIT);
+        const t1 = w1 * this.R1, t2 = w2 * this.R2;
+        return { mk, incoming, carryIn, carryOut, weight, w1, w2, t1, t2, total: t1 + t2 };
+      });
+    },
+
+    /* ---------- پشتیبان ---------- */
+    exportData() {
+      const blob = new Blob([JSON.stringify({ sheets: this.sheets, cuts: this.cuts, products: this.products }, null, 2)], { type: 'application/json' });
+      const a = document.createElement('a'); a.href = URL.createObjectURL(blob);
+      a.download = 'workshop-backup-' + todayJalali().replace(/\//g, '-') + '.json'; a.click();
+    },
+  };
+}
+</script>
+</body>
+</html>
