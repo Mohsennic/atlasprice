@@ -372,6 +372,101 @@
         </div>
       </div>
 
+      <!-- ===== گزارش روزانه ===== -->
+      <template x-if="can('daily_report')">
+        <div x-show="activeTab === 'daily'" x-cloak>
+          <div class="card p-6 space-y-6">
+            <div class="flex flex-wrap justify-between items-center gap-3 pb-4 border-b border-slate-700 no-print">
+              <div><h3 class="text-lg font-bold text-amber-400">🗓️ گزارش روزانه کارگاه</h3><p class="text-xs text-slate-400 mt-1">ورود ورق، برش و تولید را چاپ کنید تا نسخه کاغذی داشته باشید</p></div>
+              <div class="flex items-center gap-2">
+                <input type="text" x-model="dailyFrom" dir="ltr" placeholder="از 1405/07/29" class="inp !w-32 !p-1.5 text-xs">
+                <input type="text" x-model="dailyTo" dir="ltr" placeholder="تا 1405/07/29" class="inp !w-32 !p-1.5 text-xs">
+                <button @click="window.print()" class="btn2">🖨️ چاپ گزارش</button>
+              </div>
+            </div>
+            <div class="text-center">
+              <h2 class="text-base font-bold">گزارش روزانه کارگاه مهندس صادقیان</h2>
+              <p class="text-xs text-slate-400">از <span x-text="fa(normDate(dailyFrom))"></span> تا <span x-text="fa(normDate(dailyTo || dailyFrom))"></span> | تاریخ چاپ: <span x-text="fa(todayJalali())"></span></p>
+            </div>
+
+            <div>
+              <h4 class="text-sm font-bold text-slate-200 mb-2">۱) ورود ورق</h4>
+              <div class="overflow-x-auto"><table class="w-full text-right text-xs">
+                <thead class="thead"><tr><th class="td">تاریخ</th><th class="td">فاکتور</th><th class="td">نوع / ضخامت</th><th class="td">ابعاد (سانتی‌متر)</th><th class="td">تعداد</th><th class="td">وزن محاسباتی</th><th class="td">وزن باسکول</th><th class="td">وضعیت</th><th class="td">ثبت‌کننده</th></tr></thead>
+                <tbody class="divide-y divide-slate-700">
+                  <template x-for="s in dailySheets()" :key="s.id"><tr>
+                    <td class="td" x-text="fa(s.date)"></td><td class="td" x-text="s.invoiceNo ? fa(s.invoiceNo) : '-'"></td>
+                    <td class="td font-bold" x-text="s.type + ' ' + fa(s.thickness) + ' میل'"></td><td class="td" x-text="fa(s.width) + ' × ' + fa(s.length)"></td>
+                    <td class="td" x-text="fmt(s.count)"></td><td class="td" x-text="fmt(sheetWeight(s), 1) + ' ک‌گ'"></td>
+                    <td class="td" x-text="s.weighbridgeWeight ? fmt(s.weighbridgeWeight, 1) + ' ک‌گ' : 'ثبت نشده'"></td>
+                    <td class="td" x-text="s.confirmed ? 'تایید شد' : 'در انتظار تایید'"></td><td class="td" x-text="s.enteredBy || '-'"></td>
+                  </tr></template>
+                  <template x-if="dailySheets().length === 0"><tr><td colspan="9" class="text-center py-3 text-slate-500">موردی ثبت نشده است.</td></tr></template>
+                </tbody>
+                <tfoot x-show="dailySheets().length > 0" class="font-bold"><tr><td class="td" colspan="4">جمع</td><td class="td" x-text="fmt(dailySheets().reduce((a,s)=>a+Number(s.count),0))"></td>
+                  <td class="td" x-text="fmt(dailySheets().reduce((a,s)=>a+sheetWeight(s),0)) + ' ک‌گ'"></td>
+                  <td class="td" colspan="3" x-text="fmt(dailySheets().reduce((a,s)=>a+Number(s.weighbridgeWeight||0),0)) + ' ک‌گ'"></td></tr></tfoot>
+              </table></div>
+            </div>
+
+            <div>
+              <h4 class="text-sm font-bold text-slate-200 mb-2">۲) برش ورق</h4>
+              <div class="overflow-x-auto"><table class="w-full text-right text-xs">
+                <thead class="thead"><tr><th class="td">تاریخ</th><th class="td">نوع / ضخامت</th><th class="td">ابعاد ورق (سانتی‌متر)</th><th class="td">تعداد</th><th class="td">وزن (ک‌گ)</th><th class="td">کارگر</th><th class="td">توضیحات</th></tr></thead>
+                <tbody class="divide-y divide-slate-700">
+                  <template x-for="c in dailyCuts()" :key="c.id"><tr>
+                    <td class="td" x-text="fa(c.date)"></td><td class="td font-bold" x-text="c.type + ' ' + fa(c.thickness) + ' میل'"></td>
+                    <td class="td" x-text="fa(c.width) + ' × ' + fa(c.length)"></td><td class="td" x-text="fmt(c.count)"></td>
+                    <td class="td" x-text="fmt(cutWeight(c), 1)"></td><td class="td" x-text="c.worker || '-'"></td><td class="td" x-text="c.note || '-'"></td>
+                  </tr></template>
+                  <template x-if="dailyCuts().length === 0"><tr><td colspan="7" class="text-center py-3 text-slate-500">موردی ثبت نشده است.</td></tr></template>
+                </tbody>
+                <tfoot x-show="dailyCuts().length > 0" class="font-bold"><tr><td class="td" colspan="3">جمع</td><td class="td" x-text="fmt(dailyCuts().reduce((a,c)=>a+Number(c.count),0))"></td>
+                  <td class="td" colspan="3" x-text="fmt(dailyCuts().reduce((a,c)=>a+cutWeight(c),0)) + ' ک‌گ'"></td></tr></tfoot>
+              </table></div>
+            </div>
+
+            <div>
+              <h4 class="text-sm font-bold text-slate-200 mb-2">۳) محصولات تولیدشده</h4>
+              <div class="overflow-x-auto"><table class="w-full text-right text-xs">
+                <thead class="thead"><tr><th class="td">تاریخ</th><th class="td">محصول</th><th class="td">ضخامت</th><th class="td">دهنه</th><th class="td">بال</th><th class="td">طول (سانتی‌متر)</th><th class="td">تعداد</th><th class="td">وزن (ک‌گ)</th><th class="td">پروژه / مشتری</th></tr></thead>
+                <tbody class="divide-y divide-slate-700">
+                  <template x-for="p in dailyProducts()" :key="p.id"><tr>
+                    <td class="td" x-text="fa(p.date)"></td>
+                    <td class="td font-bold"><div x-text="p.productType"></div>
+                      <template x-if="p.attachments && p.attachments.length"><div class="text-[10px] font-normal mt-1">ناودانی‌های پشت آن:
+                        <template x-for="(a, i) in p.attachments" :key="i"><div x-text="'دهنه ' + fa(a.span) + '، بال ' + fa(a.wing) + '، طول ' + fa(a.length) + ' × ' + fa(a.qty) + ' عدد'"></div></template></div></template></td>
+                    <td class="td" x-text="fa(p.thickness) + ' میل'"></td><td class="td" x-text="fa(p.span)"></td><td class="td" x-text="fa(p.wing)"></td><td class="td" x-text="fa(p.length)"></td>
+                    <td class="td" x-text="fmt(p.count)"></td><td class="td" x-text="fmt(p.weight, 1)"></td><td class="td" x-text="p.customer + (p.note ? ' — ' + p.note : '')"></td>
+                  </tr></template>
+                  <template x-if="dailyProducts().length === 0"><tr><td colspan="9" class="text-center py-3 text-slate-500">موردی ثبت نشده است.</td></tr></template>
+                </tbody>
+                <tfoot x-show="dailyProducts().length > 0" class="font-bold"><tr><td class="td" colspan="6">جمع</td><td class="td" x-text="fmt(dailyProducts().reduce((a,p)=>a+Number(p.count),0))"></td>
+                  <td class="td" colspan="2" x-text="fmt(dailyProducts().reduce((a,p)=>a+Number(p.weight),0), 1) + ' ک‌گ'"></td></tr></tfoot>
+              </table></div>
+            </div>
+
+            <div>
+              <h4 class="text-sm font-bold text-slate-200 mb-2">۴) موجودی ورق خام انبار تا پایان بازه</h4>
+              <div class="overflow-x-auto"><table class="w-full text-right text-xs">
+                <thead class="thead"><tr><th class="td">نوع / ضخامت</th><th class="td">ابعاد (سانتی‌متر)</th><th class="td">باقی‌مانده (برگ)</th><th class="td">وزن باقی‌مانده</th></tr></thead>
+                <tbody class="divide-y divide-slate-700">
+                  <template x-for="g in dailyStock()" :key="g.key"><tr>
+                    <td class="td font-bold" x-text="g.type + ' ' + fa(g.thickness) + ' میل'"></td><td class="td" x-text="fa(g.width) + ' × ' + fa(g.length)"></td>
+                    <td class="td" x-text="fmt(g.remCount)"></td><td class="td" x-text="fmt(g.remWeight) + ' ک‌گ'"></td>
+                  </tr></template>
+                  <template x-if="dailyStock().length === 0"><tr><td colspan="4" class="text-center py-3 text-slate-500">موجودی تاییدشده‌ای نیست.</td></tr></template>
+                </tbody>
+              </table></div>
+            </div>
+
+            <div class="print-only mt-10 grid grid-cols-3 text-center text-xs">
+              <div>مسئول دفتر<br><br><br>.....................</div><div>مسئول تولید<br><br><br>.....................</div><div>مدیر<br><br><br>.....................</div>
+            </div>
+          </div>
+        </div>
+      </template>
+
       <!-- ===== دستمزد ماهانه ===== -->
       <template x-if="can('view_wages')">
         <div x-show="activeTab === 'wages'" x-cloak>
@@ -463,9 +558,11 @@
         <div x-show="activeTab === 'settings'" x-cloak>
           <div class="card p-6 space-y-4">
             <h3 class="text-lg font-bold text-amber-400 pb-2 border-b border-slate-700">⚙️ پشتیبان‌گیری و امنیت داده‌ها</h3>
-            <p class="text-xs text-slate-300 leading-relaxed">اطلاعات روی دیتابیس مشترک ذخیره می‌شود و برای همه کاربران یکسان است. پلن رایگان پشتیبان خودکار ندارد؛ هفته‌ای یک بار فایل پشتیبان را دانلود کنید و در درایو شخصی نگه دارید.</p>
+            <p class="text-xs text-slate-300 leading-relaxed">اطلاعات روی دیتابیس مشترک ذخیره می‌شود و برای همه کاربران یکسان است. بازیابی فقط ردیف‌هایی را اضافه می‌کند که در سیستم نیست و چیزی را حذف نمی‌کند. پلن رایگان پشتیبان خودکار ندارد؛ هفته‌ای یک بار فایل پشتیبان را دانلود کنید و در درایو شخصی نگه دارید.</p>
             <div class="flex flex-wrap gap-4 pt-2">
               <button @click="exportData()" class="bg-emerald-600 hover:bg-emerald-500 text-slate-950 font-bold px-5 py-2.5 rounded-lg text-sm transition shadow">📥 دانلود فایل پشتیبان (JSON)</button>
+              <label class="bg-cyan-600 hover:bg-cyan-500 text-slate-950 font-bold px-5 py-2.5 rounded-lg text-sm transition shadow cursor-pointer">📤 بازیابی اطلاعات از فایل پشتیبان
+                <input type="file" @change="importData($event)" accept=".json" class="hidden"></label>
             </div>
           </div>
         </div>
@@ -534,7 +631,7 @@ function workshopApp() {
     LIMIT: 15000, R1: 7350, R2: 4900, // سقف ماهانه (کیلوگرم)، نرخ تا سقف، نرخ مازاد (تومان)
     sb: null, ready: false, busy: false, errMsg: '', configured: !SUPABASE_URL.includes('YOUR_'),
     currentUser: null, loginForm: { username: '', password: '' }, loginError: '', activeTab: 'sheets',
-    sheets: [], cuts: [], products: [], pick: '', fromDate: '', toDate: '',
+    sheets: [], cuts: [], products: [], pick: '', fromDate: '', toDate: '', dailyFrom: todayJalali(), dailyTo: todayJalali(),
 
     sheetForm: { date: todayJalali(), type: 'سیاه', thickness: '2', width: 125, length: 250, count: 10, invoiceNo: '' },
     cutForm: { date: todayJalali(), type: 'سیاه', thickness: '2', width: 125, length: 250, count: 5, worker: '', note: '' },
@@ -596,6 +693,7 @@ function workshopApp() {
         case 'enter_sheets': case 'enter_cuts': case 'enter_products': return r === 'worker';
         case 'view_wages': return r === 'manager' || r === 'worker';
         case 'view_dashboard': case 'delete_records': return r === 'manager';
+        case 'daily_report': return r === 'office' || r === 'manager';
         default: return false;
       }
     },
@@ -604,6 +702,7 @@ function workshopApp() {
       t.push({ id: 'sheets', label: r === 'worker' ? '📦 اطلاع ورود ورق' : r === 'office' ? '⚖️ باسکول و تایید ورق' : '📦 گزارش ورود ورق' });
       t.push({ id: 'cutting', label: r === 'worker' ? '✂️ ثبت برش ورق' : '✂️ گزارش برش و موجودی' });
       t.push({ id: 'products', label: r === 'worker' ? '🏭 ثبت تولید محصول' : '🏭 گزارش تولید' });
+      if (this.can('daily_report')) t.push({ id: 'daily', label: '🗓️ گزارش روزانه (چاپ)' });
       if (this.can('view_wages')) t.push({ id: 'wages', label: '💰 دستمزد ماهانه' });
       if (this.can('view_dashboard')) { t.push({ id: 'dashboard', label: '📊 داشبورد مدیریتی' }); t.push({ id: 'settings', label: '⚙️ پشتیبان‌گیری' }); }
       return t;
@@ -694,6 +793,13 @@ function workshopApp() {
     totalProductWeight() { return this.products.reduce((a, p) => a + Number(p.weight), 0); },
     productSummary(t) { const l = this.products.filter(p => p.productType === t); return { count: l.reduce((a, p) => a + Number(p.count), 0), weight: l.reduce((a, p) => a + Number(p.weight), 0) }; },
 
+    /* ---------- گزارش روزانه ---------- */
+    inDaily(d) { const f = normDate(this.dailyFrom || ''), t = normDate(this.dailyTo || this.dailyFrom || ''); return d >= f && d <= t; },
+    dailySheets() { return this.sheets.filter(s => this.inDaily(s.date)); },
+    dailyCuts() { return this.cuts.filter(c => this.inDaily(c.date)); },
+    dailyProducts() { return this.products.filter(p => this.inDaily(p.date)); },
+    dailyStock() { return this.groups(normDate(this.dailyTo || this.dailyFrom || '')).filter(g => g.remCount > 0); },
+
     /* ---------- دستمزد ماهانه ---------- */
     monthName(mk) { const [y, m] = mk.split('/'); return MONTHS[+m - 1] + ' ' + fa(y); },
     wageRows() {
@@ -710,6 +816,42 @@ function workshopApp() {
     },
 
     /* ---------- پشتیبان ---------- */
+    async importData(ev) {
+      const file = ev.target.files[0]; ev.target.value = '';
+      if (!file) return;
+      let p;
+      try { p = JSON.parse(await file.text()); } catch (e) { alert('فایل نامعتبر است.'); return; }
+      if (!Array.isArray(p.sheets) || !Array.isArray(p.cuts) || !Array.isArray(p.products)) { alert('ساختار فایل پشتیبان درست نیست.'); return; }
+      const nn = v => (v === '' || v == null) ? null : Number(v);
+      const sheetRow = r => ({ date: normDate(r.date), type: r.type, thickness: Number(r.thickness), width: Number(r.width), length: Number(r.length), count: Number(r.count), invoice_no: r.invoiceNo || null, weighbridge_weight: nn(r.weighbridgeWeight), confirmed: !!r.confirmed, confirmed_at: r.confirmedAt || null, entered_by: r.enteredBy || null });
+      const cutRow = r => ({ date: normDate(r.date), type: r.type, thickness: Number(r.thickness), width: Number(r.width), length: Number(r.length), count: Number(r.count), worker: r.worker || null, note: r.note || null, entered_by: r.enteredBy || null });
+      const prodRow = r => ({ date: normDate(r.date), product_type: r.productType, thickness: Number(r.thickness), wing: Number(r.wing), span: Number(r.span), length: Number(r.length), count: Number(r.count), customer: r.customer, note: r.note || null, weight: Number(r.weight), attachments: (r.attachments && r.attachments.length) ? r.attachments : null, entered_by: r.enteredBy || null });
+      // ردیف‌هایی که از قبل در سیستم هست دوباره اضافه نمی‌شود
+      const plan = (rows, existing, map) => {
+        const have = {}; existing.forEach(e => { const k = JSON.stringify(map(e)); have[k] = (have[k] || 0) + 1; });
+        const out = []; rows.forEach(r => { const m = map(r), k = JSON.stringify(m); if (have[k] > 0) have[k]--; else out.push(m); });
+        return out;
+      };
+      let ns, nc, np;
+      try { ns = plan(p.sheets, this.sheets, sheetRow); nc = plan(p.cuts, this.cuts, cutRow); np = plan(p.products, this.products, prodRow); }
+      catch (e) { alert('اطلاعات داخل فایل پشتیبان نامعتبر است.'); return; }
+      if (!ns.length && !nc.length && !np.length) { alert('همه اطلاعات این فایل از قبل در سیستم موجود است.'); return; }
+      if (!confirm('بازیابی: ' + fa(ns.length) + ' ردیف ورق، ' + fa(nc.length) + ' برش و ' + fa(np.length) + ' محصول اضافه می‌شود. اطلاعات فعلی حذف نمی‌شود. ادامه می‌دهید؟')) return;
+      this.busy = true;
+      try {
+        for (const [tbl, rows] of [['sheets', ns], ['cuts', nc], ['products', np]]) {
+          for (let i = 0; i < rows.length; i += 200) {
+            const { error } = await this.sb.from(tbl).insert(rows.slice(i, i + 200));
+            if (error) throw new Error(tbl + ': ' + error.message);
+          }
+        }
+        await this.loadAll(); alert('بازیابی انجام شد.');
+      } catch (e) {
+        await this.loadAll();
+        alert('بازیابی کامل نشد: ' + (e.message || e) + '\nهمین فایل را دوباره بازیابی کنید؛ ردیف‌های تکراری اضافه نمی‌شوند.');
+      }
+      this.busy = false;
+    },
     exportData() {
       const blob = new Blob([JSON.stringify({ sheets: this.sheets, cuts: this.cuts, products: this.products }, null, 2)], { type: 'application/json' });
       const a = document.createElement('a'); a.href = URL.createObjectURL(blob);
