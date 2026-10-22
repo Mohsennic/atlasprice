@@ -104,9 +104,6 @@
                 <div><label class="lbl">تعداد برگ:</label><input type="number" min="1" x-model.number="sheetForm.count" required class="inp"></div>
                 <div><label class="lbl">شماره فاکتور / حواله:</label><input type="text" x-model="sheetForm.invoiceNo" class="inp" placeholder="اختیاری"></div>
               </div>
-              <div class="bg-slate-900/80 p-3 rounded-lg border border-slate-700 text-xs">
-                وزن محاسباتی این ردیف: <span class="font-bold text-cyan-400" x-text="fmt(sheetWeight(sheetForm), 1) + ' کیلوگرم'"></span>
-              </div>
               <button type="submit" class="btn">ثبت اطلاع ورود ورق 📥</button>
               <p class="text-[11px] text-slate-400">پس از ثبت، دفتر وزن باسکول هر ردیف را وارد و تایید می‌کند.</p>
             </form>
@@ -202,7 +199,7 @@
               </div>
               <div><label class="lbl">توضیحات:</label><input type="text" x-model="cutForm.note" class="inp" placeholder="مثلا نوارهای ۲۰ سانتی"></div>
               <div class="bg-slate-900/80 p-3 rounded-lg border border-slate-700 text-xs">
-                وزن ورق برش‌خورده: <span class="font-bold text-cyan-400" x-text="fmt(cutWeight(cutForm), 1) + ' کیلوگرم'"></span>
+                وزن ورق برش‌خورده (بر پایه وزن باسکول): <span class="font-bold text-cyan-400" x-text="fmt(cutWeight(cutForm), 1) + ' کیلوگرم'"></span>
               </div>
               <button type="submit" class="btn">ثبت برش ✂️</button>
             </form>
@@ -290,17 +287,32 @@
                 <div><label class="lbl">ضخامت ورق:</label><select x-model="productForm.thickness" class="inp"><option value="2">۲ میل</option><option value="1.8">۱.۸ میل</option></select></div>
               </div>
               <div class="grid grid-cols-3 gap-2">
-                <div><label class="lbl">بال (سانتی‌متر):</label><input type="number" step="0.1" min="0" x-model.number="productForm.wing" required class="inp" placeholder="7"></div>
                 <div><label class="lbl">دهنه (سانتی‌متر):</label><input type="number" step="0.1" min="0" x-model.number="productForm.span" required class="inp" placeholder="15"></div>
+                <div><label class="lbl">بال (سانتی‌متر):</label><input type="number" step="0.1" min="0" x-model.number="productForm.wing" required class="inp" placeholder="7"></div>
                 <div><label class="lbl">طول (سانتی‌متر):</label><input type="number" step="0.1" min="1" x-model.number="productForm.length" required class="inp" placeholder="30"></div>
               </div>
               <div><label class="lbl">تعداد تولید:</label><input type="number" min="1" x-model.number="productForm.count" required class="inp"></div>
+              <template x-if="productForm.productType === 'وادار میانی'">
+                <div class="bg-slate-900/80 p-3 rounded-lg border border-amber-500/40 space-y-2">
+                  <div class="text-xs font-bold text-amber-300">ناودانی‌های پشت وادار (برای هر ۱ عدد وادار)</div>
+                  <p class="text-[11px] text-slate-400" x-text="'طبق آیین‌نامه به ازای هر ۱ متر طول، یک ناودانی. برای طول ' + fa(productForm.length) + ' سانتی‌متر حدود ' + fa(expectedChannels()) + ' عدد'"></p>
+                  <template x-for="(a, i) in productForm.attachments" :key="i">
+                    <div class="grid grid-cols-5 gap-1 items-end">
+                      <div><label class="lbl">دهنه</label><input type="number" step="0.1" min="0" x-model.number="a.span" class="inp !p-1.5"></div>
+                      <div><label class="lbl">بال</label><input type="number" step="0.1" min="0" x-model.number="a.wing" class="inp !p-1.5"></div>
+                      <div><label class="lbl">طول</label><input type="number" step="0.1" min="0" x-model.number="a.length" class="inp !p-1.5"></div>
+                      <div><label class="lbl">تعداد</label><input type="number" min="0" x-model.number="a.qty" class="inp !p-1.5"></div>
+                      <button type="button" x-show="productForm.attachments.length > 1" @click="productForm.attachments.splice(i, 1)" class="text-rose-400 pb-2">✕</button>
+                    </div>
+                  </template>
+                  <button type="button" @click="productForm.attachments.push({ span: '', wing: '', length: '', qty: '' })" class="btn2 !text-[11px] !py-1">+ ردیف ناودانی</button>
+                </div>
+              </template>
               <div><label class="lbl">نام مشتری / پروژه:</label><input type="text" x-model="productForm.customer" required class="inp" placeholder="مثال: پروژه برج نگین"></div>
               <div><label class="lbl">توضیحات:</label><input type="text" x-model="productForm.note" class="inp"></div>
               <div class="bg-slate-900/80 p-3 rounded-lg border border-slate-700 text-xs space-y-1">
-                <div>عرض ورق مصرفی: <span class="font-bold text-white" x-text="fa(+(productForm.wing*2 + productForm.span).toFixed(2)) + ' سانتی‌متر'"></span>
-                  <span class="text-slate-400" x-text="'(' + fa(productForm.wing) + ' + ' + fa(productForm.span) + ' + ' + fa(productForm.wing) + ')'"></span></div>
-                <div>وزن هر قطعه: <span class="font-bold text-white" x-text="fmt(productWeight({...productForm, count: 1}), 2) + ' ک‌گ'"></span></div>
+                <div>وزن محصول: <span class="font-bold text-white" x-text="fmt(productParts(productForm).main, 1) + ' ک‌گ'"></span></div>
+                <template x-if="productForm.productType === 'وادار میانی'"><div>وزن ناودانی‌های پشت آن: <span class="font-bold text-white" x-text="fmt(productParts(productForm).att, 1) + ' ک‌گ'"></span></div></template>
                 <div>وزن کل: <span class="font-bold text-cyan-400" x-text="fmt(productWeight(productForm), 1) + ' ک‌گ'"></span></div>
               </div>
               <button type="submit" class="btn">ثبت در گزارش تولید 📦</button>
@@ -311,7 +323,7 @@
         <div class="card overflow-hidden" :class="can('enter_products') ? 'lg:col-span-2' : 'lg:col-span-3'">
           <div class="print-only mb-4 text-center">
             <h2 class="text-lg font-bold">گزارش تولید محصولات نهایی — جهت ورود به انبار</h2>
-            <p class="text-xs">کارگاه اطلس سازه| تاریخ چاپ: <span x-text="fa(todayJalali())"></span>
+            <p class="text-xs">کارگاه اطلس سازه | تاریخ چاپ: <span x-text="fa(todayJalali())"></span>
               <span x-show="fromDate || toDate" x-text="' | بازه: ' + fa(fromDate || '...') + ' تا ' + fa(toDate || '...')"></span></p>
           </div>
           <div class="flex flex-wrap justify-between items-center gap-2 mb-4 pb-2 border-b border-slate-700">
@@ -324,14 +336,19 @@
           </div>
           <div class="overflow-x-auto">
             <table class="w-full text-right text-xs">
-              <thead class="thead"><tr><th class="td">تاریخ</th><th class="td">محصول</th><th class="td">ضخامت</th><th class="td">بال + دهنه + بال = عرض ورق</th><th class="td">طول (سانتی‌متر)</th><th class="td">تعداد</th><th class="td">وزن (ک‌گ)</th><th class="td">پروژه / مشتری</th><th class="td no-print"></th></tr></thead>
+              <thead class="thead"><tr><th class="td">تاریخ</th><th class="td">محصول</th><th class="td">ضخامت</th><th class="td">دهنه (سانتی‌متر)</th><th class="td">بال (سانتی‌متر)</th><th class="td">طول (سانتی‌متر)</th><th class="td">تعداد</th><th class="td">وزن (ک‌گ)</th><th class="td">پروژه / مشتری</th><th class="td no-print"></th></tr></thead>
               <tbody class="divide-y divide-slate-700">
                 <template x-for="p in filteredProducts()" :key="p.id">
                   <tr>
                     <td class="td text-slate-300" x-text="fa(p.date)"></td>
-                    <td class="td font-bold text-amber-300" x-text="p.productType"></td>
+                    <td class="td font-bold text-amber-300"><div x-text="p.productType"></div>
+                      <template x-if="p.attachments && p.attachments.length">
+                        <div class="text-[10px] text-slate-300 font-normal mt-1">ناودانی‌های پشت آن (برای هر وادار):
+                          <template x-for="(a, i) in p.attachments" :key="i"><div x-text="'دهنه ' + fa(a.span) + '، بال ' + fa(a.wing) + '، طول ' + fa(a.length) + ' × ' + fa(a.qty) + ' عدد'"></div></template>
+                        </div>
+                      </template></td>
                     <td class="td" x-text="fa(p.thickness) + ' میل'"></td>
-                    <td class="td" x-text="fa(p.wing) + ' + ' + fa(p.span) + ' + ' + fa(p.wing) + ' = ' + fa(+(p.span + 2*p.wing).toFixed(2))"></td>
+                    <td class="td" x-text="fa(p.span)"></td><td class="td" x-text="fa(p.wing)"></td>
                     <td class="td" x-text="fa(p.length)"></td>
                     <td class="td font-bold text-white" x-text="fmt(p.count)"></td>
                     <td class="td text-cyan-400 font-bold" x-text="fmt(p.weight, 1)"></td>
@@ -339,10 +356,10 @@
                     <td class="td no-print"><template x-if="can('delete_records')"><button @click="removeProduct(p.id)" class="text-rose-400 hover:text-rose-300 p-1">🗑️</button></template></td>
                   </tr>
                 </template>
-                <template x-if="filteredProducts().length === 0"><tr><td colspan="9" class="text-center py-6 text-slate-500">محصولی ثبت نشده است.</td></tr></template>
+                <template x-if="filteredProducts().length === 0"><tr><td colspan="10" class="text-center py-6 text-slate-500">محصولی ثبت نشده است.</td></tr></template>
               </tbody>
               <tfoot x-show="filteredProducts().length > 0" class="bg-slate-900 font-bold">
-                <tr><td class="td" colspan="5">جمع کل</td><td class="td" x-text="fmt(filteredProducts().reduce((a,p)=>a+Number(p.count),0))"></td>
+                <tr><td class="td" colspan="6">جمع کل</td><td class="td" x-text="fmt(filteredProducts().reduce((a,p)=>a+Number(p.count),0))"></td>
                   <td class="td text-cyan-400" colspan="3" x-text="fmt(filteredProducts().reduce((a,p)=>a+Number(p.weight),0), 1) + ' ک‌گ'"></td></tr>
               </tfoot>
             </table>
@@ -418,7 +435,7 @@
               <div class="stat"><div class="text-xs text-slate-400">موجودی سالن</div><div class="text-xl font-bold text-emerald-400 mt-1" x-text="fmt(remainingWeightAt(null)) + ' ک‌گ'"></div></div>
               <div class="stat"><div class="text-xs text-slate-400">ورق‌های در انتظار تایید دفتر</div><div class="text-xl font-bold text-rose-400 mt-1" x-text="fmt(sheets.filter(s=>!s.confirmed).length) + ' ردیف'"></div></div>
               <div class="stat"><div class="text-xs text-slate-400">وزن محصولات تولیدی</div><div class="text-xl font-bold text-cyan-400 mt-1" x-text="fmt(totalProductWeight()) + ' ک‌گ'"></div></div>
-              <div class="stat"><div class="text-xs text-slate-400">اختلاف ورق برش‌خورده و محصول</div>
+              <div class="stat"><div class="text-xs text-slate-400">ضایعات (ورق برش‌خورده − وزن محصول)</div>
                 <div class="text-xl font-bold mt-1" :class="Math.abs(totalCutWeight()-totalProductWeight()) > 0.05*Math.max(totalCutWeight(),1) ? 'text-rose-400' : 'text-emerald-400'" x-text="fmt(totalCutWeight() - totalProductWeight()) + ' ک‌گ'"></div></div>
               <div class="stat"><div class="text-xs text-slate-400">کل دستمزد ماه‌ها</div><div class="text-xl font-bold text-emerald-400 mt-1" x-text="fmt(wageRows().reduce((a,r)=>a+r.total,0)) + ' ت'"></div></div>
               <div class="stat"><div class="text-xs text-slate-400">تعداد کل محصول</div><div class="text-xl font-bold text-white mt-1" x-text="fmt(products.reduce((a,p)=>a+Number(p.count),0)) + ' عدد'"></div></div>
@@ -519,7 +536,7 @@ function workshopApp() {
 
     sheetForm: { date: todayJalali(), type: 'سیاه', thickness: '2', width: 125, length: 250, count: 10, invoiceNo: '' },
     cutForm: { date: todayJalali(), type: 'سیاه', thickness: '2', width: 125, length: 250, count: 5, worker: '', note: '' },
-    productForm: { date: todayJalali(), productType: 'ناودانی', thickness: '2', wing: 7, span: 15, length: 30, count: 10, customer: '', note: '' },
+    productForm: { date: todayJalali(), productType: 'ناودانی', thickness: '2', wing: 7, span: 15, length: 30, count: 10, customer: '', note: '', attachments: [{ span: '', wing: '', length: '', qty: '' }] },
 
     async init() {
       if (!this.configured) return;
@@ -550,7 +567,7 @@ function workshopApp() {
       this.sheets = s.data.map(r => ({ id: r.id, date: r.date, type: r.type, thickness: String(r.thickness), width: +r.width, length: +r.length, count: r.count, invoiceNo: r.invoice_no || '',
         weighbridgeWeight: (!r.confirmed && keep[r.id] !== undefined) ? keep[r.id] : (r.weighbridge_weight ?? ''), confirmed: r.confirmed, confirmedAt: r.confirmed_at, enteredBy: r.entered_by }));
       this.cuts = c.data.map(r => ({ id: r.id, date: r.date, type: r.type, thickness: String(r.thickness), width: +r.width, length: +r.length, count: r.count, worker: r.worker || '', note: r.note || '', enteredBy: r.entered_by }));
-      this.products = p.data.map(r => ({ id: r.id, date: r.date, productType: r.product_type, thickness: String(r.thickness), wing: +r.wing, span: +r.span, length: +r.length, count: r.count, customer: r.customer, note: r.note || '', weight: +r.weight, enteredBy: r.entered_by }));
+      this.products = p.data.map(r => ({ id: r.id, date: r.date, productType: r.product_type, thickness: String(r.thickness), wing: +r.wing, span: +r.span, length: +r.length, count: r.count, customer: r.customer, note: r.note || '', weight: +r.weight, attachments: r.attachments || [], enteredBy: r.entered_by }));
     },
     async run(fn) {
       this.busy = true;
@@ -592,8 +609,28 @@ function workshopApp() {
 
     /* ---------- وزن‌ها (ابعاد به سانتی‌متر) ---------- */
     sheetWeight(o) { return (o.width / 100) * (o.length / 100) * Number(o.thickness) * DENSITY * Number(o.count || 0) || 0; },
-    cutWeight(o) { return this.sheetWeight(o); },
-    productWeight(p) { return ((Number(p.span) + 2 * Number(p.wing)) / 100) * (p.length / 100) * Number(p.thickness) * DENSITY * Number(p.count || 0) || 0; },
+    /* میانگین وزن واقعی (باسکول) هر برگ از همین سایز؛ اگر هنوز تاییدی نیست، وزن تئوریک */
+    avgSheetWeight(o) {
+      let w = 0, c = 0; const k = this.gkey(o);
+      for (const s of this.sheets) if (s.confirmed && this.gkey(s) === k) { w += Number(s.weighbridgeWeight); c += Number(s.count); }
+      return c ? w / c : this.sheetWeight({ ...o, count: 1 });
+    },
+    cutWeight(o) { return this.avgSheetWeight(o) * Number(o.count || 0) || 0; },
+    /* وزن واقعی هر متر مربع ورق این ضخامت (از باسکول)؛ در نبود داده، ضخامت × ۷.۸۵ */
+    kgPerM2(t) {
+      let w = 0, a = 0;
+      for (const s of this.sheets) if (s.confirmed && +s.thickness === +t) { w += Number(s.weighbridgeWeight); a += (s.width / 100) * (s.length / 100) * Number(s.count); }
+      return a ? w / a : Number(t) * DENSITY;
+    },
+    expectedChannels() { return Math.max(1, Math.round(Number(this.productForm.length || 0) / 100)); },
+    productParts(p) {
+      const d = this.kgPerM2(p.thickness), n = Number(p.count || 0);
+      const area = a => ((Number(a.span || 0) + 2 * Number(a.wing || 0)) / 100) * (Number(a.length || 0) / 100);
+      const main = area(p) * d * n;
+      const att = (p.productType === 'وادار میانی' ? (p.attachments || []) : []).reduce((s, a) => s + area(a) * d * Number(a.qty || 0), 0) * n;
+      return { main, att, total: main + att };
+    },
+    productWeight(p) { return this.productParts(p).total || 0; },
     diffPct(s) { const t = this.sheetWeight(s); return t ? (Number(s.weighbridgeWeight) - t) / t * 100 : 0; },
     diffText(s) { const d = Number(s.weighbridgeWeight) - this.sheetWeight(s); return (d > 0 ? '+' : '') + fmt(d, 1) + ' ک‌گ (' + fa(this.diffPct(s).toFixed(1)) + '٪)'; },
 
@@ -649,7 +686,16 @@ function workshopApp() {
     filteredProducts() { return this.products.filter(p => this.inRange(p.date)).sort((a, b) => (b.date + b.id).localeCompare(a.date + a.id)); },
     async addProductEntry() {
       const f = this.productForm;
-      await this.run(() => this.sb.from('products').insert({ date: normDate(f.date), product_type: f.productType, thickness: Number(f.thickness), wing: f.wing, span: f.span, length: f.length, count: f.count, customer: f.customer, note: f.note || null, weight: +this.productWeight(f).toFixed(2), entered_by: this.currentUser.name }));
+      let att = [];
+      if (f.productType === 'وادار میانی') {
+        att = (f.attachments || []).map(a => ({ span: Number(a.span), wing: Number(a.wing), length: Number(a.length), qty: Number(a.qty) })).filter(a => a.span > 0 && a.length > 0 && a.qty > 0);
+        if (!att.length) { alert('برای وادار میانی باید ناودانی‌های پشت آن (دهنه، بال، طول و تعداد) را وارد کنید.'); return; }
+        const total = att.reduce((x, a) => x + a.qty, 0), exp = this.expectedChannels();
+        if (total !== exp && !confirm('طبق آیین‌نامه برای این طول ' + fa(exp) + ' ناودانی لازم است ولی ' + fa(total) + ' عدد وارد شده. ادامه می‌دهید؟')) return;
+      }
+      const rec = { ...f, attachments: att };
+      await this.run(() => this.sb.from('products').insert({ date: normDate(f.date), product_type: f.productType, thickness: Number(f.thickness), wing: f.wing, span: f.span, length: f.length, count: f.count, customer: f.customer, note: f.note || null, weight: +this.productWeight(rec).toFixed(2), attachments: att.length ? att : null, entered_by: this.currentUser.name }));
+      this.productForm.attachments = [{ span: '', wing: '', length: '', qty: '' }];
     },
     async removeProduct(id) { if (confirm('حذف شود؟')) await this.run(() => this.sb.from('products').delete().eq('id', id)); },
     totalProductWeight() { return this.products.reduce((a, p) => a + Number(p.weight), 0); },
