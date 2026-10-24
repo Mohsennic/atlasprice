@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>سیستم مدیریت هوشمند کارگاه - وال‌پست و برش ورق</title>
+<title>کارگاه اطلس سازه | مدیریت تولید و انبار ورق</title>
 <script src="https://cdn.tailwindcss.com"></script>
 <script>tailwind.config = { theme: { extend: { fontFamily: { sans: ['Tahoma', 'Arial', 'sans-serif'] } } } }</script>
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.110.1/dist/umd/supabase.js" onerror="var s=document.createElement('script');s.src='https://unpkg.com/@supabase/supabase-js@2.110.1/dist/umd/supabase.js';document.head.appendChild(s)"></script>
@@ -38,7 +38,7 @@
 
 <header class="bg-slate-800 border-b border-slate-700 shadow-md px-6 py-4 flex justify-between items-center">
   <div class="flex items-center space-x-3 space-x-reverse">
-    <div class="bg-amber-600 text-white font-bold p-2.5 rounded-lg shadow">⚙️ کارگاه صنعتی</div>
+    <div class="bg-amber-600 text-white font-bold p-2.5 rounded-lg shadow">⚙️ کارگاه اطلس سازه</div>
     <div>
       <h1 class="text-lg font-bold text-slate-100">سامانه جامع مدیریت تولید و انبار ورق</h1>
       <p class="text-xs text-slate-400">باسکول، برش، محصولات و دستمزد ماهانه</p>
@@ -120,7 +120,7 @@
             <table class="w-full text-right text-xs">
               <thead class="thead"><tr>
                 <th class="td">تاریخ</th><th class="td">فاکتور</th><th class="td">نوع / ضخامت</th><th class="td">ابعاد (سانتی‌متر)</th><th class="td">تعداد</th>
-                <th class="td">وزن محاسباتی</th><th class="td text-amber-400">وزن باسکول</th><th class="td">اختلاف</th><th class="td">وضعیت</th><th class="td no-print"></th>
+                <th x-show="can('see_sheet_weights')" class="td">وزن محاسباتی</th><th x-show="can('see_weighbridge')" class="td text-amber-400">وزن باسکول</th><th x-show="can('see_sheet_weights')" class="td">اختلاف</th><th class="td">وضعیت</th><th class="td no-print"></th>
               </tr></thead>
               <tbody class="divide-y divide-slate-700">
                 <template x-for="s in sortedSheets()" :key="s.id">
@@ -130,8 +130,8 @@
                     <td class="td font-bold" x-text="s.type + ' ' + fa(s.thickness) + ' میل'"></td>
                     <td class="td" x-text="fa(s.width) + ' × ' + fa(s.length)"></td>
                     <td class="td font-bold" x-text="fmt(s.count) + ' برگ'"></td>
-                    <td class="td text-cyan-400" x-text="fmt(sheetWeight(s), 1) + ' ک‌گ'"></td>
-                    <td class="td">
+                    <td x-show="can('see_sheet_weights')" class="td text-cyan-400" x-text="fmt(sheetWeight(s), 1) + ' ک‌گ'"></td>
+                    <td class="td" x-show="can('see_weighbridge')">
                       <template x-if="can('confirm_weight') && !s.confirmed">
                         <input type="number" step="0.1" x-model.number="s.weighbridgeWeight" class="w-24 bg-slate-900 border border-amber-500/50 rounded px-2 py-1 text-amber-300 font-bold" placeholder="کیلوگرم">
                       </template>
@@ -139,7 +139,7 @@
                         <span class="font-bold" :class="s.weighbridgeWeight ? 'text-amber-300' : 'text-slate-500'" x-text="s.weighbridgeWeight ? fmt(s.weighbridgeWeight, 1) + ' ک‌گ' : 'ثبت نشده'"></span>
                       </template>
                     </td>
-                    <td class="td" x-text="s.weighbridgeWeight ? diffText(s) : '-'" :class="s.weighbridgeWeight && Math.abs(diffPct(s)) > 3 ? 'text-rose-400 font-bold' : 'text-emerald-400'"></td>
+                    <td x-show="can('see_sheet_weights')" class="td" x-text="s.weighbridgeWeight ? diffText(s) : '-'" :class="s.weighbridgeWeight && Math.abs(diffPct(s)) > 3 ? 'text-rose-400 font-bold' : 'text-emerald-400'"></td>
                     <td class="td">
                       <span x-show="s.confirmed" class="text-emerald-400 font-bold">✔ تایید شد</span>
                       <span x-show="!s.confirmed" class="text-slate-400">در انتظار تایید</span>
@@ -163,8 +163,8 @@
               </tbody>
               <tfoot x-show="sheets.length > 0" class="bg-slate-900 font-bold">
                 <tr><td class="td" colspan="4">جمع کل</td><td class="td" x-text="fmt(sheets.reduce((a,s)=>a+Number(s.count),0)) + ' برگ'"></td>
-                  <td class="td text-cyan-400" x-text="fmt(sheets.reduce((a,s)=>a+sheetWeight(s),0), 0) + ' ک‌گ'"></td>
-                  <td class="td text-amber-300" x-text="fmt(totalWeighbridgeConfirmed(), 0) + ' ک‌گ (باسکول تاییدشده)'" colspan="4"></td></tr>
+                  <td x-show="can('see_sheet_weights')" class="td text-cyan-400" x-text="fmt(sheets.reduce((a,s)=>a+sheetWeight(s),0), 0) + ' ک‌گ'"></td>
+                  <td x-show="can('see_weighbridge')" class="td text-amber-300" x-text="fmt(totalWeighbridgeConfirmed(), 0) + ' ک‌گ (باسکول تاییدشده)'" colspan="4"></td></tr>
               </tfoot>
             </table>
           </div>
@@ -199,7 +199,7 @@
                 <div><label class="lbl">مسئول برش:</label><input type="text" x-model="cutForm.worker" class="inp" placeholder="نام کارگر"></div>
               </div>
               <div><label class="lbl">توضیحات:</label><input type="text" x-model="cutForm.note" class="inp" placeholder="مثلا نوارهای ۲۰ سانتی"></div>
-              <div class="bg-slate-900/80 p-3 rounded-lg border border-slate-700 text-xs">
+              <div class="bg-slate-900/80 p-3 rounded-lg border border-slate-700 text-xs" x-show="can('see_sheet_weights')">
                 وزن ورق برش‌خورده: <span class="font-bold text-cyan-400" x-text="fmt(cutWeight(cutForm), 1) + ' کیلوگرم'"></span>
               </div>
               <button type="submit" class="btn">ثبت برش ✂️</button>
@@ -211,14 +211,14 @@
           <div class="card">
             <h3 class="text-base font-bold text-slate-200 mb-3">📊 موجودی ورق خام در سالن (بر اساس سایز)</h3>
             <div class="grid grid-cols-2 md:grid-cols-4 gap-4 mb-4">
-              <div class="stat"><div class="text-xs text-slate-400">ورق تاییدشده ورودی</div><div class="text-lg font-bold text-white mt-1" x-text="fmt(totalConfirmedWeight()) + ' ک‌گ'"></div></div>
-              <div class="stat"><div class="text-xs text-slate-400">کل برش‌خورده</div><div class="text-lg font-bold text-amber-400 mt-1" x-text="fmt(totalCutWeight()) + ' ک‌گ'"></div></div>
-              <div class="stat"><div class="text-xs text-slate-400">موجودی سالن</div><div class="text-lg font-bold text-emerald-400 mt-1" x-text="fmt(remainingWeightAt(null)) + ' ک‌گ'"></div></div>
+              <div x-show="can('see_sheet_weights')" class="stat"><div class="text-xs text-slate-400">ورق تاییدشده ورودی</div><div class="text-lg font-bold text-white mt-1" x-text="fmt(totalConfirmedWeight()) + ' ک‌گ'"></div></div>
+              <div x-show="can('see_sheet_weights')" class="stat"><div class="text-xs text-slate-400">کل برش‌خورده</div><div class="text-lg font-bold text-amber-400 mt-1" x-text="fmt(totalCutWeight()) + ' ک‌گ'"></div></div>
+              <div x-show="can('see_sheet_weights')" class="stat"><div class="text-xs text-slate-400">موجودی سالن</div><div class="text-lg font-bold text-emerald-400 mt-1" x-text="fmt(remainingWeightAt(null)) + ' ک‌گ'"></div></div>
               <div class="stat"><div class="text-xs text-slate-400">برگ باقی‌مانده</div><div class="text-lg font-bold text-cyan-400 mt-1" x-text="fmt(stockList().reduce((a,g)=>a+g.remCount,0)) + ' برگ'"></div></div>
             </div>
             <div class="overflow-x-auto">
               <table class="w-full text-right text-xs">
-                <thead class="thead"><tr><th class="td">نوع / ضخامت</th><th class="td">ابعاد (سانتی‌متر)</th><th class="td">ورودی تاییدشده</th><th class="td">برش‌خورده</th><th class="td">باقی‌مانده</th><th class="td">وزن باقی‌مانده</th></tr></thead>
+                <thead class="thead"><tr><th class="td">نوع / ضخامت</th><th class="td">ابعاد (سانتی‌متر)</th><th class="td">ورودی تاییدشده</th><th class="td">برش‌خورده</th><th class="td">باقی‌مانده</th><th x-show="can('see_sheet_weights')" class="td">وزن باقی‌مانده</th></tr></thead>
                 <tbody class="divide-y divide-slate-700">
                   <template x-for="g in stockList()" :key="g.key">
                     <tr>
@@ -226,7 +226,7 @@
                       <td class="td" x-text="fa(g.width) + ' × ' + fa(g.length)"></td>
                       <td class="td" x-text="fmt(g.inCount)"></td><td class="td" x-text="fmt(g.cutCount)"></td>
                       <td class="td font-bold text-emerald-400" x-text="fmt(g.remCount)"></td>
-                      <td class="td text-cyan-400" x-text="fmt(g.remWeight) + ' ک‌گ'"></td>
+                      <td x-show="can('see_sheet_weights')" class="td text-cyan-400" x-text="fmt(g.remWeight) + ' ک‌گ'"></td>
                     </tr>
                   </template>
                   <template x-if="stockList().length === 0"><tr><td colspan="6" class="text-center py-4 text-slate-500">موجودی تاییدشده‌ای وجود ندارد.</td></tr></template>
@@ -246,7 +246,7 @@
             </div>
             <div class="overflow-x-auto">
               <table class="w-full text-right text-xs">
-                <thead class="thead"><tr><th class="td">تاریخ</th><th class="td">نوع / ضخامت</th><th class="td">ابعاد ورق (سانتی‌متر)</th><th class="td">تعداد</th><th class="td">وزن (ک‌گ)</th><th class="td">کارگر</th><th class="td">توضیحات</th><th class="td no-print"></th></tr></thead>
+                <thead class="thead"><tr><th class="td">تاریخ</th><th class="td">نوع / ضخامت</th><th class="td">ابعاد ورق (سانتی‌متر)</th><th class="td">تعداد</th><th class="td" x-show="can('see_sheet_weights')">وزن (ک‌گ)</th><th class="td">کارگر</th><th class="td">توضیحات</th><th class="td no-print"></th></tr></thead>
                 <tbody class="divide-y divide-slate-700">
                   <template x-for="c in filteredCuts()" :key="c.id">
                     <tr>
@@ -254,7 +254,7 @@
                       <td class="td font-bold" x-text="c.type + ' ' + fa(c.thickness) + ' میل'"></td>
                       <td class="td" x-text="fa(c.width) + ' × ' + fa(c.length)"></td>
                       <td class="td text-amber-300 font-bold" x-text="fmt(c.count) + ' برگ'"></td>
-                      <td class="td text-cyan-400" x-text="fmt(cutWeight(c), 1)"></td>
+                      <td x-show="can('see_sheet_weights')" class="td text-cyan-400" x-text="fmt(cutWeight(c), 1)"></td>
                       <td class="td text-slate-300" x-text="c.worker || '-'"></td>
                       <td class="td text-slate-400" x-text="c.note || '-'"></td>
                       <td class="td no-print"><template x-if="can('delete_records')"><button @click="removeCut(c.id)" class="text-rose-400 hover:text-rose-300 p-1">🗑️</button></template></td>
@@ -264,7 +264,7 @@
                 </tbody>
                 <tfoot x-show="filteredCuts().length > 0" class="bg-slate-900 font-bold">
                   <tr><td class="td" colspan="3">جمع</td><td class="td" x-text="fmt(filteredCuts().reduce((a,c)=>a+Number(c.count),0)) + ' برگ'"></td>
-                    <td class="td text-cyan-400" colspan="4" x-text="fmt(filteredCuts().reduce((a,c)=>a+cutWeight(c),0)) + ' ک‌گ'"></td></tr>
+                    <td x-show="can('see_sheet_weights')" class="td text-cyan-400" colspan="4" x-text="fmt(filteredCuts().reduce((a,c)=>a+cutWeight(c),0)) + ' ک‌گ'"></td></tr>
                 </tfoot>
               </table>
             </div>
@@ -393,19 +393,19 @@
             <div>
               <h4 class="text-sm font-bold text-slate-200 mb-2">۱) ورود ورق</h4>
               <div class="overflow-x-auto"><table class="w-full text-right text-xs">
-                <thead class="thead"><tr><th class="td">تاریخ</th><th class="td">فاکتور</th><th class="td">نوع / ضخامت</th><th class="td">ابعاد (سانتی‌متر)</th><th class="td">تعداد</th><th class="td">وزن محاسباتی</th><th class="td">وزن باسکول</th><th class="td">وضعیت</th><th class="td">ثبت‌کننده</th></tr></thead>
+                <thead class="thead"><tr><th class="td">تاریخ</th><th class="td">فاکتور</th><th class="td">نوع / ضخامت</th><th class="td">ابعاد (سانتی‌متر)</th><th class="td">تعداد</th><th class="td" x-show="can('see_sheet_weights')">وزن محاسباتی</th><th class="td">وزن باسکول</th><th class="td">وضعیت</th><th class="td">ثبت‌کننده</th></tr></thead>
                 <tbody class="divide-y divide-slate-700">
                   <template x-for="s in dailySheets()" :key="s.id"><tr>
                     <td class="td" x-text="fa(s.date)"></td><td class="td" x-text="s.invoiceNo ? fa(s.invoiceNo) : '-'"></td>
                     <td class="td font-bold" x-text="s.type + ' ' + fa(s.thickness) + ' میل'"></td><td class="td" x-text="fa(s.width) + ' × ' + fa(s.length)"></td>
-                    <td class="td" x-text="fmt(s.count)"></td><td class="td" x-text="fmt(sheetWeight(s), 1) + ' ک‌گ'"></td>
+                    <td class="td" x-text="fmt(s.count)"></td><td class="td" x-show="can('see_sheet_weights')" x-text="fmt(sheetWeight(s), 1) + ' ک‌گ'"></td>
                     <td class="td" x-text="s.weighbridgeWeight ? fmt(s.weighbridgeWeight, 1) + ' ک‌گ' : 'ثبت نشده'"></td>
                     <td class="td" x-text="s.confirmed ? 'تایید شد' : 'در انتظار تایید'"></td><td class="td" x-text="s.enteredBy || '-'"></td>
                   </tr></template>
                   <template x-if="dailySheets().length === 0"><tr><td colspan="9" class="text-center py-3 text-slate-500">موردی ثبت نشده است.</td></tr></template>
                 </tbody>
                 <tfoot x-show="dailySheets().length > 0" class="font-bold"><tr><td class="td" colspan="4">جمع</td><td class="td" x-text="fmt(dailySheets().reduce((a,s)=>a+Number(s.count),0))"></td>
-                  <td class="td" x-text="fmt(dailySheets().reduce((a,s)=>a+sheetWeight(s),0)) + ' ک‌گ'"></td>
+                  <td class="td" x-show="can('see_sheet_weights')" x-text="fmt(dailySheets().reduce((a,s)=>a+sheetWeight(s),0)) + ' ک‌گ'"></td>
                   <td class="td" colspan="3" x-text="fmt(dailySheets().reduce((a,s)=>a+Number(s.weighbridgeWeight||0),0)) + ' ک‌گ'"></td></tr></tfoot>
               </table></div>
             </div>
@@ -413,12 +413,12 @@
             <div>
               <h4 class="text-sm font-bold text-slate-200 mb-2">۲) برش ورق</h4>
               <div class="overflow-x-auto"><table class="w-full text-right text-xs">
-                <thead class="thead"><tr><th class="td">تاریخ</th><th class="td">نوع / ضخامت</th><th class="td">ابعاد ورق (سانتی‌متر)</th><th class="td">تعداد</th><th class="td">وزن (ک‌گ)</th><th class="td">کارگر</th><th class="td">توضیحات</th></tr></thead>
+                <thead class="thead"><tr><th class="td">تاریخ</th><th class="td">نوع / ضخامت</th><th class="td">ابعاد ورق (سانتی‌متر)</th><th class="td">تعداد</th><th class="td" x-show="can('see_sheet_weights')">وزن (ک‌گ)</th><th class="td">کارگر</th><th class="td">توضیحات</th></tr></thead>
                 <tbody class="divide-y divide-slate-700">
                   <template x-for="c in dailyCuts()" :key="c.id"><tr>
                     <td class="td" x-text="fa(c.date)"></td><td class="td font-bold" x-text="c.type + ' ' + fa(c.thickness) + ' میل'"></td>
                     <td class="td" x-text="fa(c.width) + ' × ' + fa(c.length)"></td><td class="td" x-text="fmt(c.count)"></td>
-                    <td class="td" x-text="fmt(cutWeight(c), 1)"></td><td class="td" x-text="c.worker || '-'"></td><td class="td" x-text="c.note || '-'"></td>
+                    <td x-show="can('see_sheet_weights')" class="td" x-text="fmt(cutWeight(c), 1)"></td><td class="td" x-text="c.worker || '-'"></td><td class="td" x-text="c.note || '-'"></td>
                   </tr></template>
                   <template x-if="dailyCuts().length === 0"><tr><td colspan="7" class="text-center py-3 text-slate-500">موردی ثبت نشده است.</td></tr></template>
                 </tbody>
@@ -450,11 +450,11 @@
             <div>
               <h4 class="text-sm font-bold text-slate-200 mb-2">۴) موجودی ورق خام انبار تا پایان بازه</h4>
               <div class="overflow-x-auto"><table class="w-full text-right text-xs">
-                <thead class="thead"><tr><th class="td">نوع / ضخامت</th><th class="td">ابعاد (سانتی‌متر)</th><th class="td">باقی‌مانده (برگ)</th><th class="td">وزن باقی‌مانده</th></tr></thead>
+                <thead class="thead"><tr><th class="td">نوع / ضخامت</th><th class="td">ابعاد (سانتی‌متر)</th><th class="td">باقی‌مانده (برگ)</th><th x-show="can('see_sheet_weights')" class="td">وزن باقی‌مانده</th></tr></thead>
                 <tbody class="divide-y divide-slate-700">
                   <template x-for="g in dailyStock()" :key="g.key"><tr>
                     <td class="td font-bold" x-text="g.type + ' ' + fa(g.thickness) + ' میل'"></td><td class="td" x-text="fa(g.width) + ' × ' + fa(g.length)"></td>
-                    <td class="td" x-text="fmt(g.remCount)"></td><td class="td" x-text="fmt(g.remWeight) + ' ک‌گ'"></td>
+                    <td class="td" x-text="fmt(g.remCount)"></td><td x-show="can('see_sheet_weights')" class="td" x-text="fmt(g.remWeight) + ' ک‌گ'"></td>
                   </tr></template>
                   <template x-if="dailyStock().length === 0"><tr><td colspan="4" class="text-center py-3 text-slate-500">موجودی تاییدشده‌ای نیست.</td></tr></template>
                 </tbody>
@@ -526,9 +526,9 @@
               <button @click="window.print()" class="btn2 no-print">🖨️ چاپ گزارش / PDF</button>
             </div>
             <div class="grid grid-cols-2 lg:grid-cols-4 gap-4">
-              <div class="stat"><div class="text-xs text-slate-400">ورق تاییدشده ورودی</div><div class="text-xl font-bold text-white mt-1" x-text="fmt(totalConfirmedWeight()) + ' ک‌گ'"></div></div>
+              <div x-show="can('see_sheet_weights')" class="stat"><div class="text-xs text-slate-400">ورق تاییدشده ورودی</div><div class="text-xl font-bold text-white mt-1" x-text="fmt(totalConfirmedWeight()) + ' ک‌گ'"></div></div>
               <div class="stat"><div class="text-xs text-slate-400">ورق برش‌خورده</div><div class="text-xl font-bold text-amber-400 mt-1" x-text="fmt(totalCutWeight()) + ' ک‌گ'"></div></div>
-              <div class="stat"><div class="text-xs text-slate-400">موجودی سالن</div><div class="text-xl font-bold text-emerald-400 mt-1" x-text="fmt(remainingWeightAt(null)) + ' ک‌گ'"></div></div>
+              <div x-show="can('see_sheet_weights')" class="stat"><div class="text-xs text-slate-400">موجودی سالن</div><div class="text-xl font-bold text-emerald-400 mt-1" x-text="fmt(remainingWeightAt(null)) + ' ک‌گ'"></div></div>
               <div class="stat"><div class="text-xs text-slate-400">ورق‌های در انتظار تایید دفتر</div><div class="text-xl font-bold text-rose-400 mt-1" x-text="fmt(sheets.filter(s=>!s.confirmed).length) + ' ردیف'"></div></div>
               <div class="stat"><div class="text-xs text-slate-400">وزن باسکول (ورق‌های تاییدشده)</div><div class="text-xl font-bold text-white mt-1" x-text="fmt(totalWeighbridgeConfirmed()) + ' ک‌گ'"></div></div>
               <div class="stat"><div class="text-xs text-slate-400">اختلاف باسکول با وزن محاسباتی</div><div class="text-xl font-bold mt-1" :class="Math.abs(totalWeighbridgeConfirmed() - totalConfirmedWeight()) > 0.03 * Math.max(totalConfirmedWeight(), 1) ? 'text-rose-400' : 'text-emerald-400'" x-text="fmt(totalWeighbridgeConfirmed() - totalConfirmedWeight()) + ' ک‌گ'"></div></div>
@@ -707,6 +707,8 @@ function workshopApp() {
         case 'view_wages': return r === 'manager' || r === 'worker';
         case 'view_dashboard': case 'delete_records': return r === 'manager';
         case 'daily_report': return r === 'office';
+        case 'see_sheet_weights': return r === 'manager';
+        case 'see_weighbridge': return r === 'manager' || r === 'office';
         default: return false;
       }
     },
@@ -746,7 +748,7 @@ function workshopApp() {
     },
     async confirmSheet(s) {
       if (!(Number(s.weighbridgeWeight) > 0)) { alert('ابتدا وزن باسکول را وارد کنید.'); return; }
-      if (Math.abs(this.diffPct(s)) > 3 && !confirm('اختلاف وزن باسکول با وزن محاسباتی بیش از ۳٪ است. تایید شود؟')) return;
+      if (!confirm('وزن باسکول ' + fmt(s.weighbridgeWeight, 1) + ' ک‌گ برای ' + fmt(s.count) + ' برگ تایید شود؟ پس از تایید فقط مدیر می‌تواند آن را تغییر دهد.')) return;
       await this.run(() => this.sb.from('sheets').update({ weighbridge_weight: Number(s.weighbridgeWeight), confirmed: true, confirmed_at: todayJalali() }).eq('id', s.id));
     },
     async unconfirmSheet(s) { if (confirm('تایید این ردیف لغو شود؟')) await this.run(() => this.sb.from('sheets').update({ confirmed: false, confirmed_at: null }).eq('id', s.id)); },
