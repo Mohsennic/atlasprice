@@ -942,10 +942,11 @@ function addItemToOrder() {
     let weightUnit = 0;
     let unitCost = 0;
 
+    const isFittings = (cat === 'fittings');
     const discRate = getDiscountRate(count);
-    const hasDiscount = discRate > 0;
+    const hasDiscount = discRate > 0 && !isFittings;
 
-    if (cat === 'fittings') {
+    if (isFittings) {
         const fitSelect = document.getElementById('fittingType');
         const fitKey = fitSelect.value;
         name = fitSelect.options[fitSelect.selectedIndex].text;
@@ -1019,10 +1020,11 @@ function updateLivePreview() {
     const count = parseFloat(document.getElementById('item_count').value) || 1;
     let unitCost = 0;
 
+    const isFittings = (cat === 'fittings');
     const discRate = getDiscountRate(count);
-    const hasDiscount = discRate > 0;
+    const hasDiscount = discRate > 0 && !isFittings;
 
-    if (cat === 'fittings') {
+    if (isFittings) {
         const fitSelect = document.getElementById('fittingType');
         const fitKey = fitSelect.value;
         unitCost = appSettings.fittings[fitKey] || 0;
