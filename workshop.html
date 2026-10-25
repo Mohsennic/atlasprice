@@ -258,7 +258,8 @@ h1, h2, h3, h4 { font-weight: 700; }
   <template x-if="errMsg"><div class="mb-4 bg-amber-950/50 border border-amber-700 text-amber-200 text-xs rounded-lg p-3 text-center" x-text="errMsg"></div></template>
 
   <!-- ورود -->
-  <template x-if="!currentUser && ready">
+  <template x-if="restoring"><div class="text-center text-slate-300 py-16 text-sm">در حال اتصال به سرور و بررسی ورود...</div></template>
+  <template x-if="!currentUser && ready && !restoring">
     <div class="max-w-md mx-auto bg-slate-800 border border-slate-700 rounded-2xl shadow-2xl p-8 mt-12">
       <div class="text-center mb-6">
         <div class="text-4xl mb-2">🔐</div>
@@ -833,11 +834,26 @@ const DENSITY = 7.8; // کیلوگرم بر متر مربع به ازای هر �
 const SUPABASE_URL = 'https://rxngmcghsegqunfewycu.supabase.co';
 const SUPABASE_ANON_KEY = 'sb_publishable_OXCeaiyfp_zUrGo1m9SfQw_wezRdJ8M';
 
+/* ارتباط با Supabase: مهلت ۲۰ ثانیه و تلاش مجدد فقط برای درخواست‌های خواندن و ورود (برای ثبت‌ها تلاش مجدد خودکار نمی‌شود تا ردیف تکراری ساخته نشود) */
+async function sbFetch(url, opts) {
+  opts = opts || {};
+  const method = (opts.method || 'GET').toUpperCase(), safe = method === 'GET' || String(url).includes('/auth/v1/');
+  for (let i = 0; ; i++) {
+    const ctl = new AbortController(), t = setTimeout(() => ctl.abort(), 20000);
+    try { return await fetch(url, Object.assign({}, opts, { signal: opts.signal || ctl.signal })); }
+    catch (e) { if (!safe || i >= 2) throw e; await new Promise(r => setTimeout(r, 1500)); }
+    finally { clearTimeout(t); }
+  }
+}
+function friendlyErr(e) {
+  const m = (e && e.message) || String(e);
+  return /fetch|network|load failed|abort|timeout/i.test(m) ? 'ارتباط با سرور برقرار نشد (اینترنت قطع یا ضعیف است). چند لحظه بعد دوباره تلاش کنید.' : m;
+}
 const _GC = { v: -1, m: {} }; /* حافظه موقت محاسبه‌ها؛ با هر بارگذاری جدید داده پاک می‌شود */
 function workshopApp() {
   return {
     LIMIT: 15000, R1: 7350, R2: 4900, // سقف ماهانه (کیلوگرم)، نرخ تا سقف، نرخ مازاد (تومان)
-    sb: null, _ver: 0, _sig: '', ready: false, busy: false, errMsg: '', configured: !SUPABASE_URL.includes('YOUR_'),
+    sb: null, _ver: 0, _sig: '', ready: false, restoring: false, busy: false, errMsg: '', configured: !SUPABASE_URL.includes('YOUR_'),
     currentUser: null, loginForm: { username: '', password: '' }, loginError: '', activeTab: 'sheets',
     sheets: [], cuts: [], products: [], pick: '', fromDate: '', toDate: '', dailyFrom: todayJalali(), dailyTo: todayJalali(),
 
@@ -847,16 +863,17 @@ function workshopApp() {
 
     async init() {
       if (!this.configured) return;
+      this.restoring = true;
       try {
         for (let i = 0; i < 40 && !window.supabase; i++) await new Promise(r => setTimeout(r, 250));
         if (!window.supabase) throw new Error('کتابخانه Supabase بارگذاری نشد. اینترنت یا فیلترشکن را بررسی کنید و صفحه را دوباره باز کنید.');
-        this.sb = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
-        const { data } = await this.sb.auth.getSession();
-        if (data && data.session) await this.startSession(data.session.user);
+        this.sb = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY, { global: { fetch: sbFetch } });
         setInterval(() => { const a = document.activeElement; if (this.currentUser && !document.hidden && !(a && ['INPUT', 'SELECT', 'TEXTAREA'].includes(a.tagName))) this.loadAll(); }, 45000);
         document.addEventListener('visibilitychange', () => { if (!document.hidden && this.currentUser) this.loadAll(); });
-      } catch (e) { this.errMsg = 'خطا در راه‌اندازی: ' + (e.message || e); }
-      this.ready = true;
+        const r = await Promise.race([this.sb.auth.getSession(), new Promise((_, rej) => setTimeout(() => rej(new Error('ارتباط با سرور کند است. اینترنت را بررسی کنید و دوباره وارد شوید.')), 8000))]);
+        if (r.data && r.data.session) await this.startSession(r.data.session.user);
+      } catch (e) { this.errMsg = friendlyErr(e); }
+      this.restoring = false; this.ready = true;
     },
     async startSession(user) {
       const { data: prof, error } = await this.sb.from('profiles').select('full_name, role').eq('id', user.id).single();
@@ -871,7 +888,7 @@ function workshopApp() {
         this.sb.from('sheets').select('*').order('id'),
         this.sb.from('cuts').select('*').order('id'),
         this.sb.from('products').select('*').order('id')]);
-      if (s.error || c.error || p.error) { this.errMsg = 'خطا در دریافت اطلاعات از سرور: ' + ((s.error || c.error || p.error).message || ''); return; }
+      if (s.error || c.error || p.error) { this.errMsg = friendlyErr(s.error || c.error || p.error); return; }
       this.errMsg = '';
       const sig = JSON.stringify([s.data, c.data, p.data]);
       if (sig === this._sig) return;
@@ -887,7 +904,7 @@ function workshopApp() {
     async run(fn) {
       this.busy = true;
       try { const { error } = await fn(); if (error) throw error; await this.loadAll(); }
-      catch (e) { alert('عملیات انجام نشد: ' + (e.message || e)); }
+      catch (e) { alert('عملیات انجام نشد: ' + friendlyErr(e)); }
       this.busy = false;
     },
 
@@ -895,7 +912,7 @@ function workshopApp() {
     async login() {
       this.loginError = ''; this.busy = true;
       const { data, error } = await this.sb.auth.signInWithPassword({ email: this.loginForm.username.trim(), password: this.loginForm.password });
-      if (error) this.loginError = /invalid/i.test(error.message || '') ? 'ایمیل یا رمز عبور اشتباه است.' : 'خطا در ورود: ' + (error.message || error);
+      if (error) this.loginError = /invalid/i.test(error.message || '') ? 'ایمیل یا رمز عبور اشتباه است.' : friendlyErr(error);
       else if (await this.startSession(data.user)) this.loginForm = { username: '', password: '' };
       this.busy = false;
     },
