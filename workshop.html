@@ -4,9 +4,8 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>کارگاه اطلس سازه | مدیریت تولید و انبار ورق</title>
-<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/vazirmatn@33/Vazirmatn-font-face.css">
-<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Vazirmatn:wght@300;400;500;700;800&display=swap">
-<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.110.1" onerror="var s=document.createElement('script');s.src='https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.110.1/dist/umd/supabase.js';s.onerror=function(){var t=document.createElement('script');t.src='https://unpkg.com/@supabase/supabase-js@2.110.1/dist/umd/supabase.js';document.head.appendChild(t)};document.head.appendChild(s)"></script>
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/vazirmatn@33/Vazirmatn-font-face.css" media="print" onload="this.media='all'">
+<script defer src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.110.1" onerror="var s=document.createElement('script');s.src='https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.110.1/dist/umd/supabase.js';s.onerror=function(){var t=document.createElement('script');t.src='https://unpkg.com/@supabase/supabase-js@2.110.1/dist/umd/supabase.js';document.head.appendChild(t)};document.head.appendChild(s)"></script>
 <script defer src="https://cdn.jsdelivr.net/npm/alpinejs@3.14.1/dist/cdn.min.js" onerror="var s=document.createElement('script');s.src='https://unpkg.com/alpinejs@3.14.1/dist/cdn.min.js';s.defer=true;document.head.appendChild(s)"></script>
 <style>
 *,::before,::after{box-sizing:border-box;border-width:0;border-style:solid;border-color:#e5e7eb}
@@ -834,10 +833,11 @@ const DENSITY = 7.8; // کیلوگرم بر متر مربع به ازای هر �
 const SUPABASE_URL = 'https://rxngmcghsegqunfewycu.supabase.co';
 const SUPABASE_ANON_KEY = 'sb_publishable_OXCeaiyfp_zUrGo1m9SfQw_wezRdJ8M';
 
+const _GC = { v: -1, m: {} }; /* حافظه موقت محاسبه‌ها؛ با هر بارگذاری جدید داده پاک می‌شود */
 function workshopApp() {
   return {
     LIMIT: 15000, R1: 7350, R2: 4900, // سقف ماهانه (کیلوگرم)، نرخ تا سقف، نرخ مازاد (تومان)
-    sb: null, ready: false, busy: false, errMsg: '', configured: !SUPABASE_URL.includes('YOUR_'),
+    sb: null, _ver: 0, _sig: '', ready: false, busy: false, errMsg: '', configured: !SUPABASE_URL.includes('YOUR_'),
     currentUser: null, loginForm: { username: '', password: '' }, loginError: '', activeTab: 'sheets',
     sheets: [], cuts: [], products: [], pick: '', fromDate: '', toDate: '', dailyFrom: todayJalali(), dailyTo: todayJalali(),
 
@@ -853,7 +853,7 @@ function workshopApp() {
         this.sb = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
         const { data } = await this.sb.auth.getSession();
         if (data && data.session) await this.startSession(data.session.user);
-        setInterval(() => { if (this.currentUser && !document.hidden) this.loadAll(); }, 20000);
+        setInterval(() => { const a = document.activeElement; if (this.currentUser && !document.hidden && !(a && ['INPUT', 'SELECT', 'TEXTAREA'].includes(a.tagName))) this.loadAll(); }, 45000);
         document.addEventListener('visibilitychange', () => { if (!document.hidden && this.currentUser) this.loadAll(); });
       } catch (e) { this.errMsg = 'خطا در راه‌اندازی: ' + (e.message || e); }
       this.ready = true;
@@ -873,12 +873,16 @@ function workshopApp() {
         this.sb.from('products').select('*').order('id')]);
       if (s.error || c.error || p.error) { this.errMsg = 'خطا در دریافت اطلاعات از سرور: ' + ((s.error || c.error || p.error).message || ''); return; }
       this.errMsg = '';
+      const sig = JSON.stringify([s.data, c.data, p.data]);
+      if (sig === this._sig) return;
+      this._sig = sig;
       const keep = {};
       this.sheets.forEach(x => { if (!x.confirmed && x.weighbridgeWeight !== '' && x.weighbridgeWeight !== null) keep[x.id] = x.weighbridgeWeight; });
       this.sheets = s.data.map(r => ({ id: r.id, date: r.date, type: r.type, thickness: String(r.thickness), width: +r.width, length: +r.length, count: r.count, invoiceNo: r.invoice_no || '',
         weighbridgeWeight: (!r.confirmed && keep[r.id] !== undefined) ? keep[r.id] : (r.weighbridge_weight ?? ''), confirmed: r.confirmed, confirmedAt: r.confirmed_at, enteredBy: r.entered_by }));
       this.cuts = c.data.map(r => ({ id: r.id, date: r.date, type: r.type, thickness: String(r.thickness), width: +r.width, length: +r.length, count: r.count, worker: r.worker || '', note: r.note || '', enteredBy: r.entered_by }));
       this.products = p.data.map(r => ({ id: r.id, date: r.date, productType: r.product_type, thickness: String(r.thickness), wing: +r.wing, span: +r.span, length: +r.length, count: r.count, customer: r.customer, note: r.note || '', weight: +r.weight, attachments: r.attachments || [], enteredBy: r.entered_by }));
+      this._ver++;
     },
     async run(fn) {
       this.busy = true;
@@ -957,7 +961,14 @@ function workshopApp() {
 
     /* ---------- موجودی بر اساس سایز ---------- */
     gkey(o) { return [o.type, +o.thickness, +o.width, +o.length].join('|'); },
-    groups(upTo) {
+    memo(key, fn) {
+      const v = this._ver; /* خواندن این مقدار باعث می‌شود صفحه با تغییر داده دوباره ساخته شود */
+      if (_GC.v !== v) { _GC.v = v; _GC.m = {}; }
+      if (!(key in _GC.m)) _GC.m[key] = fn();
+      return _GC.m[key];
+    },
+    groups(upTo) { return this.memo('g|' + (upTo || ''), () => this._groups(upTo)); },
+    _groups(upTo) {
       const m = {}, mk = o => m[this.gkey(o)] ||= { key: this.gkey(o), type: o.type, thickness: +o.thickness, width: +o.width, length: +o.length, inCount: 0, inWeight: 0, cutCount: 0 };
       this.sheets.filter(s => s.confirmed && (!upTo || s.date <= upTo)).forEach(s => { const g = mk(s); g.inCount += Number(s.count); g.inWeight += this.sheetWeight(s); });
       this.cuts.filter(c => !upTo || c.date <= upTo).forEach(c => { mk(c).cutCount += Number(c.count); });
@@ -967,7 +978,8 @@ function workshopApp() {
         return { ...g, remCount, remWeight: remCount * avg };
       });
     },
-    stockList() { return this.groups(null).sort((a, b) => a.type.localeCompare(b.type) || a.thickness - b.thickness || a.width - b.width); },
+    stockList() { return this.memo('stock', () => this._stockList()); },
+    _stockList() { return [...this.groups(null)].sort((a, b) => a.type.localeCompare(b.type) || a.thickness - b.thickness || a.width - b.width); },
     remainingWeightAt(upTo) { return this.groups(upTo).reduce((a, g) => a + g.remWeight, 0); },
     applyPick() {
       const g = this.stockList().find(x => x.key === this.pick);
@@ -1016,7 +1028,8 @@ function workshopApp() {
 
     /* ---------- دستمزد ماهانه ---------- */
     monthName(mk) { const [y, m] = mk.split('/'); return MONTHS[+m - 1] + ' ' + fa(y); },
-    wageRows() {
+    wageRows() { return this.memo('wage', () => this._wageRows()); },
+    _wageRows() {
       const keys = [...new Set([...this.sheets.filter(s => s.confirmed).map(s => s.date), ...this.cuts.map(c => c.date)].map(d => d.slice(0, 7)))].sort();
       return keys.map((mk, i) => {
         const incoming = this.sheets.filter(s => s.confirmed && s.date.startsWith(mk)).reduce((a, s) => a + this.sheetWeight(s), 0);
