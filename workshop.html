@@ -258,7 +258,7 @@ h1, h2, h3, h4 { font-weight: 700; }
   <template x-if="errMsg"><div class="mb-4 bg-amber-950/50 border border-amber-700 text-amber-200 text-xs rounded-lg p-3 text-center" x-text="errMsg"></div></template>
 
   <!-- ورود -->
-  <template x-if="restoring && !currentUser"><div class="max-w-md mx-auto mt-6 text-center text-slate-300 text-xs bg-slate-800/60 border border-slate-700 rounded-lg py-3">در حال اتصال به سرور... (می‌توانید همین حالا وارد شوید)</div></template>
+  <template x-if="restoring && !currentUser"><div style="max-width:28rem;margin:1.5rem auto 0;text-align:center;font-size:.75rem;color:#cbd5e1;background:rgb(30 41 59 / .6);border:1px solid #334155;border-radius:.5rem;padding:.75rem">در حال اتصال به سرور... (می‌توانید همین حالا وارد شوید)</div></template>
   <template x-if="!currentUser">
     <div class="max-w-md mx-auto bg-slate-800 border border-slate-700 rounded-2xl shadow-2xl p-8 mt-12">
       <div class="text-center mb-6">
@@ -271,6 +271,8 @@ h1, h2, h3, h4 { font-weight: 700; }
         <div><label class="lbl">رمز عبور:</label><input type="password" x-model="loginForm.password" required autocomplete="current-password" dir="ltr" class="inp px-4 py-2.5 text-sm" placeholder="رمز عبور"></div>
         <template x-if="loginError"><div class="text-rose-400 text-xs text-center bg-rose-950/40 p-2 rounded border border-rose-800" x-text="loginError"></div></template>
         <button type="submit" :disabled="busy" class="btn text-sm py-3 shadow-lg disabled:opacity-50">ورود به سیستم 🚀</button>
+        <button type="button" @click="testConn()" class="btn2" style="width:100%;margin-top:.5rem">بررسی اتصال به سرور</button>
+        <div x-show="diag" x-text="diag" style="margin-top:.75rem;font-size:.75rem;line-height:1.7;color:#cbd5e1;background:rgb(15 23 42 / .6);border:1px solid #334155;border-radius:.5rem;padding:.75rem"></div>
       </form>
     </div>
   </template>
@@ -791,7 +793,7 @@ h1, h2, h3, h4 { font-weight: 700; }
       </ul>
     </div>
   </div>
-  <div class="border-t border-slate-800 py-3 text-center text-[11px] text-slate-500">© <span x-text="fa(todayJalali().split('/')[0])"></span> کارگاه اطلس سازه | تمامی حقوق محفوظ است</div>
+  <div class="border-t border-slate-800 py-3 text-center text-[11px] text-slate-500">© <span x-text="fa(todayJalali().split('/')[0])"></span> کارگاه اطلس سازه | تمامی حقوق محفوظ است | نسخه <span dir="ltr">v3-d</span></div>
 </footer>
 
 <script>
@@ -854,7 +856,7 @@ const _GC = { v: -1, m: {} }; /* حافظه موقت محاسبه‌ها؛ با 
 function workshopApp() {
   return {
     LIMIT: 15000, R1: 7350, R2: 4900, // سقف ماهانه (کیلوگرم)، نرخ تا سقف، نرخ مازاد (تومان)
-    sb: null, _ver: 0, _sig: '', ready: false, restoring: false, busy: false, errMsg: '', configured: !SUPABASE_URL.includes('YOUR_'),
+    sb: null, _ver: 0, _sig: '', ready: false, restoring: false, diag: '', busy: false, errMsg: '', configured: !SUPABASE_URL.includes('YOUR_'),
     currentUser: null, loginForm: { username: '', password: '' }, loginError: '', activeTab: 'sheets',
     sheets: [], cuts: [], products: [], pick: '', fromDate: '', toDate: '', dailyFrom: todayJalali(), dailyTo: todayJalali(),
 
@@ -910,6 +912,19 @@ function workshopApp() {
     },
 
     /* ---------- کاربران و دسترسی ---------- */
+    async testConn() {
+      this.diag = 'در حال بررسی اتصال به سرور...';
+      const t0 = Date.now(), ctl = new AbortController(), tm = setTimeout(() => ctl.abort(), 12000);
+      try {
+        const r = await fetch(SUPABASE_URL + '/auth/v1/health', { headers: { apikey: SUPABASE_ANON_KEY }, signal: ctl.signal });
+        const ms = Date.now() - t0;
+        this.diag = r.ok ? 'سرور در دسترس است (' + fa(ms) + ' هزارم ثانیه). اگر ورود ناموفق است، ایمیل و رمز را بررسی کنید.'
+          : 'سرور جواب داد ولی خطا برگرداند (کد ' + fa(r.status) + '). ممکن است پروژه Supabase متوقف یا در حال بازیابی باشد. داشبورد Supabase را بررسی کنید.';
+      } catch (e) {
+        this.diag = 'مرورگر به سرور نمی‌رسد. یعنی یا اینترنت قطع یا ضعیف است، یا آدرس supabase.co روی این شبکه بسته است، یا پروژه Supabase متوقف شده است. آدرس supabase.com را در یک تب جدید باز کنید و وضعیت پروژه را ببینید.';
+      }
+      clearTimeout(tm);
+    },
     async login() {
       this.loginError = ''; this.busy = true;
       for (let i = 0; i < 40 && !this.sb; i++) await new Promise(r => setTimeout(r, 250));
