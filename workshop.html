@@ -258,8 +258,8 @@ h1, h2, h3, h4 { font-weight: 700; }
   <template x-if="errMsg"><div class="mb-4 bg-amber-950/50 border border-amber-700 text-amber-200 text-xs rounded-lg p-3 text-center" x-text="errMsg"></div></template>
 
   <!-- ورود -->
-  <template x-if="restoring"><div class="text-center text-slate-300 py-16 text-sm">در حال اتصال به سرور و بررسی ورود...</div></template>
-  <template x-if="!currentUser && ready && !restoring">
+  <template x-if="restoring && !currentUser"><div class="max-w-md mx-auto mt-6 text-center text-slate-300 text-xs bg-slate-800/60 border border-slate-700 rounded-lg py-3">در حال اتصال به سرور... (می‌توانید همین حالا وارد شوید)</div></template>
+  <template x-if="!currentUser">
     <div class="max-w-md mx-auto bg-slate-800 border border-slate-700 rounded-2xl shadow-2xl p-8 mt-12">
       <div class="text-center mb-6">
         <div class="text-4xl mb-2">🔐</div>
@@ -800,6 +800,7 @@ h1, h2, h3, h4 { font-weight: 700; }
   function show(msg) { var b = document.getElementById('errbar'); if (b) { b.textContent = 'Error: ' + msg; b.style.display = 'block'; } }
   window.addEventListener('error', function (e) { show(e.message || e.error); });
   window.addEventListener('unhandledrejection', function (e) { show((e.reason && e.reason.message) || e.reason); });
+  setTimeout(function () { if (!window.Alpine) show('Alpine did not load: check internet/VPN and reload with Ctrl+F5'); }, 10000);
 })();
 </script>
 <script>
@@ -911,6 +912,8 @@ function workshopApp() {
     /* ---------- کاربران و دسترسی ---------- */
     async login() {
       this.loginError = ''; this.busy = true;
+      for (let i = 0; i < 40 && !this.sb; i++) await new Promise(r => setTimeout(r, 250));
+      if (!this.sb) { this.loginError = this.errMsg || 'ارتباط با سرور آماده نیست. صفحه را دوباره باز کنید (Ctrl+F5).'; this.busy = false; return; }
       const { data, error } = await this.sb.auth.signInWithPassword({ email: this.loginForm.username.trim(), password: this.loginForm.password });
       if (error) this.loginError = /invalid/i.test(error.message || '') ? 'ایمیل یا رمز عبور اشتباه است.' : friendlyErr(error);
       else if (await this.startSession(data.user)) this.loginForm = { username: '', password: '' };
