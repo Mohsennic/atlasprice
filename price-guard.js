@@ -4,14 +4,36 @@
 (function () {
     let pricesVerifiedAt = 0;      // آخرین زمانی که قیمت‌ها با سرور تأیید شد
     const FORM_IDS = ['prodCategory', 'fittingType', 'dim_w', 'dim_f', 'dim_l', 'dim_t', 'sheet_type', 'item_count'];
-    const EXTRA_KEYS = ['orderMode', 'validHours', 'closedMsg', 'sheetConfirmedAt', 'priceVersion'];
+    const EXTRA_KEYS = ['orderMode', 'validHours', 'closedMsg', 'sheetConfirmedAt', 'priceVersion', 'schedule'];
     const $ = id => document.getElementById(id);
     const fmt = ts => formatJalaliDateTime(new Date(ts));
     const verKey = s => (s.priceVersion || '') + '|' + (s.lastUpdated || '');
 
+    /* ---------- ساعت کاری و تعطیلات (به وقت تهران) ---------- */
+    function tehranNow() {
+        const p = new Intl.DateTimeFormat('en-US-u-ca-persian-nu-latn', { timeZone: 'Asia/Tehran', year: 'numeric', month: '2-digit', day: '2-digit', weekday: 'short', hour: '2-digit', minute: '2-digit', hourCycle: 'h23' }).formatToParts(new Date());
+        const g = t => (p.find(x => x.type === t) || {}).value;
+        return { wd: ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'].indexOf(g('weekday')), min: (+g('hour')) * 60 + (+g('minute')), date: `${g('year')}/${g('month')}/${g('day')}` };
+    }
+    function normDate(x) {
+        const e = String(x).replace(/[۰-۹]/g, d => '۰۱۲۳۴۵۶۷۸۹'.indexOf(d)).replace(/[٠-٩]/g, d => '٠١٢٣٤٥٦٧٨٩'.indexOf(d));
+        const a = e.split(/[\/\-]/); return a.length === 3 ? `${a[0]}/${a[1].padStart(2, '0')}/${a[2].padStart(2, '0')}` : '';
+    }
+    function scheduleState() {
+        const sc = appSettings.schedule;
+        if (!sc || !sc.on) return '';
+        const t = tehranNow(), mins = h => { const a = String(h || '0:0').split(':'); return (+a[0] || 0) * 60 + (+a[1] || 0); };
+        const hol = String(sc.holidays || '').split(/[\s,،]+/).map(normDate).filter(Boolean);
+        if ((sc.offDays || []).includes(t.wd) || hol.includes(t.date)) return '⛔ امروز تعطیل است و پیش‌فاکتور صادر نمی‌شود. لطفاً در اولین روز کاری مراجعه کنید.';
+        if (t.min < mins(sc.from) || t.min >= mins(sc.to)) return `⛔ خارج از ساعت کاری هستیم (${sc.from} تا ${sc.to}) و پیش‌فاکتور صادر نمی‌شود. لطفاً در ساعت کاری مراجعه کنید.`;
+        return '';
+    }
+
     /* ---------- وضعیت سفارش‌گیری ---------- */
     function orderState() {
         const s = appSettings, now = Date.now(), mode = s.orderMode || 'open';
+        const sch = scheduleState();
+        if (sch) return { all: true, msg: sch };
         if (mode === 'closed') {
             return { all: true, msg: s.closedMsg || '⛔ ثبت پیش‌فاکتور موقتاً بسته است. لطفاً در ساعات کاری مراجعه کنید.' };
         }
@@ -79,6 +101,7 @@
             appSettings.closedMsg = r.closedMsg || '';
             appSettings.sheetConfirmedAt = r.sheetConfirmedAt || null;
             appSettings.priceVersion = r.priceVersion || null;
+            appSettings.schedule = r.schedule || null;
             localStorage.setItem('atlas_app_settings', JSON.stringify(appSettings));
             pricesVerifiedAt = Date.now();
 
@@ -184,6 +207,10 @@
             $('adm_orderMode').value = appSettings.orderMode || 'open';
             $('adm_validHours').value = appSettings.validHours || 0;
             $('adm_closedMsg').value = appSettings.closedMsg || '';
+            const sc = appSettings.schedule || { on: false, from: '08:00', to: '16:00', offDays: [5], holidays: '' };
+            $('adm_sc_on').checked = !!sc.on; $('adm_sc_from').value = sc.from || '08:00'; $('adm_sc_to').value = sc.to || '16:00';
+            $('adm_sc_hol').value = sc.holidays || '';
+            document.querySelectorAll('#adm_sc_days input').forEach(c => { c.checked = (sc.offDays || []).includes(+c.value); });
         }
     };
     const _save = saveAdminSettings;
@@ -191,6 +218,10 @@
         appSettings.orderMode = $('adm_orderMode').value;
         appSettings.validHours = parseSafeNumber($('adm_validHours').value);
         appSettings.closedMsg = $('adm_closedMsg').value.trim();
+        appSettings.schedule = {
+            on: $('adm_sc_on').checked, from: $('adm_sc_from').value || '08:00', to: $('adm_sc_to').value || '16:00',
+            offDays: [...document.querySelectorAll('#adm_sc_days input:checked')].map(c => +c.value), holidays: $('adm_sc_hol').value.trim()
+        };
         const now = Date.now();
         appSettings.priceVersion = now;
         if (appSettings.orderMode === 'open') appSettings.sheetConfirmedAt = now;   // ذخیره در حالت «باز» یعنی تأیید قیمت ورق
@@ -219,6 +250,18 @@
                 <div class="form-group" style="grid-column: 1 / -1;"><label>پیام حالت بسته (اختیاری)</label>
                     <input type="text" id="adm_closedMsg" style="width:100%;padding:8px 10px;border:1px solid #cbd5e1;border-radius:7px;font-size:.85rem;"></div>
             </div>
+            <div class="admin-section-title">ساعت کاری و تعطیلات (به وقت تهران)</div>
+            <label class="checkbox-container"><input type="checkbox" id="adm_sc_on"><span>خارج از ساعت کاری و در روزهای تعطیل، صدور پیش‌فاکتور قفل شود</span></label>
+            <div class="admin-grid">
+                <div class="form-group"><label>شروع کار</label><input type="time" id="adm_sc_from" style="padding:8px;border:1px solid #cbd5e1;border-radius:7px;"></div>
+                <div class="form-group"><label>پایان کار</label><input type="time" id="adm_sc_to" style="padding:8px;border:1px solid #cbd5e1;border-radius:7px;"></div>
+            </div>
+            <div style="font-size:.78rem;margin-bottom:6px;font-weight:600;">روزهای تعطیل هفته:</div>
+            <div id="adm_sc_days" style="display:flex;flex-wrap:wrap;gap:12px;font-size:.8rem;margin-bottom:8px;">
+                ${[[6,'شنبه'],[0,'یکشنبه'],[1,'دوشنبه'],[2,'سه‌شنبه'],[3,'چهارشنبه'],[4,'پنجشنبه'],[5,'جمعه']].map(d => `<label><input type="checkbox" value="${d[0]}"> ${d[1]}</label>`).join('')}
+            </div>
+            <div class="form-group" style="margin-bottom:8px;"><label>تعطیلات رسمی و خاص (تاریخ شمسی، با ویرگول یا فاصله جدا کنید؛ مثال: 1405/08/20, 1405/09/01)</label>
+                <textarea id="adm_sc_hol" rows="2" style="width:100%;padding:8px;border:1px solid #cbd5e1;border-radius:7px;font-size:.85rem;"></textarea></div>
             <div style="font-size:.72rem;color:#64748b;line-height:1.7;">با هر «ذخیره» در حالت «باز»، قیمت ورق تأیید می‌شود و ساعت اعتبار از همان لحظه شروع می‌شود. اگر پس از پایان اعتبار قیمت جدید ثبت نشود، ثبت اقلام ورقی خودکار قفل می‌شود. پیش‌فاکتورها هم تا همان زمان معتبر درج می‌شوند.</div>`;
         const saveBtn = document.querySelector('#adminModal .btn-add');
         saveBtn.parentNode.insertBefore(sec, saveBtn);
