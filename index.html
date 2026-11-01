@@ -584,8 +584,8 @@
 
                         <!-- گزینه بدون ضدزنگ -->
             <label class="checkbox-container" id="grp_antirust">
-                <input type="checkbox" id="chk_no_antirust">
-                <span>بدون ضدزنگ (کسر هزینه رنگ‌آمیزی)</span>
+                <input type="checkbox" id="chk_antirust">
+                <span>با ضدزنگ (رنگ‌آمیزی) - اگر انتخاب نشود، قیمت بدون ضدزنگ محاسبه می‌شود</span>
             </label>
 
             <!-- باکس پیش‌نمایش زنده قیمت -->
@@ -593,6 +593,9 @@
                 <span>قیمت واحد: <strong id="previewUnitPrice" style="color:var(--orange-hover);">۰</strong> تومان</span>
                 <span>جمع این قلم: <strong id="previewTotalPrice" style="color:var(--orange-hover);">۰</strong> تومان</span>
             </div>
+
+            <!-- پیام ترغیبی ضدزنگ -->
+            <div id="antirustHint" style="display:none; border-radius:8px; padding:10px 14px; margin-bottom:12px; font-size:0.8rem; line-height:1.9;"></div>
 
             <button class="btn-add" onclick="addItemToOrder()">
                 <span>➕</span> افزودن به لیست پیش‌فاکتور
@@ -634,6 +637,10 @@
                     <span class="summary-val total-price-val" id="sumTotalPrice">۰ تومان</span>
                 </div>
             </div>
+
+            <div id="antirustNote" style="display:none; background:#e0f2fe; border:1px solid #7dd3fc; border-radius:8px; padding:10px 14px; margin-bottom:12px; font-size:0.78rem; line-height:2; color:#075985;">
+                📌 قیمت‌های این پیش‌فاکتور <strong>بدون ضدزنگ</strong> است. در صورت نیاز به ضدزنگ، اعلام کنید تا محاسبه شود.
+            </div>
         </div>
 
         <!-- دکمه‌های پیش‌فاکتور -->
@@ -657,9 +664,8 @@
         <div class="admin-grid">
             <div class="form-group"><label>ورق سیاه (kg)</label><input type="number" id="adm_st37"></div>
             <div class="form-group"><label>ورق گالوانیزه (kg)</label><input type="number" id="adm_galv"></div>
-            <div class="form-group"><label>مزد ساخت (kg)</label><input type="number" id="adm_labor"></div>
-            <div class="form-group"><label>ضدزنگ والپست (قطعه)</label><input type="number" id="adm_ar_wallpost"></div>
-            <div class="form-group"><label>ضدزنگ وادار (شاخه)</label><input type="number" id="adm_ar_vador"></div>
+            <div class="form-group"><label>مزد ساخت بدون رنگ (kg)</label><input type="number" id="adm_labor"></div>
+            <div class="form-group"><label>هزینه ضدزنگ (هر کیلوگرم)</label><input type="number" id="adm_ar_kg"></div>
         </div>
 
         <div class="admin-section-title">قیمت اتصالات و متعلقات (تومان)</div>
@@ -677,7 +683,7 @@
             <div class="form-group"><label>صفحه پلیت ۲۵*۱۵(ورق 5میل)</label><input type="number" id="adm_fit_plate_25_15"></div>
         </div>
 
-        <div class="admin-section-title">درصد تخفیف‌های پلکانی تعدادی (درصد)</div>
+        <div class="admin-section-title">درصد تخفیف‌های پلکانی تعدادی (درصد) - فقط والپست و وادار</div>
         <div class="admin-grid">
             <div class="form-group"><label>۱۰۰ عدد (d100)</label><input type="number" id="adm_d100"></div>
             <div class="form-group"><label>۲۰۰ عدد (d200)</label><input type="number" id="adm_d200"></div>
@@ -703,8 +709,7 @@
         st37: 32000,
         galv: 41000,
         labor: 3500,
-        ar_wallpost: 3000,
-        ar_vador: 25000,
+        ar_kg: 8000,
         fittings: {
             girandeh: 4500,
             ghollab: 4500,
@@ -746,7 +751,7 @@
         setTimeout(() => { t.style.display = 'none'; }, 3000);
     }
 
-// ✅ کد جایگزین: بارگذاری مطمئن (اول از حافظه دستگاه، سپس از سرور ابری)
+// بارگذاری مطمئن (اول از حافظه دستگاه، سپس از سرور ابری)
 function loadSettingsLocally() {
     try {
         const local = localStorage.getItem('atlas_app_settings');
@@ -756,8 +761,7 @@ function loadSettingsLocally() {
                 if (parsed.st37 !== undefined) appSettings.st37 = parsed.st37;
                 if (parsed.galv !== undefined) appSettings.galv = parsed.galv;
                 if (parsed.labor !== undefined) appSettings.labor = parsed.labor;
-                if (parsed.ar_wallpost !== undefined) appSettings.ar_wallpost = parsed.ar_wallpost;
-                if (parsed.ar_vador !== undefined) appSettings.ar_vador = parsed.ar_vador;
+                if (parsed.ar_kg !== undefined) appSettings.ar_kg = parsed.ar_kg;
                 if (parsed.fittings) appSettings.fittings = { ...appSettings.fittings, ...parsed.fittings };
                 if (parsed.discounts) appSettings.discounts = { ...appSettings.discounts, ...parsed.discounts };
                 if (parsed.lastUpdated) appSettings.lastUpdated = parsed.lastUpdated;
@@ -818,8 +822,7 @@ async function loadCloudSettings(isManual = false) {
                 if (record.st37 !== undefined) appSettings.st37 = record.st37;
                 if (record.galv !== undefined) appSettings.galv = record.galv;
                 if (record.labor !== undefined) appSettings.labor = record.labor;
-                if (record.ar_wallpost !== undefined) appSettings.ar_wallpost = record.ar_wallpost;
-                if (record.ar_vador !== undefined) appSettings.ar_vador = record.ar_vador;
+                if (record.ar_kg !== undefined) appSettings.ar_kg = record.ar_kg;
 
                 // دریافت کامل اتصالات و تخفیف‌ها
                 if (record.fittings) appSettings.fittings = { ...appSettings.fittings, ...record.fittings };
@@ -845,7 +848,7 @@ async function loadCloudSettings(isManual = false) {
     }
 }
     
-// ✅ کد جایگزین: ذخیره قطعی در حافظه و ارسال مطمئن به سرور
+// ذخیره قطعی در حافظه و ارسال مطمئن به سرور
 async function syncToCloud() {
     showToast("در حال ذخیره نرخ‌ها...");
     appSettings.lastUpdated = formatJalaliDateTime(new Date());
@@ -941,12 +944,15 @@ function addItemToOrder() {
     let specs = '-';
     let weightUnit = 0;
     let unitCost = 0;
+    let arRawPrev = 0;
+    let arSavingRaw = 0;   // هزینه ضدزنگ هر واحد (قبل از تخفیف و ضریب)
+    let noAR = false;
 
-    const isFittings = (cat === 'fittings');
-    const discRate = getDiscountRate(count);
-    const hasDiscount = discRate > 0 && !isFittings;
+    // ✅ تخفیف پلکانی فقط برای والپست و وادار؛ اتصالات بدون تخفیف
+    const discRate = (cat === 'fittings') ? 0 : getDiscountRate(count);
+    const hasDiscount = discRate > 0;
 
-    if (isFittings) {
+    if (cat === 'fittings') {
         const fitSelect = document.getElementById('fittingType');
         const fitKey = fitSelect.value;
         name = fitSelect.options[fitSelect.selectedIndex].text;
@@ -958,7 +964,7 @@ function addItemToOrder() {
         const l = parseFloat(document.getElementById('dim_l').value) || 0;
         const t = parseFloat(document.getElementById('dim_t').value) || 0;
         const sheet = document.getElementById('sheet_type').value;
-        const noAntiRust = document.getElementById('chk_no_antirust').checked;
+        const withAR = document.getElementById('chk_antirust').checked;
 
         const sheetPricePerKg = (sheet === 'galv') ? appSettings.galv : appSettings.st37;
         const sheetName = (sheet === 'galv') ? 'گالوانیزه' : 'سیاه';
@@ -971,23 +977,28 @@ function addItemToOrder() {
             specs = `${l}*${w} سانت با بال ${f} سانت ضخامت ${t} میلیمتر (${sheetName})`;
             weightUnit = (sheetWidth * l * t * 7.9) / 10000;
             const basePrice = weightUnit * (sheetPricePerKg + effectiveLabor);
-            unitCost = noAntiRust ? (basePrice - appSettings.ar_wallpost) : basePrice;
+            unitCost = basePrice + (withAR ? weightUnit * appSettings.ar_kg : 0);
+            arRawPrev = weightUnit * appSettings.ar_kg;
         } else if (cat === 'vador_end') {
             name = 'وادار انتهایی (U)';
             specs = `${l}*${w} سانت با بال ${f} سانت ضخامت ${t} میلیمتر (${sheetName})`;
             weightUnit = (sheetWidth * l * t * 7.9) / 10000;
             const basePrice = weightUnit * (sheetPricePerKg + effectiveLabor);
-            unitCost = noAntiRust ? basePrice : (basePrice + appSettings.ar_vador);
+            unitCost = basePrice + (withAR ? weightUnit * appSettings.ar_kg : 0);
+            arRawPrev = weightUnit * appSettings.ar_kg;
         } else if (cat === 'vador_mid') {
             name = 'وادار میانی (H)';
             specs = `${l}*${w} سانت با بال ${f} سانت ضخامت ${t} میلیمتر (${sheetName})`;
             const totalDevLen = l + (Math.floor(l / 100) * 40);
             weightUnit = (sheetWidth * totalDevLen * t * 7.9) / 10000;
             const basePrice = weightUnit * (sheetPricePerKg + effectiveLabor);
-            unitCost = noAntiRust ? basePrice : (basePrice + appSettings.ar_vador);
+            unitCost = basePrice + (withAR ? weightUnit * appSettings.ar_kg : 0);
+            arRawPrev = weightUnit * appSettings.ar_kg;
         }
 
-        if (noAntiRust) specs += ' | بدون ضدزنگ';
+        specs += withAR ? ' | با ضدزنگ' : ' | بدون ضدزنگ';
+        noAR = !withAR;
+        arSavingRaw = arRawPrev;
     }
 
     if (hasDiscount) {
@@ -996,6 +1007,9 @@ function addItemToOrder() {
 
     const partnerFactor = isPartner ? 1.10 : 1.14;
     unitCost = unitCost * partnerFactor;
+
+    // مبلغ ضدزنگ هر واحد در قیمت نهایی (با همان تخفیف و ضریب)
+    const arSaving = Math.round((arSavingRaw * (1 - discRate / 100) * partnerFactor) / 500) * 500;
 
     const finalUnitPrice = Math.ceil(unitCost / 500) * 500;
     const totalPrice = finalUnitPrice * count;
@@ -1008,7 +1022,10 @@ function addItemToOrder() {
         totalWeight: Number((weightUnit * count).toFixed(2)),
         unitPrice: finalUnitPrice,
         totalPrice: totalPrice,
-        hasDiscount: hasDiscount
+        hasDiscount: hasDiscount,
+        hasAR: cat !== 'fittings',
+        noAR: noAR,
+        arSaving: arSaving
     });
 
     renderTable();
@@ -1019,12 +1036,13 @@ function updateLivePreview() {
     const cat = document.getElementById('prodCategory').value;
     const count = parseFloat(document.getElementById('item_count').value) || 1;
     let unitCost = 0;
+    let arRawPrev = 0;
 
-    const isFittings = (cat === 'fittings');
-    const discRate = getDiscountRate(count);
-    const hasDiscount = discRate > 0 && !isFittings;
+    // ✅ تخفیف پلکانی فقط برای والپست و وادار؛ اتصالات بدون تخفیف
+    const discRate = (cat === 'fittings') ? 0 : getDiscountRate(count);
+    const hasDiscount = discRate > 0;
 
-    if (isFittings) {
+    if (cat === 'fittings') {
         const fitSelect = document.getElementById('fittingType');
         const fitKey = fitSelect.value;
         unitCost = appSettings.fittings[fitKey] || 0;
@@ -1034,7 +1052,7 @@ function updateLivePreview() {
         const l = parseFloat(document.getElementById('dim_l').value) || 0;
         const t = parseFloat(document.getElementById('dim_t').value) || 0;
         const sheet = document.getElementById('sheet_type').value;
-        const noAntiRust = document.getElementById('chk_no_antirust').checked;
+        const withAR = document.getElementById('chk_antirust').checked;
 
         const sheetPricePerKg = (sheet === 'galv') ? appSettings.galv : appSettings.st37;
         const sheetWidth = w + (2 * f);
@@ -1043,16 +1061,19 @@ function updateLivePreview() {
         if (cat === 'wallpost') {
             const weightUnit = (sheetWidth * l * t * 7.9) / 10000;
             const basePrice = weightUnit * (sheetPricePerKg + effectiveLabor);
-            unitCost = noAntiRust ? (basePrice - appSettings.ar_wallpost) : basePrice;
+            unitCost = basePrice + (withAR ? weightUnit * appSettings.ar_kg : 0);
+            arRawPrev = weightUnit * appSettings.ar_kg;
         } else if (cat === 'vador_end') {
             const weightUnit = (sheetWidth * l * t * 7.9) / 10000;
             const basePrice = weightUnit * (sheetPricePerKg + effectiveLabor);
-            unitCost = noAntiRust ? basePrice : (basePrice + appSettings.ar_vador);
+            unitCost = basePrice + (withAR ? weightUnit * appSettings.ar_kg : 0);
+            arRawPrev = weightUnit * appSettings.ar_kg;
         } else if (cat === 'vador_mid') {
             const totalDevLen = l + (Math.floor(l / 100) * 40);
             const weightUnit = (sheetWidth * totalDevLen * t * 7.9) / 10000;
             const basePrice = weightUnit * (sheetPricePerKg + effectiveLabor);
-            unitCost = noAntiRust ? basePrice : (basePrice + appSettings.ar_vador);
+            unitCost = basePrice + (withAR ? weightUnit * appSettings.ar_kg : 0);
+            arRawPrev = weightUnit * appSettings.ar_kg;
         }
     }
 
@@ -1075,6 +1096,28 @@ function updateLivePreview() {
     if (previewTotalPriceEl) {
         previewTotalPriceEl.innerText = finalTotalPrice.toLocaleString('fa-IR') + ' تومان';
     }
+
+    // پیام ضدزنگ
+    const hintEl = document.getElementById('antirustHint');
+    if (hintEl) {
+        if (cat === 'fittings') {
+            hintEl.style.display = 'none';
+        } else {
+            const withARchk = document.getElementById('chk_antirust').checked;
+            hintEl.style.display = 'block';
+            if (withARchk) {
+                hintEl.style.background = '#fffbeb';
+                hintEl.style.border = '1px solid #fde68a';
+                hintEl.style.color = '#78350f';
+                hintEl.innerHTML = '🎨 این قیمت شامل ضدزنگ است.';
+            } else {
+                hintEl.style.background = '#e0f2fe';
+                hintEl.style.border = '1px solid #7dd3fc';
+                hintEl.style.color = '#075985';
+                hintEl.innerHTML = 'ℹ️ این قیمت بدون ضدزنگ است. در صورت نیاز به ضدزنگ، تیک «با ضدزنگ» را بزنید تا محاسبه شود.';
+            }
+        }
+    }
 }
 
     function renderTable() {
@@ -1083,6 +1126,8 @@ function updateLivePreview() {
             tbody.innerHTML = `<tr><td colspan="7" style="padding: 20px; color: var(--text-muted);">هنوز آیتمی به لیست اضافه نشده است.</td></tr>`;
             document.getElementById('sumTotalCount').innerText = '۰';
             document.getElementById('sumTotalPrice').innerText = '۰ تومان';
+            const emptyNote = document.getElementById('antirustNote');
+            if (emptyNote) emptyNote.style.display = 'none';
             return;
         }
 
@@ -1095,11 +1140,17 @@ function updateLivePreview() {
             totalPrice += item.totalPrice;
 
             const discBadge = item.hasDiscount ? `<br><span class="badge-discount">تخفیف اعمال شد</span>` : '';
+            let arBadge = '';
+            if (item.hasAR) {
+                arBadge = item.noAR
+                    ? `<br><span class="badge-discount" style="background:#e0f2fe;color:#075985;">بدون ضدزنگ</span>`
+                    : `<br><span class="badge-discount" style="background:#fef3c7;color:#92400e;">با ضدزنگ</span>`;
+            }
 
             tbody.innerHTML += `
                 <tr>
                     <td>${index + 1}</td>
-                    <td><strong>${item.name}</strong>${discBadge}</td>
+                    <td><strong>${item.name}</strong>${discBadge}${arBadge}</td>
                     <td>${item.specs}</td>
                     <td><strong>${item.count.toLocaleString()}</strong></td>
                     <td>${item.unitPrice.toLocaleString()}</td>
@@ -1113,6 +1164,9 @@ function updateLivePreview() {
 
         document.getElementById('sumTotalCount').innerText = totalCount.toLocaleString();
         document.getElementById('sumTotalPrice').innerText = `${totalPrice.toLocaleString()} تومان`;
+
+        const noteEl = document.getElementById('antirustNote');
+        if (noteEl) noteEl.style.display = orders.some(o => o.hasAR && o.noAR) ? 'block' : 'none';
     }
 
     function deleteOrderItem(index) {
@@ -1145,6 +1199,7 @@ function updateLivePreview() {
                 badge.style.color = "#fdba74";
                 showToast("حالت مشتری فعال شد.");
             }
+            updateLivePreview();
         } else if (pass !== null) {
             alert("رمز عبور اشتباه است!");
         }
@@ -1179,8 +1234,7 @@ function openAdminModal() {
             document.getElementById('adm_st37').value = appSettings.st37;
             document.getElementById('adm_galv').value = appSettings.galv;
             document.getElementById('adm_labor').value = appSettings.labor;
-            document.getElementById('adm_ar_wallpost').value = appSettings.ar_wallpost;
-            document.getElementById('adm_ar_vador').value = appSettings.ar_vador;
+            document.getElementById('adm_ar_kg').value = appSettings.ar_kg;
 
             const f = appSettings.fittings;
             document.getElementById('adm_fit_girandeh').value = f.girandeh;
@@ -1227,8 +1281,7 @@ function saveAdminSettings() {
     appSettings.st37 = parseSafeNumber(document.getElementById('adm_st37').value);
     appSettings.galv = parseSafeNumber(document.getElementById('adm_galv').value);
     appSettings.labor = parseSafeNumber(document.getElementById('adm_labor').value);
-    appSettings.ar_wallpost = parseSafeNumber(document.getElementById('adm_ar_wallpost').value);
-    appSettings.ar_vador = parseSafeNumber(document.getElementById('adm_ar_vador').value);
+    appSettings.ar_kg = parseSafeNumber(document.getElementById('adm_ar_kg').value);
 
     appSettings.fittings = {
         girandeh: parseSafeNumber(document.getElementById('adm_fit_girandeh').value),
@@ -1263,6 +1316,10 @@ function saveAdminSettings() {
             txt += `${i+1}. ${o.name} | مشخصات: ${o.specs} | تعداد: ${o.count} | فی: ${o.unitPrice.toLocaleString()} تومان | کل: ${o.totalPrice.toLocaleString()} تومان\n`;
         });
         txt += `----------------------------------\n`;
+        if (orders.some(o => o.hasAR && o.noAR)) {
+            txt += `📌 قیمت‌ها بدون ضدزنگ است؛ در صورت نیاز به ضدزنگ، اعلام کنید تا محاسبه شود.\n`;
+            txt += `----------------------------------\n`;
+        }
         txt += `مبلغ قابل پرداخت: ${document.getElementById('sumTotalPrice').innerText}\n`;
         txt += `اطلس سازه - تامین‌کننده تخصصی والپست و اتصالات نوین`;
 
@@ -1355,7 +1412,7 @@ function saveAdminSettings() {
     handleCategoryChange();
     loadCloudSettings();
 
-        const liveInputs = ['prodCategory', 'fittingType', 'dim_w', 'dim_f', 'dim_l', 'dim_t', 'sheet_type', 'item_count', 'chk_no_antirust'];
+        const liveInputs = ['prodCategory', 'fittingType', 'dim_w', 'dim_f', 'dim_l', 'dim_t', 'sheet_type', 'item_count', 'chk_antirust'];
         liveInputs.forEach(id => {
             const el = document.getElementById(id);
             if(el) {
