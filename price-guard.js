@@ -93,7 +93,7 @@
             if (!r || (r.st37 === undefined && r.galv === undefined)) return 0;
 
             const before = verKey(appSettings), hadOrders = orders.length > 0;
-            ['st37', 'galv', 'labor', 'ar_wallpost', 'ar_vador', 'lastUpdated'].forEach(k => { if (r[k] !== undefined) appSettings[k] = r[k]; });
+            ['st37', 'galv', 'labor', 'ar_kg', 'lastUpdated'].forEach(k => { if (r[k] !== undefined) appSettings[k] = r[k]; });
             if (r.fittings) appSettings.fittings = { ...appSettings.fittings, ...r.fittings };
             if (r.discounts) appSettings.discounts = { ...appSettings.discounts, ...r.discounts };
             appSettings.orderMode = r.orderMode || 'open';
@@ -135,10 +135,10 @@
     /* ---------- افزودن قلم و محاسبه مجدد ---------- */
     const _add = addItemToOrder;
     function readForm() {
-        const o = {}; FORM_IDS.forEach(id => o[id] = $(id).value); o.noAR = $('chk_no_antirust').checked; return o;
+        const o = {}; FORM_IDS.forEach(id => o[id] = $(id).value); o.withAR = $('chk_antirust').checked; return o;
     }
     function writeForm(o) {
-        FORM_IDS.forEach(id => { $(id).value = o[id]; }); $('chk_no_antirust').checked = o.noAR;
+        FORM_IDS.forEach(id => { $(id).value = o[id]; }); $('chk_antirust').checked = !!o.withAR;
     }
     function addCore() {
         const n = orders.length, p = readForm();
@@ -182,7 +182,11 @@
         orders.forEach((o, i) => {
             txt += `${i + 1}. ${o.name} | مشخصات: ${o.specs} | تعداد: ${o.count} | فی: ${o.unitPrice.toLocaleString()} تومان | کل: ${o.totalPrice.toLocaleString()} تومان\n`;
         });
-        txt += `----------------------------------\nمبلغ قابل پرداخت: ${$('sumTotalPrice').innerText}\n⏳ ${validity()}\nاطلس سازه - تامین‌کننده تخصصی والپست و اتصالات نوین`;
+        txt += `----------------------------------\n`;
+        if (orders.some(o => o.hasAR && o.noAR)) {
+            txt += `📌 قیمت‌ها بدون ضدزنگ است؛ در صورت نیاز به ضدزنگ، اعلام کنید تا محاسبه شود.\n----------------------------------\n`;
+        }
+        txt += `مبلغ قابل پرداخت: ${$('sumTotalPrice').innerText}\n⏳ ${validity()}\nاطلس سازه - تامین‌کننده تخصصی والپست و اتصالات نوین`;
         navigator.clipboard.writeText(txt).then(() => showToast('متن پیش‌فاکتور کپی شد.'));
     };
     const _pdf = exportPDF;
