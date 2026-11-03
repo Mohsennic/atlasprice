@@ -54,6 +54,8 @@
         .btn-alt { width: 100%; background: #fff; color: var(--navy-main); border: 1px solid #cbd5e1; border-radius: 9px; padding: 10px; font-weight: 700; font-size: 0.85rem; cursor: pointer; margin-top: 8px; }
         .preview-box { position: sticky; top: 10px; }
         .preview-box canvas { width: 100%; height: auto; border-radius: 10px; border: 1px solid var(--border-color); display: block; background: #0b1218; }
+        .rtl-area { width: 100%; padding: 9px; border: 1px solid #cbd5e1; border-radius: 8px; font-size: 0.82rem; line-height: 1.9; direction: rtl; resize: vertical; }
+        .rtl-area:focus { border-color: var(--orange-main); outline: none; box-shadow: 0 0 0 3px rgba(249,115,22,0.15); }
         .warn-line { font-size: 0.72rem; color: #b45309; margin-top: 6px; min-height: 1em; }
         .toast { position: fixed; bottom: 20px; left: 50%; transform: translateX(-50%); background: var(--navy-dark); color: #fff; padding: 10px 20px; border-radius: 8px; font-size: 0.85rem; display: none; z-index: 50; }
     </style>
@@ -134,7 +136,27 @@
                 <div class="warn-line" id="rowWarn"></div>
                 <button class="btn-main" onclick="saveCurrent()">⬇️ ذخیره تصویر (لیست انتخاب‌شده)</button>
                 <button class="btn-alt" onclick="saveBoth()">⬇️ ذخیره هر دو تصویر (فروش + همکار)</button>
-                <button class="btn-alt" onclick="shareCurrent()">📤 اشتراک‌گذاری مستقیم (موبایل)</button>
+                <button class="btn-alt" onclick="shareCurrent()">📤 اشتراک‌گذاری مستقیم (تصویر + متن)</button>
+            </div>
+            <div class="card">
+                <h3>متن همراه تصویر</h3>
+                <textarea id="caption_text" rows="12" class="rtl-area">تولید کننده ملزومات دیوارچینی پرواستان یزد
+تولیدکننده انواع ناودانی وال‌پست و اتصالات دیوارچینی
+🔹 ناودانی وال‌پست در ابعاد مختلف
+🔹 اتصالات U و H
+🔹 بست و کلیپس دیوار
+🔹 تولید با ورق فولادی ۲ میل
+🔹 امکان تولید ابعاد سفارشی
+🔹 فروش عمده و همکاری مستقیم با پیمانکاران و مجریان پروژه‌ها
+📍 ارسال به تمام شهرستان‌های استان یزد
+📋 لیست قیمت محصولات جهت اطلاع و سفارش ارسال می‌شود.
+جهت دریافت لیست قیمت، مشاوره و ثبت سفارش با ما در ارتباط باشید.
+اطلس سازه</textarea>
+                <div class="hint">این متن هنگام «اشتراک‌گذاری مستقیم» همراه تصویر فرستاده می‌شود. اگر متن را تغییر دادید و خواستید برای دفعات بعد بماند، «ذخیره متن» را بزنید. اگر پیام‌رسان متن را زیر عکس نگذاشت، «کپی متن» را بزنید و در توضیح عکس بچسبانید.</div>
+                <div class="hint" id="capStatus" style="margin-top:6px; font-weight:700;"></div>
+                <button class="btn-main" onclick="saveCaption()">💾 ذخیره متن</button>
+                <button class="btn-alt" onclick="copyCaption()">📋 کپی متن</button>
+                <button class="btn-alt" onclick="resetCaption()">↩️ بازگشت به متن اولیه</button>
             </div>
         </div>
     </div>
@@ -591,11 +613,51 @@ async function shareCurrent() {
     const blob = await canvasToBlob(cv);
     const file = new File([blob], fileName(mode), { type: 'image/jpeg' });
     if (navigator.canShare && navigator.canShare({ files: [file] })) {
-        try { await navigator.share({ files: [file] }); } catch (e) {}
+        try { await navigator.share({ files: [file], text: el('caption_text').value }); } catch (e) {}
     } else {
         showToast('این مرورگر اشتراک‌گذاری مستقیم ندارد؛ از «ذخیره تصویر» استفاده کنید.');
     }
     renderPreview();
+}
+
+const CAPTION_KEY = 'atlas_pricelist_caption';
+let DEFAULT_CAPTION = '';
+let savedCaption = '';
+function updateCapStatus() {
+    const s = el('capStatus');
+    if (!s) return;
+    const same = el('caption_text').value === savedCaption;
+    s.textContent = same ? '✅ متن ذخیره‌شده است' : '⚠️ تغییرات هنوز ذخیره نشده است';
+    s.style.color = same ? '#15803d' : '#b45309';
+}
+function initCaption() {
+    const box = el('caption_text');
+    DEFAULT_CAPTION = box.value;
+    savedCaption = DEFAULT_CAPTION;
+    try {
+        const saved = localStorage.getItem(CAPTION_KEY);
+        if (saved !== null) { box.value = saved; savedCaption = saved; }
+    } catch (e) {}
+    box.addEventListener('input', updateCapStatus);
+    updateCapStatus();
+}
+function saveCaption() {
+    try {
+        localStorage.setItem(CAPTION_KEY, el('caption_text').value);
+        savedCaption = el('caption_text').value;
+        updateCapStatus();
+        showToast('متن ذخیره شد و دفعه بعد همین متن می‌آید.');
+    } catch (e) { showToast('ذخیره متن در این مرورگر ممکن نشد.'); }
+}
+function resetCaption() {
+    if (!confirm('متن به حالت اولیه برگردد؟ (برای ماندگاری باید بعد از آن «ذخیره متن» را بزنید)')) return;
+    el('caption_text').value = DEFAULT_CAPTION;
+    updateCapStatus();
+}
+async function copyCaption() {
+    const txt = el('caption_text').value;
+    try { await navigator.clipboard.writeText(txt); showToast('متن کپی شد.'); }
+    catch (e) { el('caption_text').select(); document.execCommand('copy'); showToast('متن کپی شد.'); }
 }
 
 // ===================== شروع =====================
@@ -609,6 +671,7 @@ window.addEventListener('DOMContentLoaded', async () => {
         i.addEventListener('input', scheduleRender);
         i.addEventListener('change', scheduleRender);
     });
+    initCaption();
     renderPreview();
 
     await loadCloud();
