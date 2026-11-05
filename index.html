@@ -9,454 +9,498 @@
 
     <!-- تنظیمات PWA و وب‌اپلیکیشن اطلس سازه -->
     <link rel="manifest" href="manifest.json">
-    <meta name="theme-color" content="#0f172a">
+    <meta name="theme-color" content="#0b0e12">
     <meta name="apple-mobile-web-app-capable" content="yes">
     <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
     <link rel="apple-touch-icon" href="logo.png">
 
     <style>
+:root {
+    color-scheme: dark;
+    --navy-dark: #0b0e12;
+    --navy-main: #12171d;
+    --navy-light: #9fb0c3;
+    --orange-main: #ff7a00;
+    --orange-hover: #ff9a2e;
+    --amber: #ffb000;
+    --bg-light: #161c23;
+    --card-bg: #12171d;
+    --text-dark: #e8edf2;
+    --text-muted: #7a8797;
+    --border-color: #2d3743;
+    --danger: #ef4444;
+    --success: #22c55e;
+    --steel-2: #1b232c;
+    --steel-3: #252f3a;
+}
 
-        :root {
-            --navy-dark: #0f172a;
-            --navy-main: #1e293b;
-            --navy-light: #334155;
-            --orange-main: #f97316;
-            --orange-hover: #ea580c;
-            --bg-light: #f8fafc;
-            --card-bg: #ffffff;
-            --text-dark: #0f172a;
-            --text-muted: #64748b;
-            --border-color: #e2e8f0;
-            --danger: #ef4444;
-            --success: #10b981;
-        }
+* { box-sizing: border-box; font-family: 'Vazirmatn', Tahoma, sans-serif; margin: 0; padding: 0; }
 
-        * {
-            box-sizing: border-box;
-            font-family: 'Vazirmatn', Tahoma, sans-serif;
-            margin: 0;
-            padding: 0;
-        }
+body {
+    background-color: #0a0d11;
+    background-image:
+        radial-gradient(900px 420px at 85% -5%, rgba(255, 122, 0, 0.16), transparent 65%),
+        radial-gradient(700px 400px at 5% 105%, rgba(255, 122, 0, 0.07), transparent 60%),
+        repeating-linear-gradient(135deg, rgba(255, 255, 255, 0.022) 0 1px, transparent 1px 12px);
+    background-attachment: fixed;
+    color: var(--text-dark);
+    padding: 16px 10px 40px;
+    direction: rtl;
+}
 
-        body {
-            background-color: #f1f5f9;
-            color: var(--text-dark);
-            padding: 15px 10px;
-            direction: rtl;
-        }
+/* ---------- قاب اصلی (ورق فولادی با پیچ‌های گوشه) ---------- */
+.main-wrapper {
+    position: relative;
+    max-width: 980px;
+    margin: 0 auto;
+    background: linear-gradient(180deg, #141a21, #10151b);
+    border: 1px solid #2b3540;
+    border-radius: 3px;
+    box-shadow: 0 30px 60px rgba(0, 0, 0, 0.55), inset 0 1px 0 rgba(255, 255, 255, 0.05);
+    overflow: hidden;
+}
+.main-wrapper::before {
+    content: '';
+    position: absolute;
+    inset: 7px;
+    pointer-events: none;
+    z-index: 5;
+    background:
+        radial-gradient(circle, #7a8696 0 2.2px, #2a323c 2.6px, transparent 3.2px) left top / 10px 10px no-repeat,
+        radial-gradient(circle, #7a8696 0 2.2px, #2a323c 2.6px, transparent 3.2px) right top / 10px 10px no-repeat,
+        radial-gradient(circle, #7a8696 0 2.2px, #2a323c 2.6px, transparent 3.2px) left bottom / 10px 10px no-repeat,
+        radial-gradient(circle, #7a8696 0 2.2px, #2a323c 2.6px, transparent 3.2px) right bottom / 10px 10px no-repeat;
+}
 
-        .main-wrapper {
-            max-width: 950px;
-            margin: 0 auto;
-            background: var(--card-bg);
-            border-radius: 16px;
-            box-shadow: 0 10px 25px rgba(15, 23, 42, 0.08);
-            border: 1px solid var(--border-color);
-            overflow: hidden;
-        }
+/* ---------- هدر ---------- */
+.brand-header {
+    position: relative;
+    background: linear-gradient(135deg, #0c1015 0%, #161d25 55%, #1e2732 100%);
+    color: #fff;
+    padding: 20px 26px 28px;
+    border-bottom: 1px solid #2b3540;
+}
+.brand-header::before {
+    content: '';
+    position: absolute;
+    inset: 0;
+    background: repeating-linear-gradient(115deg, rgba(255, 255, 255, 0.03) 0 2px, transparent 2px 9px);
+    pointer-events: none;
+}
+.brand-header::after {
+    content: '';
+    position: absolute;
+    left: 0; right: 0; bottom: 0;
+    height: 9px;
+    background: repeating-linear-gradient(-45deg, #ff7a00 0 12px, #12161b 12px 24px);
+}
+.header-top-row {
+    position: relative;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    flex-wrap: wrap;
+    gap: 14px;
+}
+.brand-title { display: flex; align-items: center; gap: 14px; }
+.brand-text h1 {
+    font-size: 1.55rem;
+    font-weight: 900;
+    letter-spacing: 0.4px;
+    color: #fff;
+    text-shadow: 0 2px 0 rgba(0, 0, 0, 0.55);
+    margin-bottom: 2px;
+}
+.brand-text p { font-size: 0.76rem; color: #ffb36b; font-weight: 600; }
 
-        .brand-header {
-            background: linear-gradient(135deg, var(--navy-dark) 0%, var(--navy-main) 100%);
-            color: white;
-            padding: 18px 22px;
-            border-bottom: 4px solid var(--orange-main);
-        }
+.header-controls { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; }
 
-        .header-top-row {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            flex-wrap: wrap;
-            gap: 12px;
-        }
+.btn-header {
+    background: linear-gradient(180deg, #2a3441, #1d2530);
+    color: #e8edf2;
+    border: 1px solid #3d4a5a;
+    padding: 8px 14px;
+    border-radius: 2px;
+    font-size: 0.8rem;
+    font-weight: 700;
+    cursor: pointer;
+    transition: all 0.18s;
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.09), 0 2px 0 #07090c;
+    clip-path: polygon(7px 0, 100% 0, 100% calc(100% - 7px), calc(100% - 7px) 100%, 0 100%, 0 7px);
+}
+.btn-header:hover {
+    background: linear-gradient(180deg, #ff8a1f, #e96a00);
+    color: #111;
+    border-color: #ff9a2e;
+}
 
-        .brand-title {
-            display: flex;
-            align-items: center;
-            gap: 12px;
-        }
+.badge-status {
+    background: rgba(255, 122, 0, 0.14);
+    color: #ffb36b;
+    border: 1px solid rgba(255, 122, 0, 0.55);
+    padding: 7px 13px;
+    font-size: 0.76rem;
+    font-weight: 800;
+    letter-spacing: 0.3px;
+    clip-path: polygon(7px 0, 100% 0, 100% calc(100% - 7px), calc(100% - 7px) 100%, 0 100%, 0 7px);
+}
 
-        .brand-logo-shape {
-            width: 42px;
-            height: 42px;
-            background: var(--orange-main);
-            border-radius: 10px;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            font-weight: 900;
-            font-size: 20px;
-            color: white;
-            box-shadow: 0 4px 10px rgba(249, 115, 22, 0.35);
-        }
+.sync-bar {
+    position: relative;
+    margin-top: 16px;
+    padding: 8px 12px;
+    background: rgba(0, 0, 0, 0.38);
+    border: 1px solid #2b3540;
+    border-right: 3px solid var(--orange-main);
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    gap: 8px;
+    flex-wrap: wrap;
+    font-size: 0.72rem;
+    color: #9fb0c3;
+}
+#lastSyncTime { color: #cbd5e1; font-weight: 600; }
 
-        .brand-text h1 {
-            font-size: 1.25rem;
-            font-weight: 800;
-            margin-bottom: 2px;
-        }
+/* ---------- بدنه ---------- */
+.content-body { padding: 24px 24px 26px; position: relative; }
 
-        .brand-text p {
-            font-size: 0.75rem;
-            color: #94a3b8;
-        }
+.section-title {
+    font-size: 1rem;
+    font-weight: 900;
+    color: #fff;
+    margin-bottom: 14px;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    letter-spacing: 0.2px;
+}
+.section-title::before {
+    content: '';
+    width: 10px;
+    height: 22px;
+    background: var(--orange-main);
+    transform: skewX(-14deg);
+    box-shadow: 6px 0 0 rgba(255, 122, 0, 0.35);
+    flex-shrink: 0;
+}
+.section-title::after {
+    content: '';
+    flex: 1;
+    height: 1px;
+    background: linear-gradient(270deg, #3a4654, transparent);
+}
 
-        .header-controls {
-            display: flex;
-            align-items: center;
-            gap: 8px;
-            flex-wrap: wrap;
-        }
+.form-card {
+    position: relative;
+    background: linear-gradient(180deg, #171e26, #131920);
+    border: 1px solid #2d3743;
+    border-radius: 2px;
+    padding: 20px 18px 18px;
+    margin-bottom: 24px;
+    box-shadow: inset 0 0 0 1px rgba(255, 255, 255, 0.02), 0 10px 24px rgba(0, 0, 0, 0.38);
+}
+.form-card::before, .form-card::after {
+    content: '';
+    position: absolute;
+    width: 22px; height: 22px;
+    pointer-events: none;
+}
+.form-card::before { top: -1px; left: -1px; border-top: 3px solid var(--orange-main); border-left: 3px solid var(--orange-main); }
+.form-card::after { bottom: -1px; right: -1px; border-bottom: 3px solid var(--orange-main); border-right: 3px solid var(--orange-main); }
 
-        .btn-header {
-            background: rgba(255, 255, 255, 0.12);
-            color: white;
-            border: 1px solid rgba(255, 255, 255, 0.25);
-            padding: 6px 12px;
-            border-radius: 8px;
-            font-size: 0.8rem;
-            font-weight: 600;
-            cursor: pointer;
-            transition: all 0.2s;
-            display: flex;
-            align-items: center;
-            gap: 5px;
-        }
+.grid-inputs {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(130px, 1fr));
+    gap: 12px;
+    margin-bottom: 14px;
+}
+.form-group { display: flex; flex-direction: column; gap: 5px; }
+.form-group label {
+    font-size: 0.74rem;
+    font-weight: 700;
+    color: #9fb0c3;
+    letter-spacing: 0.2px;
+}
 
-        .btn-header:hover {
-            background: rgba(255, 255, 255, 0.25);
-        }
+input[type="number"], input[type="text"], input[type="time"], textarea, select {
+    width: 100%;
+    padding: 9px 11px;
+    border: 1px solid #3a4654;
+    border-bottom: 2px solid #4a5868;
+    border-radius: 2px;
+    font-size: 0.88rem;
+    background: #0c1015;
+    color: #f1f5f9;
+    outline: none;
+    transition: all 0.18s;
+    box-shadow: inset 0 2px 6px rgba(0, 0, 0, 0.45);
+}
+select {
+    appearance: none;
+    -webkit-appearance: none;
+    padding-left: 30px;
+    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='8'%3E%3Cpath d='M1 1l5 5 5-5' fill='none' stroke='%23ff7a00' stroke-width='2'/%3E%3C/svg%3E");
+    background-repeat: no-repeat;
+    background-position: left 11px center;
+}
+select option { background: #12171d; color: #f1f5f9; }
+input:focus, select:focus, textarea:focus {
+    border-color: var(--orange-main);
+    border-bottom-color: var(--orange-main);
+    box-shadow: 0 0 0 3px rgba(255, 122, 0, 0.2), inset 0 2px 6px rgba(0, 0, 0, 0.45);
+}
 
-        .badge-status {
-            background: rgba(249, 115, 22, 0.2);
-            color: #fdba74;
-            border: 1px solid rgba(249, 115, 22, 0.4);
-            padding: 5px 10px;
-            border-radius: 6px;
-            font-size: 0.75rem;
-            font-weight: 600;
-        }
+.checkbox-container {
+    display: flex;
+    align-items: center;
+    gap: 9px;
+    margin: 12px 0 14px 0;
+    cursor: pointer;
+    user-select: none;
+    font-size: 0.82rem;
+    font-weight: 700;
+    color: #cbd5e1;
+    padding: 9px 12px;
+    background: rgba(255, 255, 255, 0.03);
+    border: 1px solid #2d3743;
+    border-right: 3px solid #4a5868;
+}
+.checkbox-container:hover { border-right-color: var(--orange-main); }
+.checkbox-container input { width: 17px; height: 17px; accent-color: var(--orange-main); cursor: pointer; box-shadow: none; }
 
-        .sync-bar {
-            margin-top: 10px;
-            padding-top: 8px;
-            border-top: 1px solid rgba(255, 255, 255, 0.1);
-            display: flex;
-            justify-content: space-between;
-            font-size: 0.7rem;
-            color: #94a3b8;
-        }
+/* نمایشگر قیمت */
+.preview-bar {
+    background: #07090c;
+    border: 1px solid #2d3743;
+    border-right: 3px solid var(--orange-main);
+    padding: 12px 16px;
+    margin-bottom: 14px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    gap: 10px;
+    flex-wrap: wrap;
+    font-size: 0.85rem;
+    color: #9fb0c3;
+    box-shadow: inset 0 0 18px rgba(0, 0, 0, 0.8);
+}
+.preview-bar strong {
+    color: var(--amber);
+    font-size: 1.18rem;
+    font-weight: 900;
+    text-shadow: 0 0 12px rgba(255, 176, 0, 0.45);
+    letter-spacing: 0.4px;
+}
 
-        .content-body {
-            padding: 20px;
-        }
-  .section-title {
-            font-size: 0.95rem;
-            font-weight: 700;
-            color: var(--navy-dark);
-            margin-bottom: 12px;
-            display: flex;
-            align-items: center;
-            gap: 8px;
-            border-right: 4px solid var(--orange-main);
-            padding-right: 10px;
-        }
+.btn-add {
+    position: relative;
+    background: linear-gradient(180deg, #ff8f26, #ee6a00);
+    color: #14100a;
+    border: none;
+    padding: 13px 22px;
+    font-weight: 900;
+    font-size: 0.98rem;
+    cursor: pointer;
+    width: 100%;
+    transition: all 0.18s;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 10px;
+    letter-spacing: 0.3px;
+    box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.35), 0 3px 0 #9a4300, 0 8px 18px rgba(255, 122, 0, 0.25);
+    clip-path: polygon(12px 0, 100% 0, 100% calc(100% - 12px), calc(100% - 12px) 100%, 0 100%, 0 12px);
+}
+.btn-add:hover { background: linear-gradient(180deg, #ffa13d, #f77607); }
+.btn-add:active { transform: translateY(2px); box-shadow: inset 0 1px 0 rgba(255,255,255,.3), 0 1px 0 #9a4300; }
 
-        .form-card {
-            background: var(--bg-light);
-            border: 1px solid var(--border-color);
-            border-radius: 12px;
-            padding: 16px;
-            margin-bottom: 20px;
-        }
+/* ---------- برگه پیش‌فاکتور (برای چاپ و PDF روشن می‌ماند) ---------- */
+#invoice-print-area {
+    background: #ffffff;
+    color: #0f172a;
+    padding: 14px 14px 6px;
+    margin-bottom: 18px;
+    border-radius: 2px;
+    box-shadow: 0 14px 34px rgba(0, 0, 0, 0.55);
+}
+#invoice-print-area .section-title { color: #0f172a; }
+#invoice-print-area .section-title::after { background: linear-gradient(270deg, #cfc9bd, transparent); }
 
-        .grid-inputs {
-            display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(130px, 1fr));
-            gap: 10px;
-            margin-bottom: 12px;
-        }
+.table-container {
+    overflow-x: auto;
+    border: 1px solid #d6d1c6;
+    margin-bottom: 14px;
+    background: #fff;
+}
+table { width: 100%; border-collapse: collapse; text-align: center; font-size: 0.8rem; color: #0f172a; }
+th {
+    background: #161c23;
+    color: #ffffff;
+    padding: 11px 6px;
+    font-weight: 700;
+    border-bottom: 3px solid var(--orange-main);
+    white-space: nowrap;
+}
+td { padding: 10px 6px; border-bottom: 1px solid #e6e2d8; color: #0f172a; vertical-align: middle; }
+tr:nth-child(even) td { background-color: #f7f5ef; }
 
-        .form-group {
-            display: flex;
-            flex-direction: column;
-            gap: 4px;
-        }
+.badge-discount {
+    background: #dcfce7;
+    color: #15803d;
+    font-size: 0.65rem;
+    padding: 2px 5px;
+    border-radius: 3px;
+    display: inline-block;
+    margin-top: 3px;
+    font-weight: bold;
+}
+.btn-del-item {
+    background: #fef2f2;
+    color: var(--danger);
+    border: 1px solid #fecaca;
+    border-radius: 3px;
+    width: 28px; height: 28px;
+    cursor: pointer;
+    font-weight: bold;
+    transition: all 0.18s;
+}
+.btn-del-item:hover { background: var(--danger); color: white; }
 
-        .form-group label {
-            font-size: 0.75rem;
-            font-weight: 600;
-            color: var(--navy-light);
-        }
+.summary-box {
+    background: #fff7ed;
+    border: 2px dashed var(--orange-main);
+    padding: 14px 20px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 12px;
+    flex-wrap: wrap;
+    gap: 10px;
+}
+.summary-item { display: flex; flex-direction: column; gap: 2px; }
+.summary-label { font-size: 0.75rem; color: #64748b; font-weight: 700; }
+.summary-val { font-size: 1.1rem; font-weight: 900; color: #0f172a; }
+.total-price-val { font-size: 1.4rem; color: #c2410c; }
 
-        input[type="number"], select {
-            width: 100%;
-            padding: 8px 10px;
-            border: 1px solid #cbd5e1;
-            border-radius: 7px;
-            font-size: 0.85rem;
-            background: white;
-            color: var(--text-dark);
-            outline: none;
-            transition: all 0.2s;
-        }
+.actions-row {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(170px, 1fr));
+    gap: 10px;
+    margin-bottom: 10px;
+}
+.btn-act {
+    background: linear-gradient(180deg, #232d38, #19212a);
+    border: 1px solid #36424f;
+    border-right: 4px solid var(--orange-main);
+    color: #e8edf2;
+    padding: 12px 14px;
+    font-size: 0.86rem;
+    font-weight: 800;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+    transition: all 0.18s;
+    border-radius: 2px;
+    box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.06), 0 2px 0 #07090c;
+}
+.btn-act:hover { background: linear-gradient(180deg, #2c3846, #212b36); border-color: #ff9a2e; }
+.btn-act.danger-btn { color: #ff7b7b; border-right-color: var(--danger); }
+.btn-act.danger-btn:hover { background: #2a1517; border-color: var(--danger); }
 
-        input[type="number"]:focus, select:focus {
-            border-color: var(--orange-main);
-            box-shadow: 0 0 0 3px rgba(249, 115, 22, 0.15);
-        }
+/* ---------- مدال مدیریت ---------- */
+.modal-overlay {
+    position: fixed;
+    top: 0; left: 0;
+    width: 100%; height: 100%;
+    background: rgba(4, 6, 9, 0.8);
+    backdrop-filter: blur(4px);
+    display: none;
+    align-items: center;
+    justify-content: center;
+    z-index: 1000;
+    padding: 15px;
+}
+.modal-card {
+    background: linear-gradient(180deg, #151b22, #10151b);
+    border: 1px solid #3a4654;
+    border-top: 5px solid var(--orange-main);
+    border-radius: 2px;
+    width: 100%;
+    max-width: 680px;
+    max-height: 90vh;
+    overflow-y: auto;
+    padding: 22px;
+    color: #e8edf2;
+    box-shadow: 0 30px 60px rgba(0, 0, 0, 0.7);
+}
+.modal-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    border-bottom: 1px solid #2d3743;
+    padding-bottom: 12px;
+    margin-bottom: 16px;
+}
+.modal-header h3 { font-size: 1.08rem; color: #fff; font-weight: 900; }
+.modal-header button { color: #e8edf2; transition: color 0.18s; }
+.modal-header button:hover { color: var(--orange-main); }
+.admin-section-title {
+    font-size: 0.86rem;
+    font-weight: 800;
+    color: var(--orange-main);
+    margin: 18px 0 8px 0;
+    border-bottom: 1px dashed #3a4654;
+    padding-bottom: 5px;
+}
+.admin-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(130px, 1fr));
+    gap: 10px;
+    margin-bottom: 8px;
+}
+/* فیلدهای پنل مدیریت (برای فیلدهایی که استایل inline دارند هم) */
+#adminModal input, #adminModal select, #adminModal textarea {
+    background-color: #0c1015 !important;
+    color: #f1f5f9 !important;
+    border-color: #3a4654 !important;
+}
+#adminModal label { color: #cbd5e1; }
+#adminModal select option { background: #12171d; color: #f1f5f9; }
+#adminModal input[type="checkbox"] { accent-color: var(--orange-main); width: auto; box-shadow: none; }
 
-        .checkbox-container {
-            display: flex;
-            align-items: center;
-            gap: 8px;
-            margin: 10px 0 14px 0;
-            cursor: pointer;
-            user-select: none;
-            font-size: 0.8rem;
-            font-weight: 600;
-            color: var(--navy-main);
-        }
+.adm-fit-row, .adm-fit-add { display: grid; grid-template-columns: 1fr 120px 34px; gap: 6px; margin-bottom: 6px; align-items: center; }
+.adm-fit-add { grid-template-columns: 1fr 120px auto; margin-top: 8px; }
+input.adm-fit-name { width: 100%; }
+.adm-fit-row input[type="number"], .adm-fit-add input[type="number"] { direction: ltr; text-align: right; }
+.adm-fit-row .btn-del-item { background: #2a1517; border-color: #5b2327; color: #ff7b7b; }
+.adm-fit-row .btn-del-item:hover { background: var(--danger); color: #fff; }
 
-        .checkbox-container input {
-            width: 16px;
-            height: 16px;
-            accent-color: var(--orange-main);
-            cursor: pointer;
-        }
+.toast {
+    position: fixed;
+    bottom: 22px;
+    left: 50%;
+    transform: translateX(-50%);
+    background: #0b0e12;
+    color: #fff;
+    padding: 11px 22px;
+    border: 1px solid #3a4654;
+    border-right: 4px solid var(--orange-main);
+    font-size: 0.86rem;
+    box-shadow: 0 8px 22px rgba(0, 0, 0, 0.6);
+    display: none;
+    z-index: 2000;
+}
 
-        .btn-add {
-            background: var(--orange-main);
-            color: white;
-            border: none;
-            border-radius: 8px;
-            padding: 11px 20px;
-            font-weight: 700;
-            font-size: 0.9rem;
-            cursor: pointer;
-            width: 100%;
-            transition: all 0.2s;
-            box-shadow: 0 4px 10px rgba(249, 115, 22, 0.25);
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            gap: 8px;
-        }
-
-        .btn-add:hover {
-            background: var(--orange-hover);
-        }
-
-        .table-container {
-            overflow-x: auto;
-            border: 1px solid var(--border-color);
-            border-radius: 10px;
-            margin-bottom: 15px;
-            background: white;
-        }
-
-        table {
-            width: 100%;
-            border-collapse: collapse;
-            text-align: center;
-            font-size: 0.8rem;
-        }
-
-        th {
-            background: var(--navy-dark);
-            color: white;
-            padding: 10px 6px;
-            font-weight: 600;
-            border-bottom: 2px solid var(--orange-main);
-            white-space: nowrap;
-        }
-
-        td {
-            padding: 9px 6px;
-            border-bottom: 1px solid var(--border-color);
-            color: var(--text-dark);
-            vertical-align: middle;
-        }
-
-        tr:nth-child(even) td {
-            background-color: #f8fafc;
-        }
-
-        .badge-discount {
-            background: #dcfce7;
-            color: #15803d;
-            font-size: 0.65rem;
-            padding: 2px 5px;
-            border-radius: 4px;
-            display: inline-block;
-            margin-top: 3px;
-            font-weight: bold;
-        }
-
-        .btn-del-item {
-            background: #fef2f2;
-            color: var(--danger);
-            border: 1px solid #fecaca;
-            border-radius: 5px;
-            width: 26px;
-            height: 26px;
-            cursor: pointer;
-            font-weight: bold;
-            transition: all 0.2s;
-        }
-
-        .btn-del-item:hover {
-            background: var(--danger);
-            color: white;
-        }
-
-        .summary-box {
-            background: linear-gradient(135deg, #fff7ed 0%, #ffedd5 100%);
-            border: 1px dashed var(--orange-main);
-            border-radius: 10px;
-            padding: 15px 20px;
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            margin-bottom: 15px;
-            flex-wrap: wrap;
-            gap: 10px;
-        }
-
-        .summary-item {
-            display: flex;
-            flex-direction: column;
-            gap: 2px;
-        }
-
-        .summary-label {
-            font-size: 0.75rem;
-            color: var(--text-muted);
-            font-weight: 600;
-        }
-
-        .summary-val {
-            font-size: 1.1rem;
-            font-weight: 800;
-            color: var(--navy-dark);
-        }
-
-        .total-price-val {
-            font-size: 1.35rem;
-            color: #c2410c;
-        }
-
-        .actions-row {
-            display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(160px, 1fr));
-            gap: 10px;
-            margin-bottom: 10px;
-        }
-
-        .btn-act {
-            background: white;
-            border: 1px solid var(--border-color);
-            color: var(--navy-main);
-            border-radius: 8px;
-            padding: 10px 14px;
-            font-size: 0.85rem;
-            font-weight: 700;
-            cursor: pointer;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            gap: 8px;
-            transition: all 0.2s;
-        }
-
-        .btn-act:hover {
-            background: #f1f5f9;
-            border-color: #cbd5e1;
-        }
-
-        .btn-act.danger-btn {
-            color: var(--danger);
-            border-color: #fecaca;
-        }
-        .btn-act.danger-btn:hover {
-            background: #fef2f2;
-        }
-
-        /* مدال پنل مدیریت */
-        .modal-overlay {
-            position: fixed;
-            top: 0;
-            left: 0;
-            width: 100%;
-            height: 100%;
-            background: rgba(15, 23, 42, 0.65);
-            backdrop-filter: blur(4px);
-            display: none;
-            align-items: center;
-            justify-content: center;
-            z-index: 1000;
-            padding: 15px;
-        }
-
-        .modal-card {
-            background: white;
-            border-radius: 14px;
-            width: 100%;
-            max-width: 650px;
-            max-height: 90vh;
-            overflow-y: auto;
-            padding: 20px;
-            box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.2);
-        }
-
-        .modal-header {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            border-bottom: 2px solid #f1f5f9;
-            padding-bottom: 10px;
-            margin-bottom: 15px;
-        }
-
-        .modal-header h3 {
-            font-size: 1.1rem;
-            color: var(--navy-dark);
-        }
-
-        .admin-section-title {
-            font-size: 0.85rem;
-            font-weight: 700;
-            color: var(--orange-main);
-            margin: 14px 0 6px 0;
-            border-bottom: 1px dashed var(--border-color);
-            padding-bottom: 4px;
-        }
-
-        .admin-grid {
-            display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(130px, 1fr));
-            gap: 8px;
-            margin-bottom: 8px;
-        }
-
-        .toast {
-            position: fixed;
-            bottom: 20px;
-            left: 50%;
-            transform: translateX(-50%);
-            background: var(--navy-dark);
-            color: white;
-            padding: 10px 20px;
-            border-radius: 8px;
-            font-size: 0.85rem;
-            box-shadow: 0 5px 15px rgba(0,0,0,0.3);
-            display: none;
-            z-index: 2000;
-        }
 #syncLoadingOverlay {
     position: fixed;
     top: 0; left: 0; right: 0; bottom: 0;
-    background: rgba(15, 23, 42, 0.88);
+    background: rgba(6, 9, 12, 0.9);
     backdrop-filter: blur(6px);
     z-index: 99999;
     display: none;
@@ -468,15 +512,21 @@
     transition: opacity 0.3s ease;
 }
 #syncLoadingOverlay .spinner {
-    width: 48px;
-    height: 48px;
-    border: 4px solid rgba(255, 255, 255, 0.2);
-    border-top-color: #3b82f6;
+    width: 48px; height: 48px;
+    border: 4px solid rgba(255, 255, 255, 0.15);
+    border-top-color: var(--orange-main);
     border-radius: 50%;
     animation: spin 0.8s linear infinite;
     margin-bottom: 16px;
 }
 @keyframes spin { to { transform: rotate(360deg); } }
+
+@media (max-width: 560px) {
+    .content-body { padding: 16px 12px 18px; }
+    .brand-header { padding: 16px 14px 26px; }
+    .brand-text h1 { font-size: 1.3rem; }
+    .adm-fit-row, .adm-fit-add { grid-template-columns: 1fr 96px 34px; }
+}
 
     </style>
 </head>
@@ -589,9 +639,9 @@
             </label>
 
             <!-- باکس پیش‌نمایش زنده قیمت -->
-            <div style="background:#e2e8f0; border-radius:8px; padding:10px 14px; margin-bottom:12px; display:flex; justify-content:space-between; align-items:center; font-size:0.85rem;">
-                <span>قیمت واحد: <strong id="previewUnitPrice" style="color:var(--orange-hover);">۰</strong> تومان</span>
-                <span>جمع این قلم: <strong id="previewTotalPrice" style="color:var(--orange-hover);">۰</strong> تومان</span>
+            <div class="preview-bar">
+                <span>قیمت واحد: <strong id="previewUnitPrice">۰</strong> تومان</span>
+                <span>جمع این قلم: <strong id="previewTotalPrice">۰</strong> تومان</span>
             </div>
 
             <!-- پیام ترغیبی ضدزنگ -->
@@ -668,20 +718,14 @@
             <div class="form-group"><label>هزینه ضدزنگ (هر کیلوگرم)</label><input type="number" id="adm_ar_kg"></div>
         </div>
 
-        <div class="admin-section-title">قیمت اتصالات و متعلقات (تومان)</div>
-        <div class="admin-grid">
-            <div class="form-group"><label>گیره</label><input type="number" id="adm_fit_girandeh"></div>
-            <div class="form-group"><label>قلاب</label><input type="number" id="adm_fit_ghollab"></div>
-            <div class="form-group"><label>میلگرد بستر ۵.۵ سانت</label><input type="number" id="adm_fit_bastar_5_5"></div>
-            <div class="form-group"><label>میلگرد بستر ۱۱ سانت</label><input type="number" id="adm_fit_bastar_11"></div>
-            <div class="form-group"><label>میلگرد بستر ۱۵ سانت</label><input type="number" id="adm_fit_bastar_15"></div>
-            <div class="form-group"><label>پیچ بولتکس 6 سانت </label><input type="number" id="adm_fit_pich_boltex"></div>
-            <div class="form-group"><label>پیچ و رول‌پلاک</label><input type="number" id="adm_fit_pich_rool"></div>
-            <div class="form-group"><label>رول‌بولت ۱۲(۱۰ سانت)</label><input type="number" id="adm_fit_rollbolt_12"></div>
-            <div class="form-group"><label>بست تخت (ثابت)</label><input type="number" id="adm_fit_bast_sabt"></div>
-            <div class="form-group"><label>بست رادیکالی</label><input type="number" id="adm_fit_bast_radikali"></div>
-            <div class="form-group"><label>صفحه پلیت ۲۵*۱۵(ورق 5میل)</label><input type="number" id="adm_fit_plate_25_15"></div>
+        <div class="admin-section-title">قیمت اتصالات و متعلقات (تومان) - افزودن، حذف و ویرایش اجناس</div>
+        <div id="admFitList"></div>
+        <div class="adm-fit-add">
+            <input type="text" id="adm_fit_new_name" class="adm-fit-name" placeholder="نام جنس جدید">
+            <input type="number" id="adm_fit_new_price" placeholder="قیمت (تومان)">
+            <button type="button" class="btn-act" style="padding:7px 10px;" onclick="admFitAdd()">➕ افزودن</button>
         </div>
+        <div style="font-size:.72rem;color:#64748b;margin:4px 0 8px;">تغییرات این بخش بعد از زدن «ذخیره و همگام‌سازی ابری» اعمال می‌شود.</div>
 
         <div class="admin-section-title">درصد تخفیف‌های پلکانی تعدادی (درصد) - فقط والپست و وادار</div>
         <div class="admin-grid">
@@ -730,8 +774,107 @@
             d500: 8,
             d1000: 10
         },
-        lastUpdated: null
+        lastUpdated: null,
+        fittingNames: {},
+        fittingHidden: []
     };
+
+
+    // ---------- فهرست اتصالات (قابل افزودن و حذف از پنل مدیریت) ----------
+    const BUILTIN_FITTINGS = {
+        girandeh: 'گیره',
+        ghollab: 'قلاب',
+        bastar_5_5: 'میلگرد بستر عرض ۵.۵ سانت',
+        bastar_11: 'میلگرد بستر عرض ۱۱ سانت',
+        bastar_15: 'میلگرد بستر عرض ۱۵ سانت',
+        pich_boltex: 'پیچ بولتکس',
+        pich_rool: 'پیچ و رول‌پلاک',
+        rollbolt_12: 'رول‌بولت ۱۲ طول ۱۰ خارجی',
+        bast_sabt: 'بست تخت (ثابت)',
+        bast_radikali: 'بست رادیکالی',
+        plate_25_15: 'صفحه پلیت ۲۵*۱۵ سانت'
+    };
+    function fittingName(k) {
+        return (appSettings.fittingNames && appSettings.fittingNames[k]) || BUILTIN_FITTINGS[k] || k;
+    }
+    function getFittingKeys() {
+        const hidden = appSettings.fittingHidden || [];
+        const keys = Object.keys(BUILTIN_FITTINGS);
+        Object.keys(appSettings.fittingNames || {}).forEach(k => { if (!keys.includes(k)) keys.push(k); });
+        return keys.filter(k => !hidden.includes(k));
+    }
+    function renderFittingSelect() {
+        const sel = document.getElementById('fittingType');
+        if (!sel) return;
+        const keys = getFittingKeys();
+        const sig = keys.map(k => k + '=' + fittingName(k)).join('|');
+        if (sel.dataset.sig === sig) return;
+        const cur = sel.value;
+        sel.innerHTML = '';
+        keys.forEach(k => {
+            const o = document.createElement('option');
+            o.value = k; o.textContent = fittingName(k);
+            sel.appendChild(o);
+        });
+        if (keys.includes(cur)) sel.value = cur;
+        sel.dataset.sig = sig;
+    }
+
+    // ---------- ویرایشگر اتصالات داخل پنل مدیریت ----------
+    let admFit = [];
+    function admFitLoad() {
+        admFit = getFittingKeys().map(k => ({ key: k, name: fittingName(k), price: appSettings.fittings[k] || 0 }));
+        admFitRender();
+    }
+    function admFitRender() {
+        const host = document.getElementById('admFitList');
+        if (!host) return;
+        host.innerHTML = '';
+        admFit.forEach((it, i) => {
+            const row = document.createElement('div');
+            row.className = 'adm-fit-row';
+            const nm = document.createElement('input');
+            nm.type = 'text'; nm.value = it.name; nm.className = 'adm-fit-name';
+            nm.oninput = () => { it.name = nm.value; };
+            const pr = document.createElement('input');
+            pr.type = 'number'; pr.value = it.price;
+            pr.oninput = () => { it.price = parseSafeNumber(pr.value); };
+            const del = document.createElement('button');
+            del.type = 'button'; del.className = 'btn-del-item'; del.textContent = '✕'; del.title = 'حذف از لیست';
+            del.onclick = () => admFitRemove(i);
+            row.append(nm, pr, del);
+            host.appendChild(row);
+        });
+    }
+    function admFitAdd() {
+        const nEl = document.getElementById('adm_fit_new_name');
+        const pEl = document.getElementById('adm_fit_new_price');
+        const name = nEl.value.trim();
+        const price = parseSafeNumber(pEl.value);
+        if (!name) { alert('نام جنس را وارد کنید.'); return; }
+        if (!(price > 0)) { alert('قیمت جنس را وارد کنید.'); return; }
+        admFit.push({ key: 'c_' + Date.now().toString(36), name, price });
+        nEl.value = ''; pEl.value = '';
+        admFitRender();
+    }
+    function admFitRemove(i) {
+        if (!confirm('«' + admFit[i].name + '» از لیست اتصالات حذف شود؟ (بعد از «ذخیره» اعمال می‌شود)')) return;
+        admFit.splice(i, 1);
+        admFitRender();
+    }
+    function admFitCommit() {
+        const items = admFit.filter(it => it.name.trim() !== '');
+        const prices = { ...appSettings.fittings };
+        const names = {};
+        items.forEach(it => {
+            prices[it.key] = it.price;
+            if (!(it.key in BUILTIN_FITTINGS) || it.name.trim() !== BUILTIN_FITTINGS[it.key]) names[it.key] = it.name.trim();
+        });
+        const keep = items.map(it => it.key);
+        appSettings.fittings = prices;
+        appSettings.fittingNames = names;
+        appSettings.fittingHidden = Object.keys(BUILTIN_FITTINGS).filter(k => !keep.includes(k));
+    }
 
     function formatJalaliDateTime(dateObj) {
         if (!dateObj) dateObj = new Date();
@@ -764,6 +907,8 @@ function loadSettingsLocally() {
                 if (parsed.ar_kg !== undefined) appSettings.ar_kg = parsed.ar_kg;
                 if (parsed.fittings) appSettings.fittings = { ...appSettings.fittings, ...parsed.fittings };
                 if (parsed.discounts) appSettings.discounts = { ...appSettings.discounts, ...parsed.discounts };
+                if (parsed.fittingNames) appSettings.fittingNames = parsed.fittingNames;
+                if (Array.isArray(parsed.fittingHidden)) appSettings.fittingHidden = parsed.fittingHidden;
                 if (parsed.lastUpdated) appSettings.lastUpdated = parsed.lastUpdated;
                 return true;
             }
@@ -827,6 +972,8 @@ async function loadCloudSettings(isManual = false) {
                 // دریافت کامل اتصالات و تخفیف‌ها
                 if (record.fittings) appSettings.fittings = { ...appSettings.fittings, ...record.fittings };
                 if (record.discounts) appSettings.discounts = { ...appSettings.discounts, ...record.discounts };
+                appSettings.fittingNames = record.fittingNames || {};
+                appSettings.fittingHidden = Array.isArray(record.fittingHidden) ? record.fittingHidden : [];
 
                 if (record.lastUpdated) {
                     appSettings.lastUpdated = record.lastUpdated;
@@ -955,6 +1102,7 @@ function addItemToOrder() {
     if (cat === 'fittings') {
         const fitSelect = document.getElementById('fittingType');
         const fitKey = fitSelect.value;
+        if (fitSelect.selectedIndex < 0) { alert('جنس انتخاب‌شده در لیست اتصالات وجود ندارد.'); return; }
         name = fitSelect.options[fitSelect.selectedIndex].text;
         specs = 'اتصال استاندارد';
         unitCost = appSettings.fittings[fitKey] || 0;
@@ -1033,6 +1181,7 @@ function addItemToOrder() {
 }
 
 function updateLivePreview() {
+    renderFittingSelect();
     const cat = document.getElementById('prodCategory').value;
     const count = parseFloat(document.getElementById('item_count').value) || 1;
     let unitCost = 0;
@@ -1236,18 +1385,7 @@ function openAdminModal() {
             document.getElementById('adm_labor').value = appSettings.labor;
             document.getElementById('adm_ar_kg').value = appSettings.ar_kg;
 
-            const f = appSettings.fittings;
-            document.getElementById('adm_fit_girandeh').value = f.girandeh;
-            document.getElementById('adm_fit_ghollab').value = f.ghollab;
-            document.getElementById('adm_fit_bastar_5_5').value = f.bastar_5_5;
-            document.getElementById('adm_fit_bastar_11').value = f.bastar_11;
-            document.getElementById('adm_fit_bastar_15').value = f.bastar_15;
-            document.getElementById('adm_fit_pich_boltex').value = f.pich_boltex;
-            document.getElementById('adm_fit_pich_rool').value = f.pich_rool;
-            document.getElementById('adm_fit_rollbolt_12').value = f.rollbolt_12;
-            document.getElementById('adm_fit_bast_sabt').value = f.bast_sabt;
-            document.getElementById('adm_fit_bast_radikali').value = f.bast_radikali;
-            document.getElementById('adm_fit_plate_25_15').value = f.plate_25_15;
+            admFitLoad();
 
             const d = appSettings.discounts;
             document.getElementById('adm_d100').value = d.d100;
@@ -1283,19 +1421,7 @@ function saveAdminSettings() {
     appSettings.labor = parseSafeNumber(document.getElementById('adm_labor').value);
     appSettings.ar_kg = parseSafeNumber(document.getElementById('adm_ar_kg').value);
 
-    appSettings.fittings = {
-        girandeh: parseSafeNumber(document.getElementById('adm_fit_girandeh').value),
-        ghollab: parseSafeNumber(document.getElementById('adm_fit_ghollab').value),
-        bastar_5_5: parseSafeNumber(document.getElementById('adm_fit_bastar_5_5').value),
-        bastar_11: parseSafeNumber(document.getElementById('adm_fit_bastar_11').value),
-        bastar_15: parseSafeNumber(document.getElementById('adm_fit_bastar_15').value),
-        pich_boltex: parseSafeNumber(document.getElementById('adm_fit_pich_boltex').value),
-        pich_rool: parseSafeNumber(document.getElementById('adm_fit_pich_rool').value),
-        rollbolt_12: parseSafeNumber(document.getElementById('adm_fit_rollbolt_12').value),
-        bast_sabt: parseSafeNumber(document.getElementById('adm_fit_bast_sabt').value),
-        bast_radikali: parseSafeNumber(document.getElementById('adm_fit_bast_radikali').value),
-        plate_25_15: parseSafeNumber(document.getElementById('adm_fit_plate_25_15').value)
-    };
+    admFitCommit();
 
     appSettings.discounts = {
         d100: parseSafeNumber(document.getElementById('adm_d100').value),
@@ -1353,7 +1479,6 @@ function saveAdminSettings() {
         headerDiv.innerHTML = `
             <div style="display: flex; justify-content: space-between; align-items: center;">
                 <div>
-                    <h2 style="margin: 0 0 4px 0; font-size: 18px; color: #ea580c; font-weight: bold;"> اطلس سازه</h2>
                     <div style="font-size: 11px; color: #555;">تاریخ و ساعت: ${dateStr}</div>
                 </div>
                 ${customerName && customerName.trim() !== "" ? `
@@ -1372,9 +1497,6 @@ function saveAdminSettings() {
             <div style="display: flex; justify-content: space-between; font-size: 12px; color: #444; margin-bottom: 25px; padding: 0 10px;">
                 <span>مهر و امضای فروشنده: ..............................</span>
                 <span>امضای خریدار: ..............................</span>
-            </div>
-            <div style="text-align: center; font-size: 11px; font-weight: bold; color: #ea580c; border-top: 1px dashed #e5e7eb; padding-top: 6px;">
-                اطلس سازه - تامین‌کننده تخصصی والپست و اتصالات نوین
             </div>
         `;
         element.appendChild(footerDiv);
