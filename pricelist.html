@@ -190,7 +190,9 @@ const DEFAULT_SETTINGS = {
         pich_boltex: 3200, pich_rool: 1800, rollbolt_12: 14500, bast_sabt: 5500,
         bast_radikali: 6500, plate_25_15: 68000
     },
-    lastUpdated: null
+    lastUpdated: null,
+    fittingNames: {},
+    fittingHidden: []
 };
 let S = JSON.parse(JSON.stringify(DEFAULT_SETTINGS));
 let settingsSource = 'defaults';
@@ -226,6 +228,8 @@ function applyRecord(r) {
     if (typeof r.ar_kg === 'number') S.ar_kg = r.ar_kg;
     if (r.fittings) S.fittings = { ...S.fittings, ...r.fittings };
     if (r.lastUpdated) S.lastUpdated = r.lastUpdated;
+    if (r.fittingNames) S.fittingNames = r.fittingNames;
+    if (Array.isArray(r.fittingHidden)) S.fittingHidden = r.fittingHidden;
 }
 function loadLocal() {
     try {
@@ -276,6 +280,8 @@ async function reloadPrices() {
     loadLocal();
     renderStatus();
     await loadCloud();
+    syncWantedFromDom();
+    buildFitList();
     renderStatus();
     scheduleRender();
 }
@@ -314,22 +320,37 @@ const CFG_KEY = 'atlas_pricelist_cfg';
 const TEXT_IDS = ['wp_widths', 'wp_lengths', 'wp_flange', 'wp_thick', 'fit_title', 'vd_widths', 'vd_flange', 'vd_height', 'vd_thick'];
 const CHK_IDS = ['wp_on', 'fit_on', 'vd_on', 'vd_U', 'vd_H', 'chk_ar'];
 
+let wantedFit = new Set(DEFAULT_FIT_KEYS);
+function fitKeys() {
+    const hidden = S.fittingHidden || [];
+    const keys = Object.keys(FIT_LABELS);
+    Object.keys(S.fittingNames || {}).forEach(k => { if (!keys.includes(k)) keys.push(k); });
+    return keys.filter(k => !hidden.includes(k));
+}
+function fitLabel(k) { return (S.fittingNames && S.fittingNames[k]) || FIT_LABELS[k] || k; }
+function syncWantedFromDom() {
+    document.querySelectorAll('.fitchk').forEach(c => { if (c.checked) wantedFit.add(c.value); else wantedFit.delete(c.value); });
+}
 function buildFitList() {
     const host = el('fitList');
     host.innerHTML = '';
-    Object.keys(FIT_LABELS).forEach(k => {
+    fitKeys().forEach(k => {
         const lab = document.createElement('label');
         lab.className = 'chk';
-        lab.innerHTML = `<input type="checkbox" class="fitchk" value="${k}" ${DEFAULT_FIT_KEYS.includes(k) ? 'checked' : ''}> ${FIT_LABELS[k]}`;
+        const cb = document.createElement('input');
+        cb.type = 'checkbox'; cb.className = 'fitchk'; cb.value = k; cb.checked = wantedFit.has(k);
+        cb.addEventListener('input', scheduleRender); cb.addEventListener('change', scheduleRender);
+        lab.appendChild(cb);
+        lab.appendChild(document.createTextNode(' ' + fitLabel(k)));
         host.appendChild(lab);
     });
 }
 function saveCfg() {
     try {
-        const cfg = { text: {}, chk: {}, fit: [], mode: getMode() };
+        syncWantedFromDom();
+        const cfg = { text: {}, chk: {}, fit: [...wantedFit], mode: getMode() };
         TEXT_IDS.forEach(id => cfg.text[id] = el(id).value);
         CHK_IDS.forEach(id => cfg.chk[id] = el(id).checked);
-        document.querySelectorAll('.fitchk').forEach(c => { if (c.checked) cfg.fit.push(c.value); });
         localStorage.setItem(CFG_KEY, JSON.stringify(cfg));
     } catch (e) {}
 }
@@ -340,7 +361,10 @@ function loadCfg() {
         const cfg = JSON.parse(raw);
         if (cfg.text) TEXT_IDS.forEach(id => { if (cfg.text[id] !== undefined) el(id).value = cfg.text[id]; });
         if (cfg.chk) CHK_IDS.forEach(id => { if (cfg.chk[id] !== undefined) el(id).checked = cfg.chk[id]; });
-        if (Array.isArray(cfg.fit)) document.querySelectorAll('.fitchk').forEach(c => { c.checked = cfg.fit.includes(c.value); });
+        if (Array.isArray(cfg.fit)) {
+            wantedFit = new Set(cfg.fit);
+            document.querySelectorAll('.fitchk').forEach(c => { c.checked = wantedFit.has(c.value); });
+        }
         if (cfg.mode) {
             const r = document.querySelector(`input[name="mode"][value="${cfg.mode}"]`);
             if (r) r.checked = true;
@@ -381,7 +405,7 @@ function buildSections(mode) {
 
     if (el('fit_on').checked) {
         const keys = [...document.querySelectorAll('.fitchk')].filter(c => c.checked).map(c => c.value);
-        const rows = keys.map(k => [FIT_LABELS[k], faMoney(priceFitting(k, factor))]);
+        const rows = keys.map(k => [fitLabel(k), faMoney(priceFitting(k, factor))]);
         if (rows.length) secs.push({
             title: el('fit_title').value.trim() || 'اتصالات',
             cols: [{ w: 70, label: 'ردیف' }, { w: 295, label: 'نوع محصول' }, { w: 174, label: 'قیمت (تومان)' }],
@@ -659,9 +683,9 @@ async function copyCaption() {
 
 // ===================== شروع =====================
 window.addEventListener('DOMContentLoaded', async () => {
+    loadLocal();
     buildFitList();
     loadCfg();
-    loadLocal();
     renderStatus();
 
     document.querySelectorAll('input').forEach(i => {
@@ -672,6 +696,8 @@ window.addEventListener('DOMContentLoaded', async () => {
     renderPreview();
 
     await loadCloud();
+    syncWantedFromDom();
+    buildFitList();
     renderStatus();
     renderPreview();
 });
