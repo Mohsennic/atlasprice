@@ -4,7 +4,7 @@
 (function () {
     let pricesVerifiedAt = 0;      // آخرین زمانی که قیمت‌ها با سرور تأیید شد
     const FORM_IDS = ['prodCategory', 'fittingType', 'dim_w', 'dim_f', 'dim_l', 'dim_t', 'sheet_type', 'item_count'];
-    const EXTRA_KEYS = ['orderMode', 'validHours', 'closedMsg', 'sheetConfirmedAt', 'priceVersion', 'schedule'];
+    const EXTRA_KEYS = ['orderMode', 'validHours', 'closedMsg', 'sheetConfirmedAt', 'priceVersion', 'schedule', 'fittingNames', 'fittingHidden'];
     const $ = id => document.getElementById(id);
     const fmt = ts => formatJalaliDateTime(new Date(ts));
     const verKey = s => (s.priceVersion || '') + '|' + (s.lastUpdated || '');
@@ -96,6 +96,8 @@
             ['st37', 'galv', 'labor', 'ar_kg', 'lastUpdated'].forEach(k => { if (r[k] !== undefined) appSettings[k] = r[k]; });
             if (r.fittings) appSettings.fittings = { ...appSettings.fittings, ...r.fittings };
             if (r.discounts) appSettings.discounts = { ...appSettings.discounts, ...r.discounts };
+            appSettings.fittingNames = r.fittingNames || {};
+            appSettings.fittingHidden = Array.isArray(r.fittingHidden) ? r.fittingHidden : [];
             appSettings.orderMode = r.orderMode || 'open';
             appSettings.validHours = r.validHours || 0;
             appSettings.closedMsg = r.closedMsg || '';
