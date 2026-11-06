@@ -5,7 +5,6 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>محاسبه قیمت والپست و اتصالات | اطلس سازه</title>
     <link href="https://cdn.jsdelivr.net/gh/rastikerdar/vazirmatn@v33.003/Vazirmatn-font-face.css" rel="stylesheet">
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
 
     <!-- تنظیمات PWA و وب‌اپلیکیشن اطلس سازه -->
     <link rel="manifest" href="manifest.json">
@@ -1488,7 +1487,234 @@ function saveAdminSettings() {
         });
     }
     
-           // تحویل فایل PDF: دانلود خودکار + دکمه‌های جایگزین (برای مرورگرهای داخل برنامه که دانلود را می‌بندند)
+           // ===================== ساخت PDF مستقیم (بدون کتابخانه خارجی و بدون چاپ) =====================
+    const PDF_NOTE_VALID = 'پیش‌فاکتور تا ساعت اداری همان روز اعتبار دارد.';
+
+    function wrapLines(ctx, text, maxW) {
+        const words = String(text).split(/\s+/);
+        const lines = [];
+        let cur = '';
+        words.forEach(w => {
+            const t = cur ? cur + ' ' + w : w;
+            if (!cur || ctx.measureText(t).width <= maxW) cur = t;
+            else { lines.push(cur); cur = w; }
+        });
+        if (cur) lines.push(cur);
+        return lines;
+    }
+
+    async function buildInvoicePages(customerName) {
+        try {
+            await Promise.all([
+                document.fonts.load('400 13px Vazirmatn'),
+                document.fonts.load('700 13px Vazirmatn'),
+                document.fonts.load('900 18px Vazirmatn')
+            ]);
+        } catch (e) {}
+        const FONT = "Vazirmatn, Tahoma, sans-serif";
+        const PW = 794, PH = 1123, S = 2, M = 30;
+        const dateStr = new Date().toLocaleDateString('fa-IR') + ' - ' + new Date().toLocaleTimeString('fa-IR', { hour: '2-digit', minute: '2-digit' });
+        const cols = [
+            { w: 34, t: '#' }, { w: 150, t: 'شرح کالا' }, { w: 268, t: 'مشخصات / ابعاد' },
+            { w: 62, t: 'تعداد / شاخه' }, { w: 110, t: 'قیمت واحد (تومان)' }, { w: 110, t: 'مبلغ کل (تومان)' }
+        ];
+        const TW = cols.reduce((a, c) => a + c.w, 0);
+        let xr = PW - M;
+        cols.forEach(c => { c.xr = xr; c.xl = xr - c.w; xr -= c.w; });
+
+        const pages = [];
+        let cv, ctx, y;
+
+        const fit = (text, cx, cy, maxW, size, weight) => {
+            let s = size;
+            ctx.font = `${weight} ${s}px ${FONT}`;
+            while (ctx.measureText(text).width > maxW && s > 8) { s -= 0.5; ctx.font = `${weight} ${s}px ${FONT}`; }
+            ctx.fillText(text, cx, cy);
+        };
+        const drawHeader = () => {
+            ctx.textAlign = 'right';
+            ctx.fillStyle = '#555';
+            ctx.font = `400 12px ${FONT}`;
+            ctx.fillText('تاریخ و ساعت: ' + dateStr, PW - M, y + 12);
+            if (customerName) {
+                const txt = 'مشتری گرامی: ' + customerName;
+                ctx.font = `700 13px ${FONT}`;
+                const w = ctx.measureText(txt).width + 22;
+                ctx.fillStyle = '#fff3ed'; ctx.fillRect(M, y, w, 26);
+                ctx.strokeStyle = '#fdba74'; ctx.lineWidth = 1; ctx.strokeRect(M, y, w, 26);
+                ctx.fillStyle = '#222'; ctx.textAlign = 'center';
+                ctx.fillText(txt, M + w / 2, y + 14);
+            }
+            ctx.fillStyle = '#ea580c';
+            ctx.fillRect(M, y + 36, TW, 2);
+            y += 52;
+        };
+        const newPage = () => {
+            cv = document.createElement('canvas');
+            cv.width = PW * S; cv.height = PH * S;
+            ctx = cv.getContext('2d');
+            ctx.scale(S, S);
+            ctx.fillStyle = '#ffffff'; ctx.fillRect(0, 0, PW, PH);
+            ctx.direction = 'rtl';
+            ctx.textBaseline = 'middle';
+            ctx.textAlign = 'center';
+            pages.push(cv);
+            y = M;
+            drawHeader();
+        };
+        const drawTitle = () => {
+            ctx.fillStyle = '#ff7a00';
+            ctx.beginPath();
+            ctx.moveTo(PW - M, y + 2); ctx.lineTo(PW - M - 9, y + 2); ctx.lineTo(PW - M - 13, y + 22); ctx.lineTo(PW - M - 4, y + 22);
+            ctx.closePath(); ctx.fill();
+            ctx.fillStyle = '#0f172a'; ctx.textAlign = 'right';
+            ctx.font = `900 16px ${FONT}`;
+            ctx.fillText('اقلام سفارش پیش‌فاکتور', PW - M - 22, y + 12);
+            y += 34;
+        };
+        const drawTableHead = () => {
+            ctx.fillStyle = '#2b3138'; ctx.fillRect(M, y, TW, 30);
+            ctx.fillStyle = '#ff7a00'; ctx.fillRect(M, y + 28, TW, 3);
+            ctx.fillStyle = '#ffffff'; ctx.textAlign = 'center';
+            cols.forEach(c => fit(c.t, (c.xl + c.xr) / 2, y + 14, c.w - 6, 12, '700'));
+            y += 31;
+        };
+        const info = o => {
+            ctx.font = `700 13px ${FONT}`;
+            const nameLines = wrapLines(ctx, o.name, cols[1].w - 14);
+            ctx.font = `400 12px ${FONT}`;
+            const specLines = wrapLines(ctx, o.specs || '-', cols[2].w - 14);
+            const badges = [];
+            if (o.hasDiscount) badges.push(['تخفیف اعمال شد', '#15803d', '#dcfce7']);
+            if (o.hasAR) badges.push(o.noAR ? ['بدون ضدزنگ', '#075985', '#e0f2fe'] : ['با ضدزنگ', '#92400e', '#fef3c7']);
+            const h = Math.max(nameLines.length * 18 + badges.length * 18, specLines.length * 17, 22) + 18;
+            return { nameLines, specLines, badges, h };
+        };
+        const BOTTOM = PH - M - 24;
+
+        newPage();
+        drawTitle();
+        drawTableHead();
+
+        let totalCount = 0, totalPrice = 0;
+        orders.forEach((o, i) => {
+            totalCount += o.count; totalPrice += o.totalPrice;
+            const r = info(o);
+            if (y + r.h > BOTTOM) { newPage(); drawTableHead(); }
+            if (i % 2 === 1) { ctx.fillStyle = '#f7f5ef'; ctx.fillRect(M, y, TW, r.h); }
+            ctx.strokeStyle = '#e6e2d8'; ctx.lineWidth = 1;
+            ctx.beginPath(); ctx.moveTo(M, y + r.h); ctx.lineTo(M + TW, y + r.h); ctx.stroke();
+            const cy = y + r.h / 2;
+            ctx.textAlign = 'center'; ctx.fillStyle = '#0f172a';
+            fit(String(i + 1), (cols[0].xl + cols[0].xr) / 2, cy, cols[0].w - 4, 12, '400');
+            // نام + برچسب‌ها
+            let ny = y + 9 + 9;
+            ctx.font = `700 13px ${FONT}`;
+            r.nameLines.forEach(l => { ctx.fillStyle = '#0f172a'; ctx.font = `700 13px ${FONT}`; ctx.fillText(l, (cols[1].xl + cols[1].xr) / 2, ny); ny += 18; });
+            r.badges.forEach(b => {
+                ctx.font = `700 10px ${FONT}`;
+                const w = ctx.measureText(b[0]).width + 12;
+                const cx = (cols[1].xl + cols[1].xr) / 2;
+                ctx.fillStyle = b[2]; ctx.fillRect(cx - w / 2, ny - 8, w, 16);
+                ctx.fillStyle = b[1]; ctx.fillText(b[0], cx, ny);
+                ny += 18;
+            });
+            // مشخصات
+            ctx.fillStyle = '#0f172a';
+            ctx.font = `400 12px ${FONT}`;
+            let sy = cy - (r.specLines.length - 1) * 8.5;
+            r.specLines.forEach(l => { ctx.fillText(l, (cols[2].xl + cols[2].xr) / 2, sy); sy += 17; });
+            // اعداد
+            fit(o.count.toLocaleString(), (cols[3].xl + cols[3].xr) / 2, cy, cols[3].w - 6, 12, '700');
+            fit(o.unitPrice.toLocaleString(), (cols[4].xl + cols[4].xr) / 2, cy, cols[4].w - 8, 12, '400');
+            fit(o.totalPrice.toLocaleString(), (cols[5].xl + cols[5].xr) / 2, cy, cols[5].w - 8, 12.5, '700');
+            y += r.h;
+        });
+        // کادر بیرونی جدول (فقط بالای صفحه آخر کافی است، خطوط ردیف‌ها کافی‌اند)
+        y += 16;
+
+        const needAR = orders.some(o => o.hasAR && o.noAR);
+        const need = 74 + (needAR ? 46 : 0) + 46 + 70;
+        if (y + need > BOTTOM) { newPage(); }
+
+        // جمع کل
+        ctx.fillStyle = '#fff7ed'; ctx.fillRect(M, y, TW, 62);
+        ctx.setLineDash([7, 5]); ctx.strokeStyle = '#ff7a00'; ctx.lineWidth = 1.6; ctx.strokeRect(M + 1, y + 1, TW - 2, 60); ctx.setLineDash([]);
+        ctx.fillStyle = '#64748b'; ctx.textAlign = 'right'; ctx.font = `700 11px ${FONT}`;
+        ctx.fillText('تعداد کل اقلام:', PW - M - 16, y + 18);
+        ctx.fillStyle = '#0f172a'; ctx.font = `900 17px ${FONT}`;
+        ctx.fillText(totalCount.toLocaleString(), PW - M - 16, y + 42);
+        ctx.fillStyle = '#64748b'; ctx.textAlign = 'left'; ctx.font = `700 11px ${FONT}`;
+        ctx.fillText('مبلغ قابل پرداخت:', M + 16, y + 18);
+        ctx.fillStyle = '#c2410c'; ctx.font = `900 20px ${FONT}`;
+        ctx.fillText(totalPrice.toLocaleString() + ' تومان', M + 16, y + 42);
+        y += 76;
+
+        const noteBox = (text, bg, border, color, size) => {
+            ctx.font = `700 ${size}px ${FONT}`;
+            const lines = wrapLines(ctx, text, TW - 28);
+            const h = lines.length * (size + 8) + 14;
+            ctx.fillStyle = bg; ctx.fillRect(M, y, TW, h);
+            ctx.strokeStyle = border; ctx.lineWidth = 1; ctx.strokeRect(M + 0.5, y + 0.5, TW - 1, h - 1);
+            ctx.fillStyle = color; ctx.textAlign = 'right';
+            lines.forEach((l, k) => ctx.fillText(l, PW - M - 14, y + 7 + (size + 8) / 2 + k * (size + 8)));
+            y += h + 10;
+        };
+        if (needAR) noteBox('📌 قیمت‌های این پیش‌فاکتور بدون ضدزنگ (بدون رنگ) است. در صورت نیاز به ضدزنگ، اعلام کنید تا محاسبه شود.', '#e0f2fe', '#7dd3fc', '#075985', 12);
+        noteBox('⏰ ' + PDF_NOTE_VALID, '#fff4e0', '#ffd49a', '#8a4b00', 13);
+
+        // امضاها
+        y += 14;
+        ctx.strokeStyle = '#dddddd'; ctx.lineWidth = 1;
+        ctx.beginPath(); ctx.moveTo(M, y); ctx.lineTo(M + TW, y); ctx.stroke();
+        y += 26;
+        ctx.fillStyle = '#444'; ctx.font = `400 12px ${FONT}`;
+        ctx.textAlign = 'right'; ctx.fillText('مهر و امضای فروشنده: ..............................', PW - M - 8, y);
+        ctx.textAlign = 'left'; ctx.fillText('امضای خریدار: ..............................', M + 8, y);
+
+        // شماره صفحه
+        pages.forEach((p, k) => {
+            const c = p.getContext('2d');
+            c.direction = 'rtl'; c.textAlign = 'center'; c.textBaseline = 'middle';
+            c.fillStyle = '#94a3b8'; c.font = `400 10px ${FONT}`;
+            if (pages.length > 1) c.fillText(`صفحه ${(k + 1).toLocaleString('fa-IR')} از ${pages.length.toLocaleString('fa-IR')}`, PW / 2, PH - 16);
+        });
+        return pages;
+    }
+
+    // ساخت فایل PDF از تصویر صفحه‌ها (بدون هیچ کتابخانه‌ای)
+    function canvasesToPdf(canvases) {
+        const enc = new TextEncoder();
+        const parts = [];
+        let offset = 0;
+        const offsets = [];
+        const push = d => { const u = (typeof d === 'string') ? enc.encode(d) : d; parts.push(u); offset += u.length; };
+        const begin = n => { offsets[n] = offset; push(`${n} 0 obj\n`); };
+        const n = canvases.length;
+        push('%PDF-1.4\n');
+        begin(1); push('<< /Type /Catalog /Pages 2 0 R >>\nendobj\n');
+        begin(2); push(`<< /Type /Pages /Kids [${canvases.map((_, i) => (3 + 3 * i) + ' 0 R').join(' ')}] /Count ${n} >>\nendobj\n`);
+        canvases.forEach((c, i) => {
+            const pg = 3 + 3 * i, ct = 4 + 3 * i, im = 5 + 3 * i;
+            const bin = atob(c.toDataURL('image/jpeg', 0.92).split(',')[1]);
+            const jpg = new Uint8Array(bin.length);
+            for (let k = 0; k < bin.length; k++) jpg[k] = bin.charCodeAt(k);
+            begin(pg); push(`<< /Type /Page /Parent 2 0 R /MediaBox [0 0 595.28 841.89] /Resources << /XObject << /Im0 ${im} 0 R >> >> /Contents ${ct} 0 R >>\nendobj\n`);
+            const content = 'q 595.28 0 0 841.89 0 0 cm /Im0 Do Q';
+            begin(ct); push(`<< /Length ${content.length} >>\nstream\n${content}\nendstream\nendobj\n`);
+            begin(im); push(`<< /Type /XObject /Subtype /Image /Width ${c.width} /Height ${c.height} /ColorSpace /DeviceRGB /BitsPerComponent 8 /Filter /DCTDecode /Length ${jpg.length} >>\nstream\n`);
+            push(jpg); push('\nendstream\nendobj\n');
+        });
+        const total = 3 + 3 * n;
+        const xrefPos = offset;
+        let xref = `xref\n0 ${total}\n0000000000 65535 f \n`;
+        for (let k = 1; k < total; k++) xref += String(offsets[k]).padStart(10, '0') + ' 00000 n \n';
+        push(xref);
+        push(`trailer\n<< /Size ${total} /Root 1 0 R >>\nstartxref\n${xrefPos}\n%%EOF`);
+        return new Blob(parts, { type: 'application/pdf' });
+    }
+
+    // تحویل فایل PDF: دانلود خودکار + دکمه‌های جایگزین (برای مرورگرهای داخل برنامه)
     function deliverPdf(blob, fileName) {
         const url = URL.createObjectURL(blob);
         try {
@@ -1520,115 +1746,23 @@ function saveAdminSettings() {
         box.style.display = 'flex';
     }
 
-    function exportPDF() {
+    async function exportPDF() {
         if (orders.length === 0) { alert("پیش‌فاکتور خالی است."); return; }
-
-        // ۱. دریافت نام مشتری
-        const customerName = prompt("لطفاً نام یا نام خانوادگی مشتری را وارد کنید (اختیاری):", "");
-
-        const element = document.getElementById('invoice-print-area');
-
-        // حذف هدر و فوتر موقت قبلی در صورت وجود
-        const oldHeader = document.getElementById('pdf-custom-header');
-        const oldFooter = document.getElementById('pdf-custom-footer');
-        if (oldHeader) oldHeader.remove();
-        if (oldFooter) oldFooter.remove();
-
-        // دریافت تاریخ و ساعت جاری به فرمت فارسی
-        const now = new Date();
-        const dateStr = now.toLocaleDateString('fa-IR') + ' - ' + now.toLocaleTimeString('fa-IR', {hour: '2-digit', minute: '2-digit'});
-
-        // ۲. ساخت سربرگ اختصاصی اطلس سازه
-        const headerDiv = document.createElement('div');
-        headerDiv.id = 'pdf-custom-header';
-        headerDiv.style.cssText = "border-bottom: 2px solid #ea580c; padding-bottom: 8px; margin-bottom: 12px; direction: rtl; font-family: inherit;";
-        headerDiv.innerHTML = `
-            <div style="display: flex; justify-content: space-between; align-items: center;">
-                <div>
-                    <div style="font-size: 11px; color: #555;">تاریخ و ساعت: ${dateStr}</div>
-                </div>
-                ${customerName && customerName.trim() !== "" ? `
-                <div style="font-size: 13px; font-weight: bold; color: #222; background: #fff3ed; border: 1px solid #fdba74; padding: 4px 10px; border-radius: 4px;">
-                    مشتری گرامی: ${customerName.trim()}
-                </div>` : ''}
-            </div>
-        `;
-        element.insertBefore(headerDiv, element.firstChild);
-
-        // ۳. ساخت پانویس رسمی اطلس سازه
-        const footerDiv = document.createElement('div');
-        footerDiv.id = 'pdf-custom-footer';
-        footerDiv.style.cssText = "margin-top: 20px; border-top: 1px solid #ddd; padding-top: 12px; direction: rtl; font-family: inherit; page-break-inside: avoid;";
-        footerDiv.innerHTML = `
-            <div style="display: flex; justify-content: space-between; font-size: 12px; color: #444; margin-bottom: 25px; padding: 0 10px;">
-                <span>مهر و امضای فروشنده: ..............................</span>
-                <span>امضای خریدار: ..............................</span>
-            </div>
-        `;
-        element.appendChild(footerDiv);
-
-        // ۴. تنظیم نام فایل دانلودی
-        const fileName = (customerName && customerName.trim() !== "") 
-            ? `پیش‌فاکتور-اطلس-سازه-${customerName.trim().replace(/\s+/g, '-')}.pdf` 
-            : 'Atlas-Sazeh-Invoice.pdf';
-
-        const opt = {
-            margin:       [8, 8, 8, 8],
-            filename:     fileName,
-            image:        { type: 'jpeg', quality: 0.98 },
-            html2canvas:  { scale: 2, useCORS: true, scrollY: 0 },
-            jsPDF:        { unit: 'mm', format: 'a4', orientation: 'portrait' },
-            pagebreak:    { mode: ['avoid-all', 'css', 'legacy'] }
-        };
-
-        // بازگرداندن صفحه به حالت اولیه (حذف سربرگ و پانویس موقت)
-        const cleanupPdf = () => {
-            const h = document.getElementById('pdf-custom-header');
-            const f = document.getElementById('pdf-custom-footer');
-            if (h) h.remove();
-            if (f) f.remove();
-        };
-
-        // اگر کتابخانه PDF از CDN بالا نیامده باشد، از چند آدرس جایگزین تلاش می‌کند
-        const loadScript = (src) => new Promise((resolve, reject) => {
-            const sc = document.createElement('script');
-            const t = setTimeout(() => { sc.remove(); reject(new Error('timeout')); }, 9000);
-            sc.src = src;
-            sc.onload = () => { clearTimeout(t); resolve(); };
-            sc.onerror = () => { clearTimeout(t); sc.remove(); reject(new Error('load failed')); };
-            document.head.appendChild(sc);
-        });
-        const ensureHtml2pdf = async () => {
-            if (typeof html2pdf !== 'undefined') return;
-            const urls = [
-                'https://cdn.jsdelivr.net/npm/html2pdf.js@0.10.1/dist/html2pdf.bundle.min.js',
-                'https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js',
-                'https://unpkg.com/html2pdf.js@0.10.1/dist/html2pdf.bundle.min.js'
-            ];
-            for (const u of urls) {
-                try { await loadScript(u); if (typeof html2pdf !== 'undefined') return; } catch (e) {}
-            }
-            throw new Error('کتابخانه ساخت PDF بارگذاری نشد (اینترنت یا فیلتر بودن CDN)');
-        };
-
-        ensureHtml2pdf()
-            .then(() => html2pdf().set(opt).from(element).outputPdf('blob'))
-            .then(blob => {
-                cleanupPdf();
-                deliverPdf(blob, fileName);
-            })
-            .catch(err => {
-                console.error('PDF error:', err);
-                const msg = (err && err.message) ? err.message : String(err);
-                if (confirm('ذخیره فایل PDF انجام نشد:\n' + msg + '\n\nاز حالت چاپ استفاده شود؟ (در پنجره چاپ گزینه «Save as PDF / ذخیره به‌صورت PDF» را بزنید)')) {
-                    window.addEventListener('afterprint', cleanupPdf, { once: true });
-                    window.print();
-                } else {
-                    cleanupPdf();
-                }
-            });
+        const customerName = (prompt("لطفاً نام یا نام خانوادگی مشتری را وارد کنید (اختیاری):", "") || '').trim();
+        try {
+            showToast('در حال ساخت PDF...');
+            const pages = await buildInvoicePages(customerName);
+            const blob = canvasesToPdf(pages);
+            const fileName = customerName
+                ? `پیش‌فاکتور-اطلس-سازه-${customerName.replace(/\s+/g, '-')}.pdf`
+                : 'Atlas-Sazeh-Invoice.pdf';
+            deliverPdf(blob, fileName);
+        } catch (err) {
+            console.error('PDF error:', err);
+            alert('ساخت PDF با خطا روبه‌رو شد: ' + ((err && err.message) ? err.message : err));
+        }
     }
-    
+
   window.addEventListener('DOMContentLoaded', () => {
     // باز شدن فوری صفحه و رفع هرگونه قفل
     const overlay = document.getElementById('syncLoadingOverlay');
