@@ -9,54 +9,51 @@
 
     <!-- تنظیمات PWA و وب‌اپلیکیشن اطلس سازه -->
     <link rel="manifest" href="manifest.json">
-    <meta name="theme-color" content="#0b0e12">
+    <meta name="theme-color" content="#2a2e35">
     <meta name="apple-mobile-web-app-capable" content="yes">
     <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
     <link rel="apple-touch-icon" href="logo.png">
 
     <style>
 :root {
-    color-scheme: dark;
-    --navy-dark: #0b0e12;
-    --navy-main: #12171d;
-    --navy-light: #9fb0c3;
+    color-scheme: light;
+    --navy-dark: #1d232b;
+    --navy-main: #2b3138;
+    --navy-light: #4a5563;
     --orange-main: #ff7a00;
-    --orange-hover: #ff9a2e;
+    --orange-hover: #e56a00;
     --amber: #ffb000;
-    --bg-light: #161c23;
-    --card-bg: #12171d;
-    --text-dark: #e8edf2;
-    --text-muted: #7a8797;
-    --border-color: #2d3743;
+    --bg-light: #f5f7f9;
+    --card-bg: #ffffff;
+    --text-dark: #1d232b;
+    --text-muted: #6b7684;
+    --border-color: #cdd4db;
     --danger: #ef4444;
     --success: #22c55e;
-    --steel-2: #1b232c;
-    --steel-3: #252f3a;
 }
 
 * { box-sizing: border-box; font-family: 'Vazirmatn', Tahoma, sans-serif; margin: 0; padding: 0; }
 
 body {
-    background-color: #0a0d11;
+    background-color: #dfe3e8;
     background-image:
-        radial-gradient(900px 420px at 85% -5%, rgba(255, 122, 0, 0.16), transparent 65%),
-        radial-gradient(700px 400px at 5% 105%, rgba(255, 122, 0, 0.07), transparent 60%),
-        repeating-linear-gradient(135deg, rgba(255, 255, 255, 0.022) 0 1px, transparent 1px 12px);
+        radial-gradient(900px 420px at 85% -5%, rgba(255, 122, 0, 0.12), transparent 65%),
+        repeating-linear-gradient(135deg, rgba(0, 0, 0, 0.028) 0 1px, transparent 1px 12px);
     background-attachment: fixed;
     color: var(--text-dark);
     padding: 16px 10px 40px;
     direction: rtl;
 }
 
-/* ---------- قاب اصلی (ورق فولادی با پیچ‌های گوشه) ---------- */
+/* ---------- قاب اصلی ---------- */
 .main-wrapper {
     position: relative;
     max-width: 980px;
     margin: 0 auto;
-    background: linear-gradient(180deg, #141a21, #10151b);
-    border: 1px solid #2b3540;
+    background: #ffffff;
+    border: 1px solid #b9c2cc;
     border-radius: 3px;
-    box-shadow: 0 30px 60px rgba(0, 0, 0, 0.55), inset 0 1px 0 rgba(255, 255, 255, 0.05);
+    box-shadow: 0 24px 50px rgba(30, 40, 55, 0.22), inset 0 1px 0 #fff;
     overflow: hidden;
 }
 .main-wrapper::before {
@@ -66,25 +63,24 @@ body {
     pointer-events: none;
     z-index: 5;
     background:
-        radial-gradient(circle, #7a8696 0 2.2px, #2a323c 2.6px, transparent 3.2px) left top / 10px 10px no-repeat,
-        radial-gradient(circle, #7a8696 0 2.2px, #2a323c 2.6px, transparent 3.2px) right top / 10px 10px no-repeat,
-        radial-gradient(circle, #7a8696 0 2.2px, #2a323c 2.6px, transparent 3.2px) left bottom / 10px 10px no-repeat,
-        radial-gradient(circle, #7a8696 0 2.2px, #2a323c 2.6px, transparent 3.2px) right bottom / 10px 10px no-repeat;
+        radial-gradient(circle at 40% 35%, #ffffff 0 1px, #aab3bd 1.6px, #7d8895 2.6px, transparent 3.2px) left top / 10px 10px no-repeat,
+        radial-gradient(circle at 40% 35%, #ffffff 0 1px, #aab3bd 1.6px, #7d8895 2.6px, transparent 3.2px) right top / 10px 10px no-repeat,
+        radial-gradient(circle at 40% 35%, #ffffff 0 1px, #aab3bd 1.6px, #7d8895 2.6px, transparent 3.2px) left bottom / 10px 10px no-repeat,
+        radial-gradient(circle at 40% 35%, #ffffff 0 1px, #aab3bd 1.6px, #7d8895 2.6px, transparent 3.2px) right bottom / 10px 10px no-repeat;
 }
 
-/* ---------- هدر ---------- */
+/* ---------- هدر (گرافیتی، نه سرمه‌ای) ---------- */
 .brand-header {
     position: relative;
-    background: linear-gradient(135deg, #0c1015 0%, #161d25 55%, #1e2732 100%);
+    background: linear-gradient(135deg, #2a2f36 0%, #3a414a 55%, #2d333b 100%);
     color: #fff;
     padding: 20px 26px 28px;
-    border-bottom: 1px solid #2b3540;
 }
 .brand-header::before {
     content: '';
     position: absolute;
     inset: 0;
-    background: repeating-linear-gradient(115deg, rgba(255, 255, 255, 0.03) 0 2px, transparent 2px 9px);
+    background: repeating-linear-gradient(115deg, rgba(255, 255, 255, 0.045) 0 2px, transparent 2px 9px);
     pointer-events: none;
 }
 .brand-header::after {
@@ -92,7 +88,7 @@ body {
     position: absolute;
     left: 0; right: 0; bottom: 0;
     height: 9px;
-    background: repeating-linear-gradient(-45deg, #ff7a00 0 12px, #12161b 12px 24px);
+    background: repeating-linear-gradient(-45deg, #ff7a00 0 12px, #23272d 12px 24px);
 }
 .header-top-row {
     position: relative;
@@ -108,17 +104,16 @@ body {
     font-weight: 900;
     letter-spacing: 0.4px;
     color: #fff;
-    text-shadow: 0 2px 0 rgba(0, 0, 0, 0.55);
+    text-shadow: 0 2px 0 rgba(0, 0, 0, 0.4);
     margin-bottom: 2px;
 }
-.brand-text p { font-size: 0.76rem; color: #ffb36b; font-weight: 600; }
-
+.brand-text p { font-size: 0.76rem; color: #ffc283; font-weight: 600; }
 .header-controls { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; }
 
 .btn-header {
-    background: linear-gradient(180deg, #2a3441, #1d2530);
-    color: #e8edf2;
-    border: 1px solid #3d4a5a;
+    background: linear-gradient(180deg, #59626d, #444c56);
+    color: #fff;
+    border: 1px solid #6c7783;
     padding: 8px 14px;
     border-radius: 2px;
     font-size: 0.8rem;
@@ -128,19 +123,15 @@ body {
     display: flex;
     align-items: center;
     gap: 6px;
-    box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.09), 0 2px 0 #07090c;
+    box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.16), 0 2px 0 #1b1f24;
     clip-path: polygon(7px 0, 100% 0, 100% calc(100% - 7px), calc(100% - 7px) 100%, 0 100%, 0 7px);
 }
-.btn-header:hover {
-    background: linear-gradient(180deg, #ff8a1f, #e96a00);
-    color: #111;
-    border-color: #ff9a2e;
-}
+.btn-header:hover { background: linear-gradient(180deg, #ff8a1f, #e96a00); color: #111; border-color: #ff9a2e; }
 
 .badge-status {
-    background: rgba(255, 122, 0, 0.14);
-    color: #ffb36b;
-    border: 1px solid rgba(255, 122, 0, 0.55);
+    background: rgba(255, 122, 0, 0.18);
+    color: #ffc283;
+    border: 1px solid rgba(255, 122, 0, 0.6);
     padding: 7px 13px;
     font-size: 0.76rem;
     font-weight: 800;
@@ -152,8 +143,8 @@ body {
     position: relative;
     margin-top: 16px;
     padding: 8px 12px;
-    background: rgba(0, 0, 0, 0.38);
-    border: 1px solid #2b3540;
+    background: rgba(0, 0, 0, 0.28);
+    border: 1px solid #555e69;
     border-right: 3px solid var(--orange-main);
     display: flex;
     justify-content: space-between;
@@ -161,17 +152,32 @@ body {
     gap: 8px;
     flex-wrap: wrap;
     font-size: 0.72rem;
-    color: #9fb0c3;
+    color: #d3dae2;
 }
-#lastSyncTime { color: #cbd5e1; font-weight: 600; }
+#lastSyncTime { color: #fff; font-weight: 600; }
+
+/* ---------- تذکر اعتبار پیش‌فاکتور ---------- */
+.validity-note {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    background: #fff4e0;
+    border: 1px solid #ffd49a;
+    border-right: 5px solid var(--orange-main);
+    color: #8a4b00;
+    font-weight: 800;
+    font-size: 0.84rem;
+    padding: 10px 16px;
+    margin-bottom: 18px;
+}
 
 /* ---------- بدنه ---------- */
-.content-body { padding: 24px 24px 26px; position: relative; }
+.content-body { padding: 24px 24px 26px; position: relative; background: #ffffff; }
 
 .section-title {
     font-size: 1rem;
     font-weight: 900;
-    color: #fff;
+    color: #1d232b;
     margin-bottom: 14px;
     display: flex;
     align-items: center;
@@ -191,17 +197,17 @@ body {
     content: '';
     flex: 1;
     height: 1px;
-    background: linear-gradient(270deg, #3a4654, transparent);
+    background: linear-gradient(270deg, #c3cad2, transparent);
 }
 
 .form-card {
     position: relative;
-    background: linear-gradient(180deg, #171e26, #131920);
-    border: 1px solid #2d3743;
+    background: linear-gradient(180deg, #f8f9fb, #eff2f5);
+    border: 1px solid #cdd4db;
     border-radius: 2px;
     padding: 20px 18px 18px;
     margin-bottom: 24px;
-    box-shadow: inset 0 0 0 1px rgba(255, 255, 255, 0.02), 0 10px 24px rgba(0, 0, 0, 0.38);
+    box-shadow: 0 6px 16px rgba(30, 40, 55, 0.08);
 }
 .form-card::before, .form-card::after {
     content: '';
@@ -222,22 +228,22 @@ body {
 .form-group label {
     font-size: 0.74rem;
     font-weight: 700;
-    color: #9fb0c3;
+    color: #4a5563;
     letter-spacing: 0.2px;
 }
 
 input[type="number"], input[type="text"], input[type="time"], textarea, select {
     width: 100%;
     padding: 9px 11px;
-    border: 1px solid #3a4654;
-    border-bottom: 2px solid #4a5868;
+    border: 1px solid #b9c2cc;
+    border-bottom: 2px solid #8d98a6;
     border-radius: 2px;
     font-size: 0.88rem;
-    background: #0c1015;
-    color: #f1f5f9;
+    background: #ffffff;
+    color: #1d232b;
     outline: none;
     transition: all 0.18s;
-    box-shadow: inset 0 2px 6px rgba(0, 0, 0, 0.45);
+    box-shadow: inset 0 1px 3px rgba(30, 40, 55, 0.08);
 }
 select {
     appearance: none;
@@ -247,11 +253,11 @@ select {
     background-repeat: no-repeat;
     background-position: left 11px center;
 }
-select option { background: #12171d; color: #f1f5f9; }
+select option { background: #fff; color: #1d232b; }
 input:focus, select:focus, textarea:focus {
     border-color: var(--orange-main);
     border-bottom-color: var(--orange-main);
-    box-shadow: 0 0 0 3px rgba(255, 122, 0, 0.2), inset 0 2px 6px rgba(0, 0, 0, 0.45);
+    box-shadow: 0 0 0 3px rgba(255, 122, 0, 0.2);
 }
 
 .checkbox-container {
@@ -263,19 +269,19 @@ input:focus, select:focus, textarea:focus {
     user-select: none;
     font-size: 0.82rem;
     font-weight: 700;
-    color: #cbd5e1;
+    color: #2b3440;
     padding: 9px 12px;
-    background: rgba(255, 255, 255, 0.03);
-    border: 1px solid #2d3743;
-    border-right: 3px solid #4a5868;
+    background: #ffffff;
+    border: 1px solid #cdd4db;
+    border-right: 3px solid #9aa5b1;
 }
 .checkbox-container:hover { border-right-color: var(--orange-main); }
 .checkbox-container input { width: 17px; height: 17px; accent-color: var(--orange-main); cursor: pointer; box-shadow: none; }
 
 /* نمایشگر قیمت */
 .preview-bar {
-    background: #07090c;
-    border: 1px solid #2d3743;
+    background: #23282e;
+    border: 1px solid #101317;
     border-right: 3px solid var(--orange-main);
     padding: 12px 16px;
     margin-bottom: 14px;
@@ -285,14 +291,14 @@ input:focus, select:focus, textarea:focus {
     gap: 10px;
     flex-wrap: wrap;
     font-size: 0.85rem;
-    color: #9fb0c3;
-    box-shadow: inset 0 0 18px rgba(0, 0, 0, 0.8);
+    color: #c4ccd5;
+    box-shadow: inset 0 0 16px rgba(0, 0, 0, 0.55);
 }
 .preview-bar strong {
     color: var(--amber);
     font-size: 1.18rem;
     font-weight: 900;
-    text-shadow: 0 0 12px rgba(255, 176, 0, 0.45);
+    text-shadow: 0 0 10px rgba(255, 176, 0, 0.4);
     letter-spacing: 0.4px;
 }
 
@@ -312,23 +318,24 @@ input:focus, select:focus, textarea:focus {
     justify-content: center;
     gap: 10px;
     letter-spacing: 0.3px;
-    box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.35), 0 3px 0 #9a4300, 0 8px 18px rgba(255, 122, 0, 0.25);
+    box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.4), 0 3px 0 #9a4300, 0 8px 18px rgba(255, 122, 0, 0.25);
     clip-path: polygon(12px 0, 100% 0, 100% calc(100% - 12px), calc(100% - 12px) 100%, 0 100%, 0 12px);
 }
 .btn-add:hover { background: linear-gradient(180deg, #ffa13d, #f77607); }
 .btn-add:active { transform: translateY(2px); box-shadow: inset 0 1px 0 rgba(255,255,255,.3), 0 1px 0 #9a4300; }
 
-/* ---------- برگه پیش‌فاکتور (برای چاپ و PDF روشن می‌ماند) ---------- */
+/* ---------- برگه پیش‌فاکتور ---------- */
 #invoice-print-area {
     background: #ffffff;
     color: #0f172a;
     padding: 14px 14px 6px;
     margin-bottom: 18px;
+    border: 1px solid #cdd4db;
+    border-top: 4px solid var(--orange-main);
     border-radius: 2px;
-    box-shadow: 0 14px 34px rgba(0, 0, 0, 0.55);
+    box-shadow: 0 10px 24px rgba(30, 40, 55, 0.12);
 }
 #invoice-print-area .section-title { color: #0f172a; }
-#invoice-print-area .section-title::after { background: linear-gradient(270deg, #cfc9bd, transparent); }
 
 .table-container {
     overflow-x: auto;
@@ -338,7 +345,7 @@ input:focus, select:focus, textarea:focus {
 }
 table { width: 100%; border-collapse: collapse; text-align: center; font-size: 0.8rem; color: #0f172a; }
 th {
-    background: #161c23;
+    background: #2b3138;
     color: #ffffff;
     padding: 11px 6px;
     font-weight: 700;
@@ -393,10 +400,10 @@ tr:nth-child(even) td { background-color: #f7f5ef; }
     margin-bottom: 10px;
 }
 .btn-act {
-    background: linear-gradient(180deg, #232d38, #19212a);
-    border: 1px solid #36424f;
+    background: linear-gradient(180deg, #ffffff, #eef1f4);
+    border: 1px solid #b9c2cc;
     border-right: 4px solid var(--orange-main);
-    color: #e8edf2;
+    color: #1d232b;
     padding: 12px 14px;
     font-size: 0.86rem;
     font-weight: 800;
@@ -407,19 +414,19 @@ tr:nth-child(even) td { background-color: #f7f5ef; }
     gap: 8px;
     transition: all 0.18s;
     border-radius: 2px;
-    box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.06), 0 2px 0 #07090c;
+    box-shadow: 0 2px 0 #b9c2cc;
 }
-.btn-act:hover { background: linear-gradient(180deg, #2c3846, #212b36); border-color: #ff9a2e; }
-.btn-act.danger-btn { color: #ff7b7b; border-right-color: var(--danger); }
-.btn-act.danger-btn:hover { background: #2a1517; border-color: var(--danger); }
+.btn-act:hover { background: #fff4e5; border-color: #ff9a2e; }
+.btn-act.danger-btn { color: #c53030; border-right-color: var(--danger); }
+.btn-act.danger-btn:hover { background: #fef2f2; border-color: var(--danger); }
 
 /* ---------- مدال مدیریت ---------- */
 .modal-overlay {
     position: fixed;
     top: 0; left: 0;
     width: 100%; height: 100%;
-    background: rgba(4, 6, 9, 0.8);
-    backdrop-filter: blur(4px);
+    background: rgba(24, 29, 36, 0.6);
+    backdrop-filter: blur(3px);
     display: none;
     align-items: center;
     justify-content: center;
@@ -427,8 +434,8 @@ tr:nth-child(even) td { background-color: #f7f5ef; }
     padding: 15px;
 }
 .modal-card {
-    background: linear-gradient(180deg, #151b22, #10151b);
-    border: 1px solid #3a4654;
+    background: #ffffff;
+    border: 1px solid #b9c2cc;
     border-top: 5px solid var(--orange-main);
     border-radius: 2px;
     width: 100%;
@@ -436,26 +443,26 @@ tr:nth-child(even) td { background-color: #f7f5ef; }
     max-height: 90vh;
     overflow-y: auto;
     padding: 22px;
-    color: #e8edf2;
-    box-shadow: 0 30px 60px rgba(0, 0, 0, 0.7);
+    color: #1d232b;
+    box-shadow: 0 30px 60px rgba(20, 28, 38, 0.45);
 }
 .modal-header {
     display: flex;
     justify-content: space-between;
     align-items: center;
-    border-bottom: 1px solid #2d3743;
+    border-bottom: 1px solid #d7dde3;
     padding-bottom: 12px;
     margin-bottom: 16px;
 }
-.modal-header h3 { font-size: 1.08rem; color: #fff; font-weight: 900; }
-.modal-header button { color: #e8edf2; transition: color 0.18s; }
+.modal-header h3 { font-size: 1.08rem; color: #1d232b; font-weight: 900; }
+.modal-header button { color: #1d232b; transition: color 0.18s; }
 .modal-header button:hover { color: var(--orange-main); }
 .admin-section-title {
     font-size: 0.86rem;
     font-weight: 800;
-    color: var(--orange-main);
+    color: #e56a00;
     margin: 18px 0 8px 0;
-    border-bottom: 1px dashed #3a4654;
+    border-bottom: 1px dashed #c3cad2;
     padding-bottom: 5px;
 }
 .admin-grid {
@@ -464,35 +471,31 @@ tr:nth-child(even) td { background-color: #f7f5ef; }
     gap: 10px;
     margin-bottom: 8px;
 }
-/* فیلدهای پنل مدیریت (برای فیلدهایی که استایل inline دارند هم) */
 #adminModal input, #adminModal select, #adminModal textarea {
-    background-color: #0c1015 !important;
-    color: #f1f5f9 !important;
-    border-color: #3a4654 !important;
+    background-color: #ffffff !important;
+    color: #1d232b !important;
+    border-color: #b9c2cc !important;
 }
-#adminModal label { color: #cbd5e1; }
-#adminModal select option { background: #12171d; color: #f1f5f9; }
+#adminModal label { color: #3b4654; }
+#adminModal select option { background: #fff; color: #1d232b; }
 #adminModal input[type="checkbox"] { accent-color: var(--orange-main); width: auto; box-shadow: none; }
 
 .adm-fit-row, .adm-fit-add { display: grid; grid-template-columns: 1fr 120px 34px; gap: 6px; margin-bottom: 6px; align-items: center; }
 .adm-fit-add { grid-template-columns: 1fr 120px auto; margin-top: 8px; }
 input.adm-fit-name { width: 100%; }
 .adm-fit-row input[type="number"], .adm-fit-add input[type="number"] { direction: ltr; text-align: right; }
-.adm-fit-row .btn-del-item { background: #2a1517; border-color: #5b2327; color: #ff7b7b; }
-.adm-fit-row .btn-del-item:hover { background: var(--danger); color: #fff; }
 
 .toast {
     position: fixed;
     bottom: 22px;
     left: 50%;
     transform: translateX(-50%);
-    background: #0b0e12;
+    background: #23282e;
     color: #fff;
     padding: 11px 22px;
-    border: 1px solid #3a4654;
     border-right: 4px solid var(--orange-main);
     font-size: 0.86rem;
-    box-shadow: 0 8px 22px rgba(0, 0, 0, 0.6);
+    box-shadow: 0 8px 22px rgba(0, 0, 0, 0.35);
     display: none;
     z-index: 2000;
 }
@@ -500,7 +503,7 @@ input.adm-fit-name { width: 100%; }
 #syncLoadingOverlay {
     position: fixed;
     top: 0; left: 0; right: 0; bottom: 0;
-    background: rgba(6, 9, 12, 0.9);
+    background: rgba(35, 40, 46, 0.88);
     backdrop-filter: blur(6px);
     z-index: 99999;
     display: none;
@@ -513,7 +516,7 @@ input.adm-fit-name { width: 100%; }
 }
 #syncLoadingOverlay .spinner {
     width: 48px; height: 48px;
-    border: 4px solid rgba(255, 255, 255, 0.15);
+    border: 4px solid rgba(255, 255, 255, 0.2);
     border-top-color: var(--orange-main);
     border-radius: 50%;
     animation: spin 0.8s linear infinite;
@@ -525,8 +528,36 @@ input.adm-fit-name { width: 100%; }
     .content-body { padding: 16px 12px 18px; }
     .brand-header { padding: 16px 14px 26px; }
     .brand-text h1 { font-size: 1.3rem; }
+    .validity-note { padding: 9px 12px; font-size: 0.78rem; }
     .adm-fit-row, .adm-fit-add { grid-template-columns: 1fr 96px 34px; }
 }
+
+/* ---------- چاپ / ذخیره PDF از پنجره چاپ مرورگر ---------- */
+@media print {
+    body { background: #fff !important; padding: 0 !important; }
+    body * { visibility: hidden !important; }
+    #invoice-print-area, #invoice-print-area * { visibility: visible !important; }
+    #invoice-print-area {
+        position: absolute; top: 0; left: 0; right: 0; width: 100%;
+        box-shadow: none !important; border: none !important; padding: 0 !important;
+    }
+    .btn-del-item, th:last-child, td:last-child { display: none !important; }
+}
+
+/* پیام آماده‌بودن PDF */
+#pdfReady {
+    position: fixed; bottom: 70px; left: 50%; transform: translateX(-50%);
+    background: #23282e; color: #fff; padding: 12px 18px;
+    border-right: 4px solid var(--orange-main);
+    font-size: 0.84rem; z-index: 2100; display: none;
+    box-shadow: 0 10px 26px rgba(0,0,0,.4); max-width: 92vw;
+    align-items: center; gap: 12px; flex-wrap: wrap;
+}
+#pdfReady a, #pdfReady button {
+    background: var(--orange-main); color: #14100a; font-weight: 800; border: none;
+    padding: 6px 12px; text-decoration: none; cursor: pointer; font-size: 0.8rem; border-radius: 2px;
+}
+#pdfReady .x { background: transparent; color: #cbd5e1; font-size: 1rem; padding: 2px 8px; }
 
     </style>
 </head>
@@ -567,6 +598,8 @@ input.adm-fit-name { width: 100%; }
     </div>
 
     <div class="content-body">
+        <div class="validity-note">⚠️ پیش‌فاکتور فقط تا پایان زمان اداری همان روز اعتبار دارد.</div>
+
         <!-- فرم ورودی -->
         <div class="section-title">محاسبه و افزودن به پیش‌فاکتور</div>
         <div class="form-card">
@@ -740,6 +773,7 @@ input.adm-fit-name { width: 100%; }
     </div>
 </div>
 
+<div id="pdfReady"></div>
 <div class="toast" id="toastBox">پیام سیستم</div>
 
 <script>
@@ -1454,7 +1488,39 @@ function saveAdminSettings() {
         });
     }
     
-       function exportPDF() {
+           // تحویل فایل PDF: دانلود خودکار + دکمه‌های جایگزین (برای مرورگرهای داخل برنامه که دانلود را می‌بندند)
+    function deliverPdf(blob, fileName) {
+        const url = URL.createObjectURL(blob);
+        try {
+            const a = document.createElement('a');
+            a.href = url; a.download = fileName;
+            document.body.appendChild(a); a.click(); a.remove();
+        } catch (e) {}
+        const box = document.getElementById('pdfReady');
+        if (!box) return;
+        box.innerHTML = '';
+        const msg = document.createElement('span');
+        msg.textContent = '✅ فایل PDF آماده شد. اگر دانلود نشد:';
+        const open = document.createElement('a');
+        open.href = url; open.target = '_blank'; open.rel = 'noopener'; open.textContent = '📄 باز کردن PDF';
+        box.append(msg, open);
+        try {
+            const file = new File([blob], fileName, { type: 'application/pdf' });
+            if (navigator.canShare && navigator.canShare({ files: [file] })) {
+                const sh = document.createElement('button');
+                sh.textContent = '📤 ارسال / ذخیره';
+                sh.onclick = () => { navigator.share({ files: [file] }).catch(() => {}); };
+                box.append(sh);
+            }
+        } catch (e) {}
+        const x = document.createElement('button');
+        x.className = 'x'; x.textContent = '✕';
+        x.onclick = () => { box.style.display = 'none'; };
+        box.append(x);
+        box.style.display = 'flex';
+    }
+
+    function exportPDF() {
         if (orders.length === 0) { alert("پیش‌فاکتور خالی است."); return; }
 
         // ۱. دریافت نام مشتری
@@ -1515,13 +1581,52 @@ function saveAdminSettings() {
             pagebreak:    { mode: ['avoid-all', 'css', 'legacy'] }
         };
 
-        // دانلود PDF و بازگرداندن صفحه به حالت اولیه
-        html2pdf().set(opt).from(element).save().then(() => {
+        // بازگرداندن صفحه به حالت اولیه (حذف سربرگ و پانویس موقت)
+        const cleanupPdf = () => {
             const h = document.getElementById('pdf-custom-header');
             const f = document.getElementById('pdf-custom-footer');
             if (h) h.remove();
             if (f) f.remove();
+        };
+
+        // اگر کتابخانه PDF از CDN بالا نیامده باشد، از چند آدرس جایگزین تلاش می‌کند
+        const loadScript = (src) => new Promise((resolve, reject) => {
+            const sc = document.createElement('script');
+            const t = setTimeout(() => { sc.remove(); reject(new Error('timeout')); }, 9000);
+            sc.src = src;
+            sc.onload = () => { clearTimeout(t); resolve(); };
+            sc.onerror = () => { clearTimeout(t); sc.remove(); reject(new Error('load failed')); };
+            document.head.appendChild(sc);
         });
+        const ensureHtml2pdf = async () => {
+            if (typeof html2pdf !== 'undefined') return;
+            const urls = [
+                'https://cdn.jsdelivr.net/npm/html2pdf.js@0.10.1/dist/html2pdf.bundle.min.js',
+                'https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js',
+                'https://unpkg.com/html2pdf.js@0.10.1/dist/html2pdf.bundle.min.js'
+            ];
+            for (const u of urls) {
+                try { await loadScript(u); if (typeof html2pdf !== 'undefined') return; } catch (e) {}
+            }
+            throw new Error('کتابخانه ساخت PDF بارگذاری نشد (اینترنت یا فیلتر بودن CDN)');
+        };
+
+        ensureHtml2pdf()
+            .then(() => html2pdf().set(opt).from(element).outputPdf('blob'))
+            .then(blob => {
+                cleanupPdf();
+                deliverPdf(blob, fileName);
+            })
+            .catch(err => {
+                console.error('PDF error:', err);
+                const msg = (err && err.message) ? err.message : String(err);
+                if (confirm('ذخیره فایل PDF انجام نشد:\n' + msg + '\n\nاز حالت چاپ استفاده شود؟ (در پنجره چاپ گزینه «Save as PDF / ذخیره به‌صورت PDF» را بزنید)')) {
+                    window.addEventListener('afterprint', cleanupPdf, { once: true });
+                    window.print();
+                } else {
+                    cleanupPdf();
+                }
+            });
     }
     
   window.addEventListener('DOMContentLoaded', () => {
